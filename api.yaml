@@ -32,6 +32,7 @@ paths:
       summary: Gets services registered within the broker
       tags:
         - catalog
+        - discovery
       description: >
         "The first endpoint that a broker must implement is the service catalog. The client will
         initially fetch this endpoint from all brokers and make adjustments to the user-facing service catalog
@@ -47,10 +48,10 @@ paths:
         - application/json
       responses:
         '200':
-          description: successful operation
+          description: Successful operation
           schema:
             $ref: '#/definitions/CatalogServices'
-  '/service_instances/{instance_id}':
+  /service_instances/{instance_id}:
     parameters:
       - $ref: '#/parameters/instance_id'
     put:
@@ -102,8 +103,7 @@ paths:
             $ref: '#/definitions/Dashboard_url'
         '409':
           description: >
-            'Should be returned if the requested service instance already exists.
-            The expected response body is {}'
+            'The requested service instance already exists.'
           schema:
             $ref: '#/definitions/Empty'
         '422':
@@ -219,7 +219,7 @@ paths:
             asynchronous service operations." }.'
           schema:
             $ref: '#/definitions/Error'
-  '/service_instances/{instance_id}/last_operation':
+  /service_instances/{instance_id}/last_operation:
     parameters:
       - $ref: '#/parameters/instance_id'
     get:
@@ -269,7 +269,7 @@ paths:
             response a success and remove the resource from its database. The expected response body is {}.
             Returning this while the client is polling for create or update operations will be interpreted as
             an invalid response and the client will continue polling."
-  '/service_instances/{instance_id}/service_bindings/{binding_id}':
+  /service_instances/{instance_id}/service_bindings/{binding_id}:
     parameters:
       - $ref: '#/parameters/instance_id'
       - $ref: '#/parameters/binding_id'
