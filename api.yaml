@@ -21,12 +21,12 @@ info:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
 host: '127.0.0.1:8888'
-basePath: /v2
+basePath: /  # this is pragmatically done to allow for extensions to the core spec.
 schemes:
   - http
   - https
 paths:
-  /catalog:
+  /v2/catalog:
     get:
       operationId: catalog
       summary: Gets services registered within the broker
@@ -51,7 +51,40 @@ paths:
           description: Successful operation
           schema:
             $ref: '#/definitions/CatalogServices'
-  /service_instances/{instance_id}:
+  /v2-et/catalog:
+    put:
+      operationId: registerService
+      summary: Registers the service with the catalog.
+      tags:
+       - catalog
+       - registration
+       - elastest
+       - extension
+      description: >
+        "Service providers need a means to register their service with a service broker. This provides this functionality. Also using
+        PUT a service provider can update their registration. Note that this requires the complete content and will REPLACE the existing
+        service information registered with the broker."
+      parameters:
+        - name: X-Broker-Api-Version
+          in: header
+          description: Version of API requested
+          required: true
+          type: string
+          format: string
+        - name: service
+          description: the service description to register
+          required: true
+          in: body
+          schema:
+            $ref: '#/definitions/CatalogService'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Successful operation
+          schema:
+            $ref: '#/definitions/CatalogServices'
+  /v2/service_instances/{instance_id}:
     parameters:
       - $ref: '#/parameters/instance_id'
     put:
@@ -219,7 +252,7 @@ paths:
             asynchronous service operations." }.'
           schema:
             $ref: '#/definitions/Error'
-  /service_instances/{instance_id}/last_operation:
+  /v2/service_instances/{instance_id}/last_operation:
     parameters:
       - $ref: '#/parameters/instance_id'
     get:
@@ -269,7 +302,7 @@ paths:
             response a success and remove the resource from its database. The expected response body is {}.
             Returning this while the client is polling for create or update operations will be interpreted as
             an invalid response and the client will continue polling."
-  /service_instances/{instance_id}/service_bindings/{binding_id}:
+  /v2/service_instances/{instance_id}/service_bindings/{binding_id}:
     parameters:
       - $ref: '#/parameters/instance_id'
       - $ref: '#/parameters/binding_id'
