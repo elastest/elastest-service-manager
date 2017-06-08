@@ -13,6 +13,13 @@ info:
     credentials. [Learn more about the Service Broker API.]
     (https://github.com/openservicebrokerapi/servicebroker/).
     Note the [topic on orphan resolution](https://github.com/openservicebrokerapi/servicebroker/blob/master/_spec.md#orphans). It is not dealt with in this spec.
+
+    TODOs
+      * add get support to bindings
+      * add further error codes, especially 5XX codes
+      * add Location headers in response to creation requests, to support async operations
+      * rename types to reflect semantics better
+
   contact:
     name: Andy Edmonds
     url: https://blog.zhaw.ch/icclab/andy-edmonds/
@@ -252,6 +259,32 @@ paths:
             asynchronous service operations." }.'
           schema:
             $ref: '#/definitions/Error'
+  /v2-et/service_instances/{instance_id}:
+    parameters:
+        - $ref: '#/parameters/instance_id'
+      get:
+        operationId: instance_info
+        summary: Returns information about the service instance.
+        tags:
+         - instance_info
+         - service_instance
+        description: >
+          Returns information about the service instance. This is a simple read operation against the broker database 
+          and is provided as a developer/consumer convienence.
+        parameters:
+          - name: X-Broker-Api-Version
+            in: header
+            description: Version of API requested
+            required: true
+            type: string
+            format: string
+        produces:
+          - application/json
+        responses:
+          '200':
+            description: serice description
+            schema:
+              $ref: '#/definitions/CatalogService'
   /v2/service_instances/{instance_id}/last_operation:
     parameters:
       - $ref: '#/parameters/instance_id'
@@ -260,6 +293,7 @@ paths:
       summary: Gets the current state of the last operation upon the specified resource.
       tags:
         - last_operation
+        - service_instance
       description: >
         "When a broker returns status code 202 ACCEPTED for provision, update, or deprovision, the
         client will begin to poll the /v2/service_instances/:guid/last_operation endpoint to obtain the state of the
