@@ -14,12 +14,6 @@ info:
     (https://github.com/openservicebrokerapi/servicebroker/).
     Note the [topic on orphan resolution](https://github.com/openservicebrokerapi/servicebroker/blob/master/_spec.md#orphans). It is not dealt with in this spec.
 
-    TODOs
-      * add get support to bindings
-      * add further error codes, especially 5XX codes
-      * add Location headers in response to creation requests, to support async operations
-      * rename types to reflect semantics better
-
   contact:
     name: Andy Edmonds
     url: https://blog.zhaw.ch/icclab/andy-edmonds/
