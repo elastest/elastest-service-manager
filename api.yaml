@@ -262,29 +262,29 @@ paths:
   /v2-et/service_instances/{instance_id}:
     parameters:
         - $ref: '#/parameters/instance_id'
-      get:
-        operationId: instance_info
-        summary: Returns information about the service instance.
-        tags:
-         - instance_info
-         - service_instance
-        description: >
-          Returns information about the service instance. This is a simple read operation against the broker database 
-          and is provided as a developer/consumer convienence.
-        parameters:
-          - name: X-Broker-Api-Version
-            in: header
-            description: Version of API requested
-            required: true
-            type: string
-            format: string
-        produces:
-          - application/json
-        responses:
-          '200':
-            description: serice description
-            schema:
-              $ref: '#/definitions/CatalogService'
+    get:
+      operationId: instance_info
+      summary: Returns information about the service instance.
+      tags:
+        - instance_info
+        - service_instance
+      description: >
+        Returns information about the service instance. This is a simple read operation against the broker database 
+        and is provided as a developer/consumer convienence.
+      parameters:
+        - name: X-Broker-Api-Version
+          in: header
+          description: Version of API requested
+          required: true
+          type: string
+          format: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: serice description
+          schema:
+            $ref: '#/definitions/CatalogService'
   /v2/service_instances/{instance_id}/last_operation:
     parameters:
       - $ref: '#/parameters/instance_id'
