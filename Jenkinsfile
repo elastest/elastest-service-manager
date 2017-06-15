@@ -12,7 +12,6 @@ node('docker'){
             stage "Unit tests"
                 echo ("Starting unit tests...")
                 sh 'ls -l'
-                sh 'source /env/bin/activate'
                 sh 'cd elastest-service-manager'
                 sh 'tox'
 
