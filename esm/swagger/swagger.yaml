@@ -1,0 +1,754 @@
+---
+swagger: "2.0"
+info:
+  description: "This is the service manager API. It is an extension of the the Open\
+    \ Service Broker API. The Open Service Broker API defines the contract between\
+    \ the a requesting client and the service broker. The broker is expected to implement\
+    \ several HTTP (or HTTPS) endpoints underneath a URI prefix. One or more services\
+    \ can be provided by a single broker, and load balancing enables horizontal scalability\
+    \ of redundant brokers. Multiple service provider instances can be supported by\
+    \ a single broker using different URL prefixes and credentials. [Learn more about\
+    \ the Service Broker API.] (https://github.com/openservicebrokerapi/servicebroker/).\
+    \ Note the [topic on orphan resolution](https://github.com/openservicebrokerapi/servicebroker/blob/master/_spec.md#orphans).\
+    \ It is not dealt with in this spec.\n"
+  version: "2.11"
+  title: "ElasTest Service Manager API"
+  contact:
+    name: "ElasTest"
+    url: "https://github.com/elastest/bugtracker"
+    email: "elastest-users@googlegroups.com"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+schemes:
+- "http"
+- "https"
+paths:
+  /v2/catalog:
+    get:
+      tags:
+      - "catalog"
+      - "discovery"
+      summary: "Gets services registered within the broker"
+      description: "\"The first endpoint that a broker must implement is the service\
+        \ catalog. The client will initially fetch this endpoint from all brokers\
+        \ and make adjustments to the user-facing service catalog stored in the a\
+        \ client database. \\n\"\n"
+      operationId: "catalog"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/CatalogServices"
+      x-swagger-router-controller: "esm.controllers.catalog_controller"
+  /v2-et/catalog:
+    put:
+      tags:
+      - "catalog"
+      - "registration"
+      - "elastest"
+      - "extension"
+      summary: "Registers the service with the catalog."
+      description: "\"Service providers need a means to register their service with\
+        \ a service broker. This provides this functionality. Also using PUT a service\
+        \ provider can update their registration. Note that this requires the complete\
+        \ content and will REPLACE the existing service information registered with\
+        \ the broker.\"\n"
+      operationId: "register_service"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "service"
+        description: "the service description to register"
+        required: true
+        schema:
+          $ref: "#/definitions/CatalogService"
+      responses:
+        200:
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/CatalogServices"
+      x-swagger-router-controller: "esm.controllers.catalog_controller"
+  /v2/service_instances/{instance_id}:
+    put:
+      tags:
+      - "service_instances"
+      summary: "Provisions a service instance"
+      description: "'When the broker receives a provision request from a client, it\
+        \ should synchronously take whatever action is necessary to create a new service\
+        \ resource for the developer. The result of provisioning varies by service\
+        \ type, although there are a few common actions that work for many services.\
+        \ Supports asynchronous operations.'\n"
+      operationId: "create_service_instance"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "instance_id"
+        in: "path"
+        description: "'The instance_id of a service instance is provided by the client.\
+          \ This ID will be used for future requests (bind and deprovision), so the\
+          \ broker must use it to correlate the resource it creates.'\n"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "service"
+        description: "Service information."
+        required: true
+        schema:
+          $ref: "#/definitions/Service"
+      - name: "accept_incomplete"
+        in: "query"
+        description: "Indicates that the client is supporting asynchronous operations"
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "\"May be returned if the service instance already exists and\
+            \ the requested parameters are identical to the existing service instance.\
+            \ The expected response body is below.\"\n"
+          schema:
+            $ref: "#/definitions/Dashboard_url"
+        201:
+          description: "Service instance has been created."
+          schema:
+            $ref: "#/definitions/Dashboard_url"
+        202:
+          description: "Service instance is being created - asynchronous operation"
+          schema:
+            $ref: "#/definitions/Dashboard_url"
+        409:
+          description: "'The requested service instance already exists.'\n"
+          schema:
+            $ref: "#/definitions/Empty"
+        422:
+          description: "This service plan requires client support for asynchronous\
+            \ service operations."
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "esm.controllers.service_instances_controller"
+    delete:
+      tags:
+      - "service_instances"
+      summary: "Deprovisions a service instance."
+      description: "'When a broker receives a deprovision request from a client, it\
+        \ should delete any resources it created during the provision. Usually this\
+        \ means that all resources are immediately reclaimed for future provisions.'\n"
+      operationId: "deprovision_service_instance"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "instance_id"
+        in: "path"
+        description: "'The instance_id of a service instance is provided by the client.\
+          \ This ID will be used for future requests (bind and deprovision), so the\
+          \ broker must use it to correlate the resource it creates.'\n"
+        required: true
+        type: "string"
+      - name: "service_id"
+        in: "query"
+        description: "service ID to be deprovisioned"
+        required: true
+        type: "string"
+      - name: "plan_id"
+        in: "query"
+        description: "plan ID of the service to be deprovisioned"
+        required: true
+        type: "string"
+      - name: "accept_incomplete"
+        in: "query"
+        description: "Indicates that the client is supporting asynchronous operations"
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "Service instance was deleted. The expected response body is\
+            \ {}."
+          schema:
+            $ref: "#/definitions/Empty"
+        202:
+          description: "Service instance is being deleted - asynchronous operation"
+          schema:
+            $ref: "#/definitions/Dashboard_url"
+        410:
+          description: "Should be returned if the binding does not exist. The expected\
+            \ response body is {}."
+          schema:
+            $ref: "#/definitions/Empty"
+        422:
+          description: "'May be returned if the particular plan change requested is\
+            \ not supported or if the request cannot currently be fulfilled due to\
+            \ the state of the instance (eg. instance utilization is over the quota\
+            \ of the requested plan). Broker should include a user-facing message\
+            \ in the body. Additionally, a 422 can also be returned if the broker\
+            \ only supports asynchronous update for the requested plan and the request\
+            \ did not include ?accepts_incomplete=true. The expected response body\
+            \ is: { \"error\": \"AsyncRequired\", \"description\": \"This service\
+            \ plan requires client support for asynchronous service operations.\"\
+            \ }.'\n"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "esm.controllers.service_instances_controller"
+    patch:
+      tags:
+      - "service_instances"
+      summary: "Updating a Service Instance"
+      description: "'Brokers that implement this endpoint can enable users to modify\
+        \ attributes of an existing service instance. The first attribute supports\
+        \ users modifying is the service plan. This effectively enables users to upgrade\
+        \ or downgrade their service instance to other plans. To see how users make\
+        \ these requests.'\n"
+      operationId: "update_service_instance"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "instance_id"
+        in: "path"
+        description: "'The instance_id of a service instance is provided by the client.\
+          \ This ID will be used for future requests (bind and deprovision), so the\
+          \ broker must use it to correlate the resource it creates.'\n"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "plan"
+        description: "New Plan information."
+        required: true
+        schema:
+          $ref: "#/definitions/ServicePlan"
+      - name: "accept_incomplete"
+        in: "query"
+        description: "Indicates that the client is supporting asynchronous operations"
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "New plan is effective. The expected response body is {}."
+          schema:
+            $ref: "#/definitions/Empty"
+        202:
+          description: "Service instance is being updated - asynchronous operation"
+          schema:
+            $ref: "#/definitions/UpdateOperation"
+        422:
+          description: "'May be returned if the particular plan change requested is\
+            \ not supported or if the request cannot currently be fulfilled due to\
+            \ the state of the instance (eg. instance utilization is over the quota\
+            \ of the requested plan). Broker should include a user-facing message\
+            \ in the body. Additionally, a 422 can also be returned if the broker\
+            \ only supports asynchronous update for the requested plan and the request\
+            \ did not include ?accepts_incomplete=true. The expected response body\
+            \ is: { \"error\": \"AsyncRequired\", \"description\": \"This service\
+            \ plan requires client support for asynchronous service operations.\"\
+            \ }.'\n"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "esm.controllers.service_instances_controller"
+  /v2-et/service_instances/{instance_id}:
+    get:
+      tags:
+      - "instance_info"
+      - "service_instance"
+      summary: "Returns information about the service instance."
+      description: "Returns information about the service instance. This is a simple\
+        \ read operation against the broker database  and is provided as a developer/consumer\
+        \ convienence.\n"
+      operationId: "instance_info"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "instance_id"
+        in: "path"
+        description: "'The instance_id of a service instance is provided by the client.\
+          \ This ID will be used for future requests (bind and deprovision), so the\
+          \ broker must use it to correlate the resource it creates.'\n"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "serice description"
+          schema:
+            $ref: "#/definitions/CatalogService"
+      x-swagger-router-controller: "esm.controllers.instance_info_controller"
+  /v2/service_instances/{instance_id}/last_operation:
+    get:
+      tags:
+      - "last_operation"
+      - "service_instance"
+      summary: "Gets the current state of the last operation upon the specified resource."
+      description: "\"When a broker returns status code 202 ACCEPTED for provision,\
+        \ update, or deprovision, the client will begin to poll the /v2/service_instances/:guid/last_operation\
+        \ endpoint to obtain the state of the last requested operation. The broker\
+        \ response must contain the field state and an optional field description.\"\
+        \n"
+      operationId: "last_operation_status"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "instance_id"
+        in: "path"
+        description: "'The instance_id of a service instance is provided by the client.\
+          \ This ID will be used for future requests (bind and deprovision), so the\
+          \ broker must use it to correlate the resource it creates.'\n"
+        required: true
+        type: "string"
+      - name: "service_id"
+        in: "query"
+        description: "ID of the service from the catalog."
+        required: false
+        type: "string"
+      - name: "plan_id"
+        in: "query"
+        description: "ID of the plan from the catalog."
+        required: false
+        type: "string"
+      - name: "operation"
+        in: "query"
+        description: "\"A broker-provided identifier for the operation. When a value\
+          \ for operation is included with asynchronous responses for Provision, Update,\
+          \ and Deprovision requests, the broker client should provide the same value\
+          \ using this query parameter as a URL-encoded string.\"\n"
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/LastOperation"
+        410:
+          description: "\"Appropriate only for asynchronous delete requests. The client\
+            \ will consider this response a success and remove the resource from its\
+            \ database. The expected response body is {}. Returning this while the\
+            \ client is polling for create or update operations will be interpreted\
+            \ as an invalid response and the client will continue polling.\"\n"
+      x-swagger-router-controller: "esm.controllers.last_operation_controller"
+  /v2/service_instances/{instance_id}/service_bindings/{binding_id}:
+    put:
+      tags:
+      - "service_instances"
+      summary: "Binds to a service"
+      description: "'When the broker receives a bind request from the client, it should\
+        \ return information which helps an application to utilize the provisioned\
+        \ resource. This information is generically referred to as credentials. Applications\
+        \ should be issued unique credentials whenever possible, so one application\
+        \ access can be revoked without affecting other bound applications.'\n"
+      operationId: "service_bind"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "instance_id"
+        in: "path"
+        description: "'The instance_id of a service instance is provided by the client.\
+          \ This ID will be used for future requests (bind and deprovision), so the\
+          \ broker must use it to correlate the resource it creates.'\n"
+        required: true
+        type: "string"
+      - name: "binding_id"
+        in: "path"
+        description: "The binding_id of a service binding is provided by the Cloud\
+          \ Controller."
+        required: true
+        type: "string"
+      - in: "body"
+        name: "binding"
+        required: true
+        schema:
+          $ref: "#/definitions/Binding"
+      responses:
+        200:
+          description: "\"May be returned if the binding already exists and the requested\
+            \ parameters are identical to the existing binding.\"\n"
+          schema:
+            $ref: "#/definitions/BindingResponse"
+        201:
+          description: "Binding has been created."
+          schema:
+            $ref: "#/definitions/BindingResponse"
+        409:
+          description: "'Should be returned if the requested binding already exists.\
+            \ The expected response body is {}, though the description field can be\
+            \ used to return a user-facing error message.'\n"
+          schema:
+            $ref: "#/definitions/Empty"
+        422:
+          description: "'Should be returned if the broker requires that app_guid be\
+            \ included in the request body. The expected response body is: { \"error\"\
+            : \"RequiresApp\", \"description\": \"This service supports generation\
+            \ of credentials through binding an application only.\" }'\n"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "esm.controllers.service_instances_controller"
+    delete:
+      tags:
+      - "service_instances"
+      summary: "Unbinds a service"
+      description: "'When a broker receives an unbind request from the client, it\
+        \ should delete any resources it created in bind. Usually this means that\
+        \ an application immediately cannot access the resource.'\n"
+      operationId: "service_unbind"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "instance_id"
+        in: "path"
+        description: "'The instance_id of a service instance is provided by the client.\
+          \ This ID will be used for future requests (bind and deprovision), so the\
+          \ broker must use it to correlate the resource it creates.'\n"
+        required: true
+        type: "string"
+      - name: "binding_id"
+        in: "path"
+        description: "The binding_id of a service binding is provided by the Cloud\
+          \ Controller."
+        required: true
+        type: "string"
+      - name: "service_id"
+        in: "query"
+        description: "ID of the service from the catalog."
+        required: true
+        type: "string"
+      - name: "plan_id"
+        in: "query"
+        description: "ID of the plan from the catalog."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Binding was deleted. The expected response body is {}."
+          schema:
+            $ref: "#/definitions/Empty"
+        410:
+          description: "Should be returned if the binding does not exist. The expected\
+            \ response body is {}."
+          schema:
+            $ref: "#/definitions/Empty"
+      x-swagger-router-controller: "esm.controllers.service_instances_controller"
+definitions:
+  CatalogServices:
+    properties:
+      services:
+        type: "array"
+        items:
+          $ref: "#/definitions/CatalogService"
+    description: "list of services"
+  CatalogService:
+    properties:
+      id:
+        type: "string"
+        description: "An identifier used to correlate this service in future requests\
+          \ to the catalog. This must be unique within the client namespace, using\
+          \ a GUID is recommended.\n"
+      name:
+        type: "string"
+        description: "The CLI-friendly name of the service that will appear in the\
+          \ catalog. All lowercase, no spaces."
+      description:
+        type: "string"
+        description: "A short description of the service that will appear in the catalog."
+      bindable:
+        type: "boolean"
+        description: "Whether the service can be bound to applications."
+      tags:
+        type: "array"
+        description: "Tags provide a flexible mechanism to expose a classification,\
+          \ attribute, or base technology of a service, enabling equivalent services\
+          \ to be swapped out without changes to dependent logic in applications,\
+          \ buildpacks, or other services. E.g. mysql, relational, redis, key-value,\
+          \ caching, messaging, amqp.\n"
+        items:
+          type: "string"
+      metadata:
+        $ref: "#/definitions/Meta_data"
+      requires:
+        type: "array"
+        description: "'A list of permissions that the user would have to give the\
+          \ service, if they provision it. The only permission currently supported\
+          \ is syslog_drain.'\n"
+        items:
+          type: "string"
+      plan_updateable:
+        type: "boolean"
+        description: "\"Whether the service supports upgrade/downgrade for some plans.\
+          \ Please note that the misspelling of the attribute plan_updatable to plan_updateable\
+          \ was done by mistake. Note that the misspelling is kept instead of fixing\
+          \ it and thus maintaining backward compatibility.\"\n"
+      plans:
+        type: "array"
+        description: "A list of plans for this service"
+        items:
+          $ref: "#/definitions/Plan"
+      dashboard_client:
+        $ref: "#/definitions/Dashboard_client"
+    description: "Schema of an offered service"
+  Plan:
+    properties:
+      id:
+        type: "string"
+        description: "'An identifier used to correlate this plan in future requests\
+          \ to the catalog. This must be unique within the client namespace, using\
+          \ a GUID is recommended.'\n"
+      name:
+        type: "string"
+        description: "The CLI-friendly name of the plan that will appear in the catalog.\
+          \ All lowercase, no spaces."
+      description:
+        type: "string"
+        description: "A short description of the service that will appear in the catalog."
+      metadata:
+        type: "object"
+        description: "A list of metadata for a service plan."
+        properties: {}
+      free:
+        type: "boolean"
+        description: "'This field allows the plan to be limited by the non_basic_services_allowed\
+          \ field in a client quota.'\n"
+      bindable:
+        type: "boolean"
+        description: "'Specifies whether instances of the service plan can be bound\
+          \ to applications. This field is optional. If specified, this takes precedence\
+          \ over the bindable attribute of the service. If not specified, the default\
+          \ is derived from the service.'\n"
+    description: "A plan for the service"
+  Dashboard_client:
+    properties:
+      id:
+        type: "string"
+        description: "'The id of the OAuth2 client that the service intends to use.\
+          \ The name may be taken, in which case the API will return an error to the\
+          \ operator'\n"
+      secret:
+        type: "string"
+        description: "A secret for the dashboard client"
+      redirect_uri:
+        type: "string"
+        description: "A domain for the service dashboard that will be whitelisted\
+          \ by the UAA to enable SSO"
+    description: "Contains the data necessary to activate the Dashboard SSO feature\
+      \ for this service"
+  Service:
+    properties:
+      service_id:
+        type: "string"
+        description: "'The ID of the service within the catalog above. While not strictly\
+          \ necessary, some brokers might make use of this ID.'\n"
+      plan_id:
+        type: "string"
+        description: "'The ID of the plan within the above service (from the catalog\
+          \ endpoint) that the user would like provisioned. Because plans have identifiers\
+          \ unique to a broker, this is enough information to determine what to provision.'\n"
+      organization_guid:
+        type: "string"
+        description: "'The client GUID of the organization under which the service\
+          \ is to be provisioned. Although most brokers will not use this field, it\
+          \ could be helpful in determining data placement or applying custom business\
+          \ rules.'\n"
+      space_guid:
+        type: "string"
+        description: "Similar to organization_guid, but for the space."
+      parameters:
+        $ref: "#/definitions/Parameter"
+      accepts_incomplete:
+        type: "boolean"
+    description: "Service object"
+  Dashboard_url:
+    properties:
+      dashboard_url:
+        type: "string"
+        description: "\"The URL of a web-based management user interface for the service\
+          \ instance; we refer to this as a service dashboard. The URL should contain\
+          \ enough information for the dashboard to identify the resource being accessed\
+          \ (in the example below). For information on how users can authenticate\
+          \ with service dashboards via SSO.\"\n"
+      operation:
+        type: "string"
+        description: "\"For async responses, service brokers can return operation\
+          \ state as a string. This field will be provided back to the service broker\
+          \ on last_operation requests as a URL encoded query param.\"\n"
+    description: "\"The URL of a web-based management user interface for the service\
+      \ instance; we refer to this as a service dashboard. The URL should contain\
+      \ enough information for the dashboard to identify the resource being accessed\"\
+      \n"
+  Empty:
+    type: "string"
+    description: "Expected empty response could be {}"
+  ServicePlan:
+    properties:
+      service_id:
+        type: "string"
+      plan_id:
+        type: "string"
+        description: "ID of the new plan from the catalog."
+      parameters:
+        $ref: "#/definitions/Parameter"
+      accepts_incomplete:
+        type: "boolean"
+        description: "\"A value of true indicates that the marketplace and its clients\
+          \ support asynchronous broker operations. If this parameter is not included\
+          \ in the request, and the broker can only provision an instance of the requested\
+          \ plan asynchronously, the broker should reject the request with a 422.\"\
+          \n"
+      previous_values:
+        $ref: "#/definitions/PreviousValues"
+    description: "New/Updated Plan to be added to a service."
+  PreviousValues:
+    properties:
+      plan_id:
+        type: "string"
+        description: "ID of the plan prior to the update."
+      service_id:
+        type: "string"
+        description: "ID of the service for the instance."
+      organization_id:
+        type: "string"
+        description: "ID of the organization containing the instance."
+      space_id:
+        type: "string"
+        description: "ID of the space containing the instance."
+    description: "Information about the instance prior to the update."
+  Parameter:
+    properties:
+      name:
+        type: "string"
+        description: "Name of the parameter"
+      value:
+        type: "object"
+        description: "value of the parameter"
+        properties: {}
+    description: "\"A key-value parameter. Clients can provide a JSON object of configuration\
+      \ parameters with their request and this value will be passed through to the\
+      \ service broker. Brokers are responsible for validation.\"\n"
+  Binding:
+    properties:
+      app_guid:
+        type: "string"
+        description: "\"Deprecated in favor of bind_resource.app_guid. GUID of an\
+          \ application associated with the binding to be created.\"\n"
+      plan_id:
+        type: "string"
+        description: "'ID of the plan from the catalog. While not strictly necessary,\
+          \ some brokers might make use of this ID.'\n"
+      service_id:
+        type: "string"
+        description: "'ID of the service from the catalog. While not strictly necessary,\
+          \ some brokers might make use of this ID.'\n"
+      parameters:
+        $ref: "#/definitions/Parameter"
+      bind_resource:
+        $ref: "#/definitions/BindResource"
+    description: "Information to bind the service to an application."
+  BindResource:
+    properties:
+      app_guid:
+        type: "string"
+        description: "GUID of the application that you want to bind your service to."
+      route:
+        type: "string"
+        description: "Route binding"
+    description: "\"A JSON object that contains the required fields of the resource\
+      \ being bound. Currently only app_guid for application bindings and route for\
+      \ route bindings are supported.\"\n"
+  BindingResponse:
+    properties:
+      credentials:
+        type: "object"
+        description: "A free-form hash of credentials that the bound application can\
+          \ use to access the service."
+        properties: {}
+      syslog_drain_url:
+        type: "string"
+        description: "'A URL to which the client should drain logs for the bound application.\
+          \ requires `syslog_drain` must be declared in the catalog endpoint or the\
+          \ client will consider the response invalid.'\n"
+      route_service_url:
+        type: "string"
+        description: "\"A URL to which the client should proxy requests for the bound\
+          \ route. `requires:route_forwarding` must be declared in the catalog endpoint\
+          \ or the client will consider the response invalid.\"\n"
+      volume_mounts:
+        type: "array"
+        description: "\"An array of volume mount instructions. `requires:volume_mount`\
+          \ must be declared in the catalog endpoint or the client will consider the\
+          \ response invalid.\"\n"
+        items:
+          type: "object"
+          properties: {}
+    description: "Success binding response."
+  Meta_data:
+    properties:
+      displayName:
+        type: "string"
+        description: "displayName of the service."
+      listing:
+        $ref: "#/definitions/Listing"
+      provider:
+        $ref: "#/definitions/Provider"
+    description: "metadata related to the service"
+  Listing:
+    properties:
+      blurb:
+        type: "string"
+        description: "blurb"
+      imageUrl:
+        type: "string"
+        description: "image URL."
+      longDescription:
+        type: "string"
+        description: "Long Description"
+    description: "Listing information on a service."
+  Provider:
+    properties:
+      name:
+        type: "string"
+        description: "Provider Name"
+    description: "Provider of the service."
+  LastOperation:
+    properties:
+      state:
+        type: "string"
+        description: "'Valid values are in progress, succeeded, and failed. While\
+          \ \"state\": \"in progress\", the client will continue polling. A response\
+          \ with \"state\": \"succeeded\" or \"state\": \"failed\" will cause the\
+          \ client to cease polling.'\n"
+      description:
+        type: "string"
+        description: "'Optional field. A user-facing message displayed to the API\
+          \ client. Can be used to tell the user details about the status of the operation.'\n"
+    description: "status of polling last operation (async only)"
+  Error:
+    properties:
+      description:
+        type: "string"
+        description: "\"An error message explaining why the request failed. This message\
+          \ will be displayed to the user who initiated the request.\"\n"
+    description: "Description of the error that occurred."
+  UpdateOperation:
+    properties:
+      operation:
+        type: "string"
+        description: "\"For async responses, service brokers can return operation\
+          \ state as a string. This field will be provided back to the service broker\
+          \ on `last_operation` requests as a URL encoded query param.\"\n"
+    description: "Response after issuing an update to a service instance"
+parameters:
+  instance_id:
+    name: "instance_id"
+    in: "path"
+    description: "'The instance_id of a service instance is provided by the client.\
+      \ This ID will be used for future requests (bind and deprovision), so the broker\
+      \ must use it to correlate the resource it creates.'\n"
+    required: true
+    type: "string"
+  binding_id:
+    name: "binding_id"
+    in: "path"
+    description: "The binding_id of a service binding is provided by the Cloud Controller."
+    required: true
+    type: "string"
