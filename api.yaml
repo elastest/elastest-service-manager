@@ -15,14 +15,14 @@ info:
     Note the [topic on orphan resolution](https://github.com/openservicebrokerapi/servicebroker/blob/master/_spec.md#orphans). It is not dealt with in this spec.
 
   contact:
-    name: Andy Edmonds
-    url: https://blog.zhaw.ch/icclab/andy-edmonds/
-    email: edmo@zhaw.ch
+    name: ElasTest
+    url: https://github.com/elastest/bugtracker
+    email: elastest-users@googlegroups.com
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
-host: '127.0.0.1:8888'
-basePath: /  # this is pragmatically done to allow for extensions to the core spec.
+# host: '127.0.0.1:8888'
+# basePath: /  # this is pragmatically done to allow for extensions to the core spec.
 schemes:
   - http
   - https
@@ -38,13 +38,13 @@ paths:
         "The first endpoint that a broker must implement is the service catalog. The client will
         initially fetch this endpoint from all brokers and make adjustments to the user-facing service catalog
         stored in the a client database. \n"
-      parameters:
-        - name: X-Broker-Api-Version
-          in: header
-          description: Version of API requested
-          required: true
-          type: string
-          format: string
+      # parameters:
+      #   - name: X-Broker-Api-Version
+      #     in: header
+      #     description: Version of API requested
+      #     required: true
+      #     type: string
+      #     format: string
       produces:
         - application/json
       responses:
@@ -66,12 +66,12 @@ paths:
         PUT a service provider can update their registration. Note that this requires the complete content and will REPLACE the existing
         service information registered with the broker."
       parameters:
-        - name: X-Broker-Api-Version
-          in: header
-          description: Version of API requested
-          required: true
-          type: string
-          format: string
+        # - name: X-Broker-Api-Version
+        #   in: header
+        #   description: Version of API requested
+        #   required: true
+        #   type: string
+        #   format: string
         - name: service
           description: the service description to register
           required: true
@@ -103,12 +103,12 @@ paths:
         services. Supports asynchronous operations.'
       summary: Provisions a service instance
       parameters:
-        - name: X-Broker-Api-Version
-          in: header
-          description: Version of API requested
-          required: true
-          type: string
-          format: string
+        # - name: X-Broker-Api-Version
+        #   in: header
+        #   description: Version of API requested
+        #   required: true
+        #   type: string
+        #   format: string
         - name: service
           required: true
           description: Service information.
@@ -159,12 +159,12 @@ paths:
       tags:
         - service_instances
       parameters:
-        - name: X-Broker-Api-Version
-          in: header
-          description: Version of API requested
-          required: true
-          type: string
-          format: string
+        # - name: X-Broker-Api-Version
+        #   in: header
+        #   description: Version of API requested
+        #   required: true
+        #   type: string
+        #   format: string
         - name: plan
           description: New Plan information.
           required: true
@@ -208,12 +208,12 @@ paths:
       tags:
         - service_instances
       parameters:
-        - name: X-Broker-Api-Version
-          in: header
-          description: Version of API requested
-          required: true
-          type: string
-          format: string
+        # - name: X-Broker-Api-Version
+        #   in: header
+        #   description: Version of API requested
+        #   required: true
+        #   type: string
+        #   format: string
         - name: service_id
           required: true
           in: query
@@ -265,13 +265,13 @@ paths:
       description: >
         Returns information about the service instance. This is a simple read operation against the broker database 
         and is provided as a developer/consumer convienence.
-      parameters:
-        - name: X-Broker-Api-Version
-          in: header
-          description: Version of API requested
-          required: true
-          type: string
-          format: string
+      # parameters:
+        # - name: X-Broker-Api-Version
+        #   in: header
+        #   description: Version of API requested
+        #   required: true
+        #   type: string
+        #   format: string
       produces:
         - application/json
       responses:
@@ -293,12 +293,12 @@ paths:
         client will begin to poll the /v2/service_instances/:guid/last_operation endpoint to obtain the state of the
         last requested operation. The broker response must contain the field state and an optional field description."
       parameters:
-        - name: X-Broker-Api-Version
-          in: header
-          description: Version of API requested
-          required: true
-          type: string
-          format: string
+        # - name: X-Broker-Api-Version
+        #   in: header
+        #   description: Version of API requested
+        #   required: true
+        #   type: string
+        #   format: string
         - in: query
           name: service_id
           required: false
@@ -349,12 +349,12 @@ paths:
       tags:
         - service_instances
       parameters:
-        - name: X-Broker-Api-Version
-          in: header
-          description: Version of API requested
-          required: true
-          type: string
-          format: string
+        # - name: X-Broker-Api-Version
+        #   in: header
+        #   description: Version of API requested
+        #   required: true
+        #   type: string
+        #   format: string
         - name: binding
           required: true
           in: body
@@ -395,12 +395,12 @@ paths:
       tags:
         - service_instances
       parameters:
-        - name: X-Broker-Api-Version
-          in: header
-          description: Version of API requested
-          required: true
-          type: string
-          format: string
+        # - name: X-Broker-Api-Version
+        #   in: header
+        #   description: Version of API requested
+        #   required: true
+        #   type: string
+        #   format: string
         - name: service_id
           in: query
           required: true

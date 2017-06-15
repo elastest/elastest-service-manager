@@ -24,6 +24,34 @@ testers with friendly interactive facilities for decision taking.
 The [ElasTest] project provides detailed documentation including tutorials,
 installation and development guide.
 
+## Generated Code
+Some of the code in the ESM is generated using [swagger-codegen](https://github.com/swagger-api/swagger-codegen).
+See ```./gen_api_skels.sh``` on how the command line is to generate the code.
+The ESM uses the [Connexion](https://github.com/zalando/connexion) library on top of Flask.
+
+To run the ESM, please execute the following from the root directory:
+
+```
+pip3 install -r requirements.txt
+python3 -m esm
+```
+
+If you want to view the Swagger UI you can simply navigate to this URL in your browser:
+```
+http://localhost:8080/ui/
+```
+
+To retreive the swagger specification of the running ESM simply use `curl` or `wget` against this URL
+```
+http://localhost:8080/swagger.json
+```
+
+To launch the integration tests, use tox:
+```
+pip install tox
+tox
+```
+
 # Source
 Source code for other ElasTest projects can be found in the [GitHub ElasTest
 Group].
