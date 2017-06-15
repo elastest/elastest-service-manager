@@ -22,4 +22,4 @@ ENV ESM_PORT 8080
 
 EXPOSE 8080
 
-CMD ["/env/bin/python", "/app/runme.py"]
+CMD ["/env/bin/python", "/app/runesm.py"]
