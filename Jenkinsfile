@@ -11,7 +11,6 @@ node('docker'){
             
             stage "Unit tests"
                 echo ("Starting unit tests...")
-                sh 'ls -l'
                 sh 'tox'
 
             stage "Build image - Package"
@@ -27,13 +26,13 @@ node('docker'){
             //    echo ("Starting unit tests...")
             //    echo ("No tests yet")
 
-            // stage "Publish"
-            //     echo ("Publishing as all tests succeeded...")
-            //     //this is work arround as withDockerRegistry is not working properly 
-            //     withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'elastestci-dockerhub',
-            //     usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-            //         sh 'docker login -u "$USERNAME" -p "$PASSWORD"'
-            //         myimage.push()
-            //     }
+            stage "Publish"
+                echo ("Publishing as all tests succeeded...")
+                //this is work arround as withDockerRegistry is not working properly 
+                withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'elastestci-dockerhub',
+                usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
+                    sh 'docker login -u "$USERNAME" -p "$PASSWORD"'
+                    myimage.push()
+                }
         }
 }
