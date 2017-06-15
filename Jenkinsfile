@@ -12,7 +12,8 @@ node('docker'){
             stage "Unit tests"
                 echo ("Starting unit tests...")
                 sh 'tox'
-                step([$class: 'JUnitResultArchiver', testResults: './nosetests.xml'])
+                sh 'ls -l'
+                step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
 
             stage "Build image - Package"
                 echo ("building... maybe use packer.io to build both container and VM images?")
