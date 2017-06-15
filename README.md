@@ -33,7 +33,7 @@ To run the ESM, please execute the following from the root directory:
 
 ```
 pip3 install -r requirements.txt
-python3 -m esm
+python3 ./runesm.py
 ```
 
 If you want to view the Swagger UI you can simply navigate to this URL in your browser:
