@@ -12,7 +12,6 @@ node('docker'){
             stage "Unit tests"
                 echo ("Starting unit tests...")
                 sh 'ls -l'
-                sh 'cd elastest-service-manager'
                 sh 'tox'
 
             stage "Build image - Package"
