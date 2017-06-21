@@ -33,7 +33,6 @@ paths:
       summary: Gets services registered within the broker
       tags:
         - catalog
-        - discovery
       description: >
         "The first endpoint that a broker must implement is the service catalog. The client will
         initially fetch this endpoint from all brokers and make adjustments to the user-facing service catalog
@@ -58,9 +57,6 @@ paths:
       summary: Registers the service with the catalog.
       tags:
        - catalog
-       - registration
-       - elastest
-       - extension
       description: >
         "Service providers need a means to register their service with a service broker. This provides this functionality. Also using
         PUT a service provider can update their registration. Note that this requires the complete content and will REPLACE the existing
@@ -260,8 +256,7 @@ paths:
       operationId: instance_info
       summary: Returns information about the service instance.
       tags:
-        - instance_info
-        - service_instance
+        - service_instances
       description: >
         Returns information about the service instance. This is a simple read operation against the broker database 
         and is provided as a developer/consumer convienence.
@@ -286,8 +281,7 @@ paths:
       operationId: last_operation_status
       summary: Gets the current state of the last operation upon the specified resource.
       tags:
-        - last_operation
-        - service_instance
+        - service_instances
       description: >
         "When a broker returns status code 202 ACCEPTED for provision, update, or deprovision, the
         client will begin to poll the /v2/service_instances/:guid/last_operation endpoint to obtain the state of the

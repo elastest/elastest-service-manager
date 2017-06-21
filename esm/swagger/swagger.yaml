@@ -28,7 +28,6 @@ paths:
     get:
       tags:
       - "catalog"
-      - "discovery"
       summary: "Gets services registered within the broker"
       description: "\"The first endpoint that a broker must implement is the service\
         \ catalog. The client will initially fetch this endpoint from all brokers\
@@ -48,9 +47,6 @@ paths:
     put:
       tags:
       - "catalog"
-      - "registration"
-      - "elastest"
-      - "extension"
       summary: "Registers the service with the catalog."
       description: "\"Service providers need a means to register their service with\
         \ a service broker. This provides this functionality. Also using PUT a service\
@@ -253,8 +249,7 @@ paths:
   /v2-et/service_instances/{instance_id}:
     get:
       tags:
-      - "instance_info"
-      - "service_instance"
+      - "service_instances"
       summary: "Returns information about the service instance."
       description: "Returns information about the service instance. This is a simple\
         \ read operation against the broker database  and is provided as a developer/consumer\
@@ -275,12 +270,11 @@ paths:
           description: "serice description"
           schema:
             $ref: "#/definitions/CatalogService"
-      x-swagger-router-controller: "esm.controllers.instance_info_controller"
+      x-swagger-router-controller: "esm.controllers.service_instances_controller"
   /v2/service_instances/{instance_id}/last_operation:
     get:
       tags:
-      - "last_operation"
-      - "service_instance"
+      - "service_instances"
       summary: "Gets the current state of the last operation upon the specified resource."
       description: "\"When a broker returns status code 202 ACCEPTED for provision,\
         \ update, or deprovision, the client will begin to poll the /v2/service_instances/:guid/last_operation\
@@ -327,7 +321,7 @@ paths:
             \ database. The expected response body is {}. Returning this while the\
             \ client is polling for create or update operations will be interpreted\
             \ as an invalid response and the client will continue polling.\"\n"
-      x-swagger-router-controller: "esm.controllers.last_operation_controller"
+      x-swagger-router-controller: "esm.controllers.service_instances_controller"
   /v2/service_instances/{instance_id}/service_bindings/{binding_id}:
     put:
       tags:
