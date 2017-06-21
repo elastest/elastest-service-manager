@@ -4,9 +4,11 @@ from __future__ import absolute_import
 
 from esm.models.binding import Binding
 from esm.models.binding_response import BindingResponse
+from esm.models.catalog_service import CatalogService
 from esm.models.dashboard_url import DashboardUrl
 from esm.models.empty import Empty
 from esm.models.error import Error
+from esm.models.last_operation import LastOperation
 from esm.models.service import Service
 from esm.models.service_plan import ServicePlan
 from esm.models.update_operation import UpdateOperation
@@ -44,6 +46,30 @@ class TestServiceInstancesController(BaseTestCase):
                         ('accept_incomplete', 'accept_incomplete_example')]
         response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id='instance_id_example'),
                                     method='DELETE',
+                                    query_string=query_string)
+        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+
+    def test_instance_info(self):
+        """
+        Test case for instance_info
+
+        Returns information about the service instance.
+        """
+        response = self.client.open('/v2-et/service_instances/{instance_id}'.format(instance_id='instance_id_example'),
+                                    method='GET')
+        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+
+    def test_last_operation_status(self):
+        """
+        Test case for last_operation_status
+
+        Gets the current state of the last operation upon the specified resource.
+        """
+        query_string = [('service_id', 'service_id_example'),
+                        ('plan_id', 'plan_id_example'),
+                        ('operation', 'operation_example')]
+        response = self.client.open('/v2/service_instances/{instance_id}/last_operation'.format(instance_id='instance_id_example'),
+                                    method='GET',
                                     query_string=query_string)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
