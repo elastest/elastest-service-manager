@@ -12,7 +12,6 @@ node('docker'){
             stage "Unit tests"
                 echo ("Starting unit tests...")
                 sh 'tox'
-                sh 'ls -l'
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
 
             stage "Build image - Package"
@@ -23,10 +22,6 @@ node('docker'){
             //stage "Run image"
             //    echo "Run the image... run it as a target of integration tests"
             //    myimage.run()
-
-            //stage "Integration tests"
-            //    echo ("Starting unit tests...")
-            //    echo ("No tests yet")
 
             stage "Publish"
                 echo ("Publishing as all tests succeeded...")
