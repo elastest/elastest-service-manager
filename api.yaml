@@ -3,7 +3,7 @@ info:
   version: '2.11'
   title: ElasTest Service Manager API
   description: >
-    This is the service manager API. It is an extension of the the Open Service Broker API.
+    This is the service manager API. It is an extension of the the Open Service Broker API (v2.11).
     The Open Service Broker API defines the contract between the a requesting client
     and the service broker. The broker is expected to implement
     several HTTP (or HTTPS) endpoints underneath a URI prefix. One or more
@@ -21,11 +21,17 @@ info:
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
-# host: '127.0.0.1:8888'
-# basePath: /  # this is pragmatically done to allow for extensions to the core spec.
 schemes:
   - http
   - https
+securityDefinitions:
+  basicAuth:
+    type: basic
+    description: > 
+      The open service broker specification requires basic authentication 
+      on all requests. [See here](https://github.com/openservicebrokerapi/servicebroker/blob/v2.12/spec.md#authentication)
+security:
+  - basicAuth: []  # all paths are to have authentication
 paths:
   /v2/catalog:
     get:
@@ -50,7 +56,7 @@ paths:
         '200':
           description: Successful operation
           schema:
-            $ref: '#/definitions/CatalogServices'
+            $ref: '#/definitions/Catalog'
   /v2-et/catalog:
     put:
       operationId: registerService
@@ -73,14 +79,53 @@ paths:
           required: true
           in: body
           schema:
-            $ref: '#/definitions/CatalogService'
+            $ref: '#/definitions/ServiceType'
       produces:
+        - application/json
+      consumes: 
         - application/json
       responses:
         '200':
-          description: Successful operation
+          description: Successful registration. Has an empty body
           schema:
-            $ref: '#/definitions/CatalogServices'
+            $ref: '#/definitions/Empty'
+        '409':
+          description: >
+            'The requested service type already exists. The ID of the service exists in the catalog already'
+          schema:
+            $ref: '#/definitions/Error'
+  /v2-et/manifest:
+    # can only store the manifest. later can add further verb support
+    post:
+      operationId: storeManifest
+      summary: takes deployment description of a software service and associates with a service and plan
+      tags:
+        - catalog
+      description: takes deployment description of a software service and associates with a service and plan that is already registered in the service catalog.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        # - name: X-Broker-Api-Version
+        #   in: header
+        #   description: Version of API requested
+        #   required: true
+        #   type: string
+        #   format: string
+        - name: manifest
+          description: the manifest to store
+          required: true
+          in: body
+          schema:
+            $ref: '#/definitions/Manifest'
+      responses:
+        '200':
+          description: >
+            "May be returned if the service instance already exists and the requested parameters are
+            identical to the existing service instance. The expected response body is below."
+          schema:
+            $ref: '#/definitions/DashboardUrl'
   /v2/service_instances/{instance_id}:
     parameters:
       - $ref: '#/parameters/instance_id'
@@ -110,7 +155,7 @@ paths:
           description: Service information.
           in: body
           schema:
-            $ref: '#/definitions/Service'
+            $ref: '#/definitions/ServiceRequest'
         - in: query
           name: accept_incomplete
           required: false
@@ -122,15 +167,15 @@ paths:
             "May be returned if the service instance already exists and the requested parameters are
             identical to the existing service instance. The expected response body is below."
           schema:
-            $ref: '#/definitions/Dashboard_url'
+            $ref: '#/definitions/DashboardUrl'
         '201':
           description: Service instance has been created.
           schema:
-            $ref: '#/definitions/Dashboard_url'
+            $ref: '#/definitions/DashboardUrl'
         '202':
           description: Service instance is being created - asynchronous operation
           schema:
-            $ref: '#/definitions/Dashboard_url'
+            $ref: '#/definitions/DashboardUrl'
         '409':
           description: >
             'The requested service instance already exists.'
@@ -166,7 +211,7 @@ paths:
           required: true
           in: body
           schema:
-            $ref: '#/definitions/ServicePlan'
+            $ref: '#/definitions/PlanUpdateRequest'
         - in: query
           name: accept_incomplete
           required: false
@@ -180,7 +225,7 @@ paths:
         '202':
           description: Service instance is being updated - asynchronous operation
           schema:
-            $ref: '#/definitions/UpdateOperation'
+            $ref: '#/definitions/UpdateOperationResponse'
         '422':
           description: >
             'May be returned if the particular plan change requested is not supported or if the request
@@ -233,7 +278,7 @@ paths:
         '202':
           description: Service instance is being deleted - asynchronous operation
           schema:
-            $ref: '#/definitions/Dashboard_url'
+            $ref: '#/definitions/DashboardUrl'
         '410':
           description: 'Should be returned if the binding does not exist. The expected response body is {}.'
           schema:
@@ -273,7 +318,7 @@ paths:
         '200':
           description: serice description
           schema:
-            $ref: '#/definitions/CatalogService'
+            $ref: '#/definitions/ServiceType'
   /v2/service_instances/{instance_id}/last_operation:
     parameters:
       - $ref: '#/parameters/instance_id'
@@ -353,7 +398,7 @@ paths:
           required: true
           in: body
           schema:
-            $ref: '#/definitions/Binding'
+            $ref: '#/definitions/BindingRequest'
       responses:
         '200':
           description: >
@@ -430,34 +475,30 @@ parameters:
     in: path
     required: true
 definitions:
-  CatalogServices:
-    description: list of services
+  Catalog:
+    description: list of service types
     properties:
       services:
         type: array
         items:
-          $ref: '#/definitions/CatalogService'
-  CatalogService:
+          $ref: '#/definitions/ServiceType'
+  ServiceType:
     description: Schema of an offered service
     properties:
       id:
         type: string
-        # required: true
         description: >
           An identifier used to correlate this service in future requests to the
           catalog. This must be unique within the client namespace, using a GUID is
           recommended.
       name:
         type: string
-        # required: true
         description: 'The CLI-friendly name of the service that will appear in the catalog. All lowercase, no spaces.'
       description:
         type: string
-        # required: true
         description: A short description of the service that will appear in the catalog.
       bindable:
         type: boolean
-        # required: true
         description: Whether the service can be bound to applications.
       tags:
         type: array
@@ -470,7 +511,7 @@ definitions:
         items:
           type: string
       metadata:
-        $ref: '#/definitions/Meta_data'
+        $ref: '#/definitions/ServiceMetadata'
       requires:
         type: array
         description: >
@@ -490,13 +531,12 @@ definitions:
         items:
           $ref: '#/definitions/Plan'
       dashboard_client:
-        $ref: '#/definitions/Dashboard_client'
+        $ref: '#/definitions/DashboardClient'
   Plan:
     description: A plan for the service
     properties:
       id:
         type: string
-        # required: true
         description: >
           'An identifier used to correlate this plan in future requests to the catalog.
           This must be unique within the client namespace, using a GUID is recommended.'
@@ -505,7 +545,6 @@ definitions:
         type: string
         description: 'The CLI-friendly name of the plan that will appear in the catalog. All lowercase, no spaces.'
       description:
-        # required: true
         type: string
         description: A short description of the service that will appear in the catalog.
       metadata:
@@ -522,7 +561,7 @@ definitions:
           'Specifies whether instances of the service plan can be bound to applications.
           This field is optional. If specified, this takes precedence over the bindable attribute of the
           service. If not specified, the default is derived from the service.'
-  Dashboard_client:
+  DashboardClient:
     description: 'Contains the data necessary to activate the Dashboard SSO feature for this service'
     properties:
       id:
@@ -536,25 +575,22 @@ definitions:
       redirect_uri:
         type: string
         description: A domain for the service dashboard that will be whitelisted by the UAA to enable SSO
-  Service:
+  ServiceRequest:
     description: Service object
     properties:
       service_id:
         type: string
-        # required: true
         description: >
           'The ID of the service within the catalog above. While not strictly necessary, some
           brokers might make use of this ID.'
       plan_id:
         type: string
-        # required: true
         description: >
           'The ID of the plan within the above service (from the catalog endpoint) that the user would
           like provisioned. Because plans have identifiers unique to a broker, this is enough information to determine
           what to provision.'
       organization_guid:
         type: string
-        # required: true
         description: >
           'The client GUID of the organization under which the service is to be provisioned.
           Although most brokers will not use this field, it could be helpful in determining data placement
@@ -568,7 +604,7 @@ definitions:
       # XXX this is talked about as a query parameter yet it's here in the body according to the spec???!
       accepts_incomplete:
         type: boolean
-  Dashboard_url:
+  DashboardUrl:
     description: >
       "The URL of a web-based management user interface for the service instance; we refer to
       this as a service dashboard. The URL should contain enough information for the dashboard to
@@ -590,12 +626,11 @@ definitions:
   Empty:
     type: string
     description: 'Expected empty response could be {}'
-  ServicePlan:
+  PlanUpdateRequest:
     description: New/Updated Plan to be added to a service.
     properties:
       service_id:
         type: string
-        # required: true
       plan_id:
         type: string
         description: ID of the new plan from the catalog.
@@ -610,8 +645,8 @@ definitions:
           can only provision an instance of the requested plan asynchronously, the broker
           should reject the request with a 422."
       previous_values:
-        $ref: '#/definitions/PreviousValues'
-  PreviousValues:
+        $ref: '#/definitions/PlanPreviousValues'
+  PlanPreviousValues:
     description: Information about the instance prior to the update.
     properties:
       plan_id:
@@ -638,7 +673,7 @@ definitions:
       value:
         type: object
         description: value of the parameter
-  Binding:
+  BindingRequest:
     description: Information to bind the service to an application.
     properties:
       app_guid:
@@ -646,16 +681,13 @@ definitions:
         description: >
           "Deprecated in favor of bind_resource.app_guid. GUID of an application
           associated with the binding to be created."
-        # deprecated: true
       plan_id:
         type: string
-        # required: true
         description: >
           'ID of the plan from the catalog. While not strictly necessary,
           some brokers might make use of this ID.'
       service_id:
         type: string
-        # required: true
         description: >
           'ID of the service from the catalog. While not strictly necessary,
           some brokers might make use of this ID.'
@@ -697,12 +729,12 @@ definitions:
         description: >
           "An array of volume mount instructions. `requires:volume_mount` must be declared in the catalog
           endpoint or the client will consider the response invalid."
-  Meta_data:
+  ServiceMetadata:
     description: metadata related to the service
     properties:
       displayName:
         type: string
-        description: displayName of the service.
+        description: display name of the service.
       listing:
         $ref: '#/definitions/Listing'
       provider:
@@ -734,7 +766,6 @@ definitions:
           the client will continue polling. A response with "state": "succeeded" or "state": "failed"
           will cause the client to cease polling.'
         type: string
-        # required: true
       description:
         description: >
           'Optional field. A user-facing message displayed to the API client.
@@ -748,7 +779,7 @@ definitions:
           "An error message explaining why the request failed.
           This message will be displayed to the user who initiated the request."
         type: string
-  UpdateOperation:
+  UpdateOperationResponse:
     description: Response after issuing an update to a service instance
     properties:
       operation:
@@ -757,3 +788,18 @@ definitions:
           This field will be provided back to the service broker on `last_operation` requests as a URL
           encoded query param."
         type: string
+  Manifest:
+    description: The manifest of a software component and the plan and service it is to be associated with.
+    properties:
+      plan_id:
+        description: The plan the manifest should be associated with
+        type: string
+      service_id:
+        description: The service type (id) the manifest should be assocaited with
+        type: string
+      manifest_type:
+        description: The type of system that that manifest targets
+        type: string
+      manifest_content:
+        description: The manifest content
+        type: object
