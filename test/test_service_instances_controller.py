@@ -47,7 +47,7 @@ class TestServiceInstancesController(BaseTestCase):
         ESM_DB.services.insert_one(self.test_service.to_dict())
 
         path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-        with open(path + "/docker-compose.yml", "r") as mani_file:
+        with open(path + "/manifests/docker-compose.yml", "r") as mani_file:
             mani = mani_file.read().replace('\n', '</br>')
 
         self.test_manifest = Manifest(

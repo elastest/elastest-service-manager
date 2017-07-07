@@ -12,7 +12,7 @@ class TestDockerCompose(TestCase):
         super().setUp()
         self.docker = DockerBackend()
         path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-        with open(path+"/docker-compose.yml", "r") as mani:
+        with open(path+"/manifests/docker-compose.yml", "r") as mani:
             content = mani.read().replace("\n", "</br>")
             self.docker.create(instance_id=INST_ID, content=content, type="docker-compose")
 
@@ -39,6 +39,6 @@ class TestDockerComposeWithoutSetup(TestCase):
 
     def test_docker_create_cmd(self):
         path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-        with open(path + "/docker-compose.yml", "r") as mani:
+        with open(path + "/manifests/docker-compose.yml", "r") as mani:
             content = mani.read().replace("\n", "</br>")
         self.docker.create(instance_id=INST_ID, content=content, type="docker-compose")
