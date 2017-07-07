@@ -26,6 +26,7 @@ services:
       - ./spark/spark_conf:/opt/spark/conf
       - ./spark/hadoop_conf:/usr/local/hadoop/etc/hadoop
     command: ["/usr/bin/supervisord", "--configuration=/opt/conf/slave.conf"]
+    hostname: spark-worker
     networks:
       - elastest
 

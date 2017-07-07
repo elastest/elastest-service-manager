@@ -1,10 +1,6 @@
 import connexion
-from pymongo import MongoClient
 
-# from adapters.epm import DockerBackend as EPM
-# from adapters.docker import DummyBackend as EPM
-from adapters.epm import EPM
-
+from adapters.resources import EPM
 from esm.models import BindingRequest
 from esm.models import BindingResponse
 from esm.models import Empty

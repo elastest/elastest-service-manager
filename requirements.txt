@@ -4,3 +4,4 @@ setuptools >= 21.0.0
 pymongo
 docker-compose
 pykube
+daiquiri

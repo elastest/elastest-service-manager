@@ -1,43 +1,44 @@
 import inspect
 import os
-
 from unittest import TestCase
 
+from adapters.resources import DockerBackend
 
-from adapters.epm import DockerBackend as EPM
-
-docker = EPM()
+INST_ID = 'test-id-123'
 
 
 class TestDockerCompose(TestCase):
-    def tearDown(self):
-        super().tearDown()
-        docker.delete(instance_id=self.inst_id)
-
     def setUp(self):
         super().setUp()
-        self.inst_id = 'test-id-123'
+        self.docker = DockerBackend()
         path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         with open(path+"/docker-compose.yml", "r") as mani:
             content = mani.read().replace("\n", "</br>")
-        docker.create(instance_id=self.inst_id, content=content, type="docker-compose")
-
-    def test_docker_info(self):
-        docker.info(instance_id=self.inst_id)
-
-    def test_docker_delete_cmd(self):
-        docker.delete(instance_id=self.inst_id)
-
-
-class TestDockerComposeWithoutSetup(TestCase):
-    inst_id = 'test-id-123'
+            self.docker.create(instance_id=INST_ID, content=content, type="docker-compose")
 
     def tearDown(self):
         super().tearDown()
-        docker.delete(instance_id=self.inst_id)
+        self.docker.delete(instance_id=INST_ID)
+
+    def test_docker_info(self):
+        self.docker.info(instance_id=INST_ID)
+
+    def test_docker_delete_cmd(self):
+        self.docker.delete(instance_id=INST_ID)
+
+
+class TestDockerComposeWithoutSetup(TestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.docker = DockerBackend()
+
+    def tearDown(self):
+        super().tearDown()
+        self.docker.delete(instance_id=INST_ID)
 
     def test_docker_create_cmd(self):
         path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         with open(path + "/docker-compose.yml", "r") as mani:
             content = mani.read().replace("\n", "</br>")
-        docker.create(instance_id=self.inst_id, content=content, type="docker-compose")
+        self.docker.create(instance_id=INST_ID, content=content, type="docker-compose")

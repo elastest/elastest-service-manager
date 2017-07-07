@@ -8,3 +8,4 @@ tox
 pymongo  # this should be removed
 docker-compose  # this should be also remove
 pykube  # this should be also removed
+daiquiri

@@ -19,24 +19,16 @@ from . import BaseTestCase
 from six import BytesIO
 from flask import json
 
+from adapters.datasource import ESM_DB
+
 
 class TestServiceInstancesController(BaseTestCase):
     """ ServiceInstancesController integration test stubs """
-
-    def tearDown(self):
-        super().tearDown()
-        from pymongo import MongoClient
-        CLIENT = MongoClient('localhost', 27017)
-        CLIENT.esm.services.delete_many({})
-        CLIENT.esm.manifests.delete_many({})
 
     def setUp(self):
         super().setUp()
 
         self.instance_id = 'this_is_a_test_instance'
-
-        from pymongo import MongoClient
-        CLIENT = MongoClient('localhost', 27017)
 
         self.test_plan = Plan(
             id='testplan', name='testing plan', description='plan for testing',
@@ -52,7 +44,7 @@ class TestServiceInstancesController(BaseTestCase):
             plan_updateable=False, plans=[self.test_plan],
             dashboard_client=None)
 
-        CLIENT.esm.services.insert_one(self.test_service.to_dict())
+        ESM_DB.services.insert_one(self.test_service.to_dict())
 
         path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         with open(path + "/docker-compose.yml", "r") as mani_file:
@@ -60,11 +52,16 @@ class TestServiceInstancesController(BaseTestCase):
 
         self.test_manifest = Manifest(
             id='test-mani', plan_id=self.test_plan.id, service_id=self.test_service.id,
-            manifest_type='docker-compose', manifest_content=mani)
+            manifest_type='dummy', manifest_content=mani)
 
         # manifest_type should be set to test for tests and therefore select the dummydriver
 
-        CLIENT.esm.manifests.insert_one(self.test_manifest.to_dict())
+        ESM_DB.manifests.insert_one(self.test_manifest.to_dict())
+
+    def tearDown(self):
+        super().tearDown()
+        ESM_DB.services.delete_many({})
+        ESM_DB.manifests.delete_many({})
 
     def test_create_service_instance(self):
         """
@@ -147,7 +144,6 @@ class TestServiceInstancesController(BaseTestCase):
                                     content_type='application/json',
                                     query_string=query_string)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
-
 
         query_string = [('service_id', 'service_id_example'),
                         ('plan_id', 'plan_id_example'),

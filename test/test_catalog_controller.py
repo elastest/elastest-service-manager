@@ -2,6 +2,9 @@
 
 from __future__ import absolute_import
 
+from six import BytesIO
+from flask import json
+
 from esm.models.catalog import Catalog
 from esm.models.empty import Empty
 from esm.models.error import Error
@@ -9,8 +12,8 @@ from esm.models.plan import Plan
 from esm.models.manifest import Manifest
 from esm.models.service_type import ServiceType
 from . import BaseTestCase
-from six import BytesIO
-from flask import json
+
+from adapters.datasource import ESM_DB
 
 
 class TestCatalogController(BaseTestCase):
@@ -18,10 +21,9 @@ class TestCatalogController(BaseTestCase):
 
     def tearDown(self):
         super().tearDown()
-        from pymongo import MongoClient
-        CLIENT = MongoClient('localhost', 27017)
-        result = CLIENT.esm.services.delete_many({})
-        result = CLIENT.esm.manifests.delete_many({})
+
+        ESM_DB.services.delete_many({})
+        ESM_DB.manifests.delete_many({})
 
     def setUp(self):
         super().setUp()
@@ -40,7 +42,7 @@ class TestCatalogController(BaseTestCase):
 
         self.test_manifest = Manifest(
             id='test', plan_id=self.test_plan.id, service_id=self.test_service.id,
-            manifest_type='docker', manifest_content=''
+            manifest_type='dummy', manifest_content=''
         )
 
     def test_catalog(self):
