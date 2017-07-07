@@ -1,0 +1,34 @@
+version: '2'
+
+services:
+  spark-master:
+    image: elastest/ebs-spark-base:0.5.0
+    container_name: spark-master
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./spark/alluxio_conf:/opt/alluxio/conf
+      - ./spark/spark_conf:/opt/spark/conf
+      - ./spark/hadoop_conf:/usr/local/hadoop/etc/hadoop
+    command: ["/usr/bin/supervisord", "--configuration=/opt/conf/master.conf"]
+    hostname: spark-master
+    networks:
+      - elastest
+
+  spark-worker:
+    image: elastest/ebs-spark-base:0.5.0
+    depends_on:
+      - spark-master
+    ports:
+      - "8081"
+    volumes:
+      - ./spark/alluxio_conf:/opt/alluxio/conf
+      - ./spark/spark_conf:/opt/spark/conf
+      - ./spark/hadoop_conf:/usr/local/hadoop/etc/hadoop
+    command: ["/usr/bin/supervisord", "--configuration=/opt/conf/slave.conf"]
+    networks:
+      - elastest
+
+networks:
+  elastest:
+    external: true

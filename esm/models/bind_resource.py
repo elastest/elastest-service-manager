@@ -50,7 +50,7 @@ class BindResource(Model):
     def app_guid(self) -> str:
         """
         Gets the app_guid of this BindResource.
-        GUID of the application that you want to bind your service to.
+        GUID of an application associated with the binding. For credentials bindings. 
 
         :return: The app_guid of this BindResource.
         :rtype: str
@@ -61,7 +61,7 @@ class BindResource(Model):
     def app_guid(self, app_guid: str):
         """
         Sets the app_guid of this BindResource.
-        GUID of the application that you want to bind your service to.
+        GUID of an application associated with the binding. For credentials bindings. 
 
         :param app_guid: The app_guid of this BindResource.
         :type app_guid: str
@@ -73,7 +73,7 @@ class BindResource(Model):
     def route(self) -> str:
         """
         Gets the route of this BindResource.
-        Route binding
+        URL of the application to be intermediated. For route services bindings. 
 
         :return: The route of this BindResource.
         :rtype: str
@@ -84,7 +84,7 @@ class BindResource(Model):
     def route(self, route: str):
         """
         Sets the route of this BindResource.
-        Route binding
+        URL of the application to be intermediated. For route services bindings. 
 
         :param route: The route of this BindResource.
         :type route: str

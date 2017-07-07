@@ -50,7 +50,7 @@ class LastOperation(Model):
     def state(self) -> str:
         """
         Gets the state of this LastOperation.
-        'Valid values are in progress, succeeded, and failed. While \"state\": \"in progress\", the client will continue polling. A response with \"state\": \"succeeded\" or \"state\": \"failed\" will cause the client to cease polling.' 
+        Valid values are in progress, succeeded, and failed. While \"state\": \"in progress\", the platform SHOULD continue polling. A response with \"state\": \"succeeded\" or \"state\": \"failed\" MUST cause the platform to cease polling. 
 
         :return: The state of this LastOperation.
         :rtype: str
@@ -61,11 +61,13 @@ class LastOperation(Model):
     def state(self, state: str):
         """
         Sets the state of this LastOperation.
-        'Valid values are in progress, succeeded, and failed. While \"state\": \"in progress\", the client will continue polling. A response with \"state\": \"succeeded\" or \"state\": \"failed\" will cause the client to cease polling.' 
+        Valid values are in progress, succeeded, and failed. While \"state\": \"in progress\", the platform SHOULD continue polling. A response with \"state\": \"succeeded\" or \"state\": \"failed\" MUST cause the platform to cease polling. 
 
         :param state: The state of this LastOperation.
         :type state: str
         """
+        if state is None:
+            raise ValueError("Invalid value for `state`, must not be `None`")
 
         self._state = state
 
@@ -73,7 +75,7 @@ class LastOperation(Model):
     def description(self) -> str:
         """
         Gets the description of this LastOperation.
-        'Optional field. A user-facing message displayed to the API client. Can be used to tell the user details about the status of the operation.' 
+        A user-facing message displayed to the platform API client. Can be used to tell the user details about the status of the operation. If present, MUST be a non-empty string. 
 
         :return: The description of this LastOperation.
         :rtype: str
@@ -84,7 +86,7 @@ class LastOperation(Model):
     def description(self, description: str):
         """
         Sets the description of this LastOperation.
-        'Optional field. A user-facing message displayed to the API client. Can be used to tell the user details about the status of the operation.' 
+        A user-facing message displayed to the platform API client. Can be used to tell the user details about the status of the operation. If present, MUST be a non-empty string. 
 
         :param description: The description of this LastOperation.
         :type description: str

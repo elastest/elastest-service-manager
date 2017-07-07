@@ -27,7 +27,13 @@ setup(
     package_data={'': ['swagger/swagger.yaml']},
     include_package_data=True,
     long_description="""\
-    This is the service manager API. It is an extension of the the Open Service Broker API. The Open Service Broker API defines the contract between the a requesting client and the service broker. The broker is expected to implement several HTTP (or HTTPS) endpoints underneath a URI prefix. One or more services can be provided by a single broker, and load balancing enables horizontal scalability of redundant brokers. Multiple service provider instances can be supported by a single broker using different URL prefixes and credentials. [Learn more about the Service Broker API.] (https://github.com/openservicebrokerapi/servicebroker/). Note the [topic on orphan resolution](https://github.com/openservicebrokerapi/servicebroker/blob/master/_spec.md#orphans). It is not dealt with in this spec. 
+    This is the service manager API. It is an extension of the the Open Service Broker API. The Open Service Broker 
+    API defines the contract between the a requesting client and the service broker. The broker is expected to 
+    implement several HTTP (or HTTPS) endpoints underneath a URI prefix. One or more services can be provided by a 
+    single broker, and load balancing enables horizontal scalability of redundant brokers. Multiple service provider 
+    instances can be supported by a single broker using different URL prefixes and credentials. [Learn more about 
+    the Service Broker API.] (https://github.com/openservicebrokerapi/servicebroker/). Note the [topic on orphan reso
+    lution](https://github.com/openservicebrokerapi/servicebroker/blob/master/_spec.md#orphans). It is not 
+    dealt with in this spec. 
     """
 )
-

@@ -61,7 +61,7 @@ class BindingResponse(Model):
     def credentials(self) -> object:
         """
         Gets the credentials of this BindingResponse.
-        A free-form hash of credentials that the bound application can use to access the service.
+        A free-form hash of credentials that can be used by applications or users to access the service. 
 
         :return: The credentials of this BindingResponse.
         :rtype: object
@@ -72,7 +72,7 @@ class BindingResponse(Model):
     def credentials(self, credentials: object):
         """
         Sets the credentials of this BindingResponse.
-        A free-form hash of credentials that the bound application can use to access the service.
+        A free-form hash of credentials that can be used by applications or users to access the service. 
 
         :param credentials: The credentials of this BindingResponse.
         :type credentials: object
@@ -84,7 +84,7 @@ class BindingResponse(Model):
     def syslog_drain_url(self) -> str:
         """
         Gets the syslog_drain_url of this BindingResponse.
-        'A URL to which the client should drain logs for the bound application. requires `syslog_drain` must be declared in the catalog endpoint or the client will consider the response invalid.' 
+        A URL to which logs MUST be streamed. \"requires\":[\"syslog_drain\"] MUST be declared in the Catalog endpoint or the platform MUST consider the response invalid. 
 
         :return: The syslog_drain_url of this BindingResponse.
         :rtype: str
@@ -95,7 +95,7 @@ class BindingResponse(Model):
     def syslog_drain_url(self, syslog_drain_url: str):
         """
         Sets the syslog_drain_url of this BindingResponse.
-        'A URL to which the client should drain logs for the bound application. requires `syslog_drain` must be declared in the catalog endpoint or the client will consider the response invalid.' 
+        A URL to which logs MUST be streamed. \"requires\":[\"syslog_drain\"] MUST be declared in the Catalog endpoint or the platform MUST consider the response invalid. 
 
         :param syslog_drain_url: The syslog_drain_url of this BindingResponse.
         :type syslog_drain_url: str
@@ -107,7 +107,7 @@ class BindingResponse(Model):
     def route_service_url(self) -> str:
         """
         Gets the route_service_url of this BindingResponse.
-        \"A URL to which the client should proxy requests for the bound route. `requires:route_forwarding` must be declared in the catalog endpoint or the client will consider the response invalid.\" 
+        A URL to which the platform MUST proxy requests for the address sent with bind_resource.route in the request body. \"requires\":[\"route_forwarding\"] MUST be declared in the Catalog endpoint or the platform can consider the response invalid. 
 
         :return: The route_service_url of this BindingResponse.
         :rtype: str
@@ -118,7 +118,7 @@ class BindingResponse(Model):
     def route_service_url(self, route_service_url: str):
         """
         Sets the route_service_url of this BindingResponse.
-        \"A URL to which the client should proxy requests for the bound route. `requires:route_forwarding` must be declared in the catalog endpoint or the client will consider the response invalid.\" 
+        A URL to which the platform MUST proxy requests for the address sent with bind_resource.route in the request body. \"requires\":[\"route_forwarding\"] MUST be declared in the Catalog endpoint or the platform can consider the response invalid. 
 
         :param route_service_url: The route_service_url of this BindingResponse.
         :type route_service_url: str
@@ -130,7 +130,7 @@ class BindingResponse(Model):
     def volume_mounts(self) -> List[object]:
         """
         Gets the volume_mounts of this BindingResponse.
-        \"An array of volume mount instructions. `requires:volume_mount` must be declared in the catalog endpoint or the client will consider the response invalid.\" 
+        An array of configuration for mounting volumes. \"requires\":[\"volume_mount\"] MUST be declared in the Catalog endpoint or the platform can consider the response invalid. 
 
         :return: The volume_mounts of this BindingResponse.
         :rtype: List[object]
@@ -141,7 +141,7 @@ class BindingResponse(Model):
     def volume_mounts(self, volume_mounts: List[object]):
         """
         Sets the volume_mounts of this BindingResponse.
-        \"An array of volume mount instructions. `requires:volume_mount` must be declared in the catalog endpoint or the client will consider the response invalid.\" 
+        An array of configuration for mounting volumes. \"requires\":[\"volume_mount\"] MUST be declared in the Catalog endpoint or the platform can consider the response invalid. 
 
         :param volume_mounts: The volume_mounts of this BindingResponse.
         :type volume_mounts: List[object]

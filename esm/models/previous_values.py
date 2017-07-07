@@ -60,7 +60,7 @@ class PreviousValues(Model):
     def plan_id(self) -> str:
         """
         Gets the plan_id of this PreviousValues.
-        ID of the plan prior to the update.
+        ID of the plan prior to the update. If present, MUST be a non-empty string. 
 
         :return: The plan_id of this PreviousValues.
         :rtype: str
@@ -71,7 +71,7 @@ class PreviousValues(Model):
     def plan_id(self, plan_id: str):
         """
         Sets the plan_id of this PreviousValues.
-        ID of the plan prior to the update.
+        ID of the plan prior to the update. If present, MUST be a non-empty string. 
 
         :param plan_id: The plan_id of this PreviousValues.
         :type plan_id: str
@@ -83,7 +83,7 @@ class PreviousValues(Model):
     def service_id(self) -> str:
         """
         Gets the service_id of this PreviousValues.
-        ID of the service for the instance.
+        Deprecated; determined to be unnecessary as the value is immutable. ID of the service for the service instance. If present, MUST be a non-empty string. 
 
         :return: The service_id of this PreviousValues.
         :rtype: str
@@ -94,7 +94,7 @@ class PreviousValues(Model):
     def service_id(self, service_id: str):
         """
         Sets the service_id of this PreviousValues.
-        ID of the service for the instance.
+        Deprecated; determined to be unnecessary as the value is immutable. ID of the service for the service instance. If present, MUST be a non-empty string. 
 
         :param service_id: The service_id of this PreviousValues.
         :type service_id: str
@@ -106,7 +106,7 @@ class PreviousValues(Model):
     def organization_id(self) -> str:
         """
         Gets the organization_id of this PreviousValues.
-        ID of the organization containing the instance.
+        Deprecated as it was redundant information. Organization for the service instance MUST be provided by platforms in the top-level field context. ID of the organization specified for the service instance. If present, MUST be a non-empty string. 
 
         :return: The organization_id of this PreviousValues.
         :rtype: str
@@ -117,7 +117,7 @@ class PreviousValues(Model):
     def organization_id(self, organization_id: str):
         """
         Sets the organization_id of this PreviousValues.
-        ID of the organization containing the instance.
+        Deprecated as it was redundant information. Organization for the service instance MUST be provided by platforms in the top-level field context. ID of the organization specified for the service instance. If present, MUST be a non-empty string. 
 
         :param organization_id: The organization_id of this PreviousValues.
         :type organization_id: str
@@ -129,7 +129,7 @@ class PreviousValues(Model):
     def space_id(self) -> str:
         """
         Gets the space_id of this PreviousValues.
-        ID of the space containing the instance.
+        Deprecated as it was redundant information. Space for the service instance MUST be provided by platforms in the top-level field context. ID of the space specified for the service instance. If present, MUST be a non-empty string. 
 
         :return: The space_id of this PreviousValues.
         :rtype: str
@@ -140,7 +140,7 @@ class PreviousValues(Model):
     def space_id(self, space_id: str):
         """
         Sets the space_id of this PreviousValues.
-        ID of the space containing the instance.
+        Deprecated as it was redundant information. Space for the service instance MUST be provided by platforms in the top-level field context. ID of the space specified for the service instance. If present, MUST be a non-empty string. 
 
         :param space_id: The space_id of this PreviousValues.
         :type space_id: str

@@ -1,10 +1,10 @@
 swagger: '2.0'
 info:
-  version: '2.11'
+  version: '2.12'
   title: ElasTest Service Manager API
   description: >
-    This is the service manager API. It is an extension of the the Open Service Broker API (v2.11).
-    The Open Service Broker API defines the contract between the a requesting client
+    This is the service manager API. It is an extension of the the Open Service Broker API
+    (v2.12). The Open Service Broker API defines the contract between the a requesting client
     and the service broker. The broker is expected to implement
     several HTTP (or HTTPS) endpoints underneath a URI prefix. One or more
     services can be provided by a single broker, and load balancing enables
@@ -27,8 +27,8 @@ schemes:
 securityDefinitions:
   basicAuth:
     type: basic
-    description: > 
-      The open service broker specification requires basic authentication 
+    description: >
+      The open service broker specification requires basic authentication
       on all requests. [See here](https://github.com/openservicebrokerapi/servicebroker/blob/v2.12/spec.md#authentication)
 security:
   - basicAuth: []  # all paths are to have authentication
@@ -50,6 +50,7 @@ paths:
       #     required: true
       #     type: string
       #     format: string
+      #     default: 2.11
       produces:
         - application/json
       responses:
@@ -57,23 +58,19 @@ paths:
           description: Successful operation
           schema:
             $ref: '#/definitions/Catalog'
-  /v2-et/catalog:
+  /v2/et/catalog:
     put:
       operationId: registerService
       summary: Registers the service with the catalog.
       tags:
        - catalog
       description: >
-        "Service providers need a means to register their service with a service broker. This provides this functionality. Also using
-        PUT a service provider can update their registration. Note that this requires the complete content and will REPLACE the existing
-        service information registered with the broker."
+        Service providers need a means to register their service with a service broker.
+        This provides this functionality. Also using
+        PUT a service provider can update their registration. Note that this requires
+        the complete content and will REPLACE the existing service information
+        registered with the broker.
       parameters:
-        # - name: X-Broker-Api-Version
-        #   in: header
-        #   description: Version of API requested
-        #   required: true
-        #   type: string
-        #   format: string
         - name: service
           description: the service description to register
           required: true
@@ -82,7 +79,7 @@ paths:
             $ref: '#/definitions/ServiceType'
       produces:
         - application/json
-      consumes: 
+      consumes:
         - application/json
       responses:
         '200':
@@ -94,9 +91,11 @@ paths:
             'The requested service type already exists. The ID of the service exists in the catalog already'
           schema:
             $ref: '#/definitions/Error'
-  /v2-et/manifest:
+  /v2/et/manifest/{manifest_id}:
     # can only store the manifest. later can add further verb support
-    post:
+    parameters:
+      - $ref: '#/parameters/manifest_id'
+    put:
       operationId: storeManifest
       summary: takes deployment description of a software service and associates with a service and plan
       tags:
@@ -107,12 +106,6 @@ paths:
       produces:
         - application/json
       parameters:
-        # - name: X-Broker-Api-Version
-        #   in: header
-        #   description: Version of API requested
-        #   required: true
-        #   type: string
-        #   format: string
         - name: manifest
           description: the manifest to store
           required: true
@@ -121,11 +114,15 @@ paths:
             $ref: '#/definitions/Manifest'
       responses:
         '200':
-          description: >
-            "May be returned if the service instance already exists and the requested parameters are
-            identical to the existing service instance. The expected response body is below."
+          description: Successful registration. Has an empty body
           schema:
-            $ref: '#/definitions/DashboardUrl'
+            $ref: '#/definitions/Empty'
+        '409':
+          description: >
+            'The requested manifest already exists.
+            The ID of the manifest exists in the catalog already'
+          schema:
+            $ref: '#/definitions/Error'
   /v2/service_instances/{instance_id}:
     parameters:
       - $ref: '#/parameters/instance_id'
@@ -138,10 +135,10 @@ paths:
       tags:
         - service_instances
       description: >
-        'When the broker receives a provision request from a client, it should synchronously take
-        whatever action is necessary to create a new service resource for the developer. The result of
-        provisioning varies by service type, although there are a few common actions that work for many
-        services. Supports asynchronous operations.'
+        When the broker receives a provision request from a client, it should synchronously take
+        whatever action is necessary to create a new service resource for the developer.
+        The result of provisioning varies by service type, although there are a few
+        common actions that work for many services. Supports asynchronous operations.'
       summary: Provisions a service instance
       parameters:
         # - name: X-Broker-Api-Version
@@ -160,27 +157,27 @@ paths:
           name: accept_incomplete
           required: false
           description: 'Indicates that the client is supporting asynchronous operations'
-          type: string
+          type: boolean
       responses:
         '200':
           description: >
             "May be returned if the service instance already exists and the requested parameters are
             identical to the existing service instance. The expected response body is below."
           schema:
-            $ref: '#/definitions/DashboardUrl'
+            $ref: '#/definitions/ServiceResponse'
         '201':
           description: Service instance has been created.
           schema:
-            $ref: '#/definitions/DashboardUrl'
+            $ref: '#/definitions/ServiceResponse'
         '202':
           description: Service instance is being created - asynchronous operation
           schema:
-            $ref: '#/definitions/DashboardUrl'
+            $ref: '#/definitions/LastOperation'
         '409':
           description: >
             'The requested service instance already exists.'
           schema:
-            $ref: '#/definitions/Empty'
+            $ref: '#/definitions/Error'
         '422':
           description: "This service plan requires client support for asynchronous service operations."
           schema:
@@ -189,10 +186,10 @@ paths:
       operationId: updateServiceInstance
       summary: Updating a Service Instance
       description: >
-        'Brokers that implement this endpoint can enable users to modify attributes of an existing
-        service instance. The first attribute supports users modifying is the service plan. This effectively
-        enables users to upgrade or downgrade their service instance to other plans. To see how users
-        make these requests.'
+        Brokers that implement this endpoint can enable users to modify attributes of an existing
+        service instance. The first attribute supports users modifying is the service plan.
+        This effectively enables users to upgrade or downgrade their service instance to
+        other plans. To see how users make these requests.'
       consumes:
         - application/json
       produces:
@@ -211,30 +208,32 @@ paths:
           required: true
           in: body
           schema:
-            $ref: '#/definitions/PlanUpdateRequest'
+            $ref: '#/definitions/UpdateRequest'
         - in: query
           name: accept_incomplete
           required: false
           description: 'Indicates that the client is supporting asynchronous operations'
-          type: string
+          type: boolean
       responses:
         '200':
-          description: 'New plan is effective. The expected response body is {}.'
+          description: New plan is effective. The expected response body is {}.
           schema:
             $ref: '#/definitions/Empty'
         '202':
           description: Service instance is being updated - asynchronous operation
           schema:
-            $ref: '#/definitions/UpdateOperationResponse'
+            $ref: '#/definitions/LastOperation'
         '422':
           description: >
-            'May be returned if the particular plan change requested is not supported or if the request
-            cannot currently be fulfilled due to the state of the instance (eg. instance utilization is over the
-            quota of the requested plan). Broker should include a user-facing message in the body.
-            Additionally, a 422 can also be returned if the broker only supports asynchronous update for the
-            requested plan and the request did not include ?accepts_incomplete=true. The expected response body is:
-            { "error": "AsyncRequired", "description": "This service plan requires client support for asynchronous
-            service operations." }.'
+            May be returned if the particular plan change requested is not supported
+            or if the request cannot currently be fulfilled due to the state of the
+            instance (eg. instance utilization is over the quota of the requested plan).
+            Broker should include a user-facing message in the body.
+            Additionally, a 422 can also be returned if the broker only supports
+            asynchronous update for the requested plan and the request did not include
+            ?accepts_incomplete=true. The expected response body is:
+            { "error": "AsyncRequired", "description": "This service plan requires
+            client support for asynchronous service operations." }.'
           schema:
             $ref: '#/definitions/Error'
     delete:
@@ -269,20 +268,27 @@ paths:
           in: query
           required: false
           description: 'Indicates that the client is supporting asynchronous operations'
-          type: string
+          type: boolean
       responses:
         '200':
-          description: 'Service instance was deleted. The expected response body is {}.'
+          description: >
+              MUST be returned if the service instance was deleted as a
+              result of this request. The expected response body is {}.
           schema:
-            $ref: '#/definitions/Empty'
+            $ref: '#/definitions/UpdateOperationResponse'
         '202':
-          description: Service instance is being deleted - asynchronous operation
+          description: >
+            MUST be returned if the service instance deletion is in progress.
+            This triggers the marketplace to poll the Service Instance Last Operation
+            Endpoint for operation status. Note that a re-sent DELETE request MUST
+            return a 202 Accepted, not a 200 OK, if the delete request has not completed yet.
           schema:
-            $ref: '#/definitions/DashboardUrl'
+            $ref: '#/definitions/LastOperation'
         '410':
-          description: 'Should be returned if the binding does not exist. The expected response body is {}.'
+          description: >
+            Should be returned if the binding does not exist. The expected response body is {}.
           schema:
-            $ref: '#/definitions/Empty'
+            $ref: '#/definitions/Error'
         '422':
           description: >
             'May be returned if the particular plan change requested is not supported or if the request
@@ -294,7 +300,7 @@ paths:
             asynchronous service operations." }.'
           schema:
             $ref: '#/definitions/Error'
-  /v2-et/service_instances/{instance_id}:
+  /v2/et/service_instances/{instance_id}:
     parameters:
         - $ref: '#/parameters/instance_id'
     get:
@@ -303,8 +309,9 @@ paths:
       tags:
         - service_instances
       description: >
-        Returns information about the service instance. This is a simple read operation against the broker database 
-        and is provided as a developer/consumer convienence.
+        Returns information about the service instance. This is a simple read
+        operation against the broker database and is provided as a developer/consumer
+        convienence.
       # parameters:
         # - name: X-Broker-Api-Version
         #   in: header
@@ -377,10 +384,11 @@ paths:
       operationId: serviceBind
       summary: Binds to a service
       description: >
-        'When the broker receives a bind request from the client, it should return information
-        which helps an application to utilize the provisioned resource. This information is generically
-        referred to as credentials. Applications should be issued unique credentials whenever possible, so one
-        application access can be revoked without affecting other bound applications.'
+        When the broker receives a bind request from the client, it should return information
+        which helps an application to utilize the provisioned resource. This information
+        is generically referred to as credentials. Applications should be issued
+        unique credentials whenever possible, so one application access can be
+        revoked without affecting other bound applications.
       produces:
         - application/json
       consumes:
@@ -402,8 +410,8 @@ paths:
       responses:
         '200':
           description: >
-            "May be returned if the binding already exists and the requested parameters are
-            identical to the existing binding."
+            May be returned if the binding already exists and the requested parameters are
+            identical to the existing binding.
           schema:
             $ref: '#/definitions/BindingResponse'
         '201':
@@ -412,23 +420,26 @@ paths:
             $ref: '#/definitions/BindingResponse'
         '409':
           description: >
-            'Should be returned if the requested binding already exists. The expected response body
-            is {}, though the description field can be used to return a user-facing error message.'
+            'Should be returned if the requested binding already exists.
+            The expected response body is {}, though the description field can
+            be used to return a user-facing error message.
           schema:
             $ref: '#/definitions/Empty'
         '422':
           description: >
-            'Should be returned if the broker requires that app_guid be included in the request body.
-            The expected response body is: { "error": "RequiresApp", "description": "This service supports
-            generation of credentials through binding an application only." }'
+            Should be returned if the broker requires that app_guid be
+            included in the request body. The expected response body is:
+            { "error": "RequiresApp", "description": "This service supports
+            generation of credentials through binding an application only." }
           schema:
             $ref: '#/definitions/Error'
     delete:
       operationId: serviceUnbind
       summary: Unbinds a service
       description: >
-        'When a broker receives an unbind request from the client, it should delete any resources
-        it created in bind. Usually this means that an application immediately cannot access the resource.'
+        When a broker receives an unbind request from the client, it should delete any resources
+        it created in bind. Usually this means that an application immediately cannot access
+        the resource.
       produces:
         - application/json
       tags:
@@ -452,11 +463,13 @@ paths:
           description: ID of the plan from the catalog.
       responses:
         '200':
-          description: 'Binding was deleted. The expected response body is {}.'
+          description: Binding was deleted. The expected response body is {}.
           schema:
             $ref: '#/definitions/Empty'
         '410':
-          description: 'Should be returned if the binding does not exist. The expected response body is {}.'
+          description: >
+            Should be returned if the binding does not exist.
+            The expected response body is {}.
           schema:
             $ref: '#/definitions/Empty'
 parameters:
@@ -474,9 +487,18 @@ parameters:
     type: string
     in: path
     required: true
+  manifest_id:
+    name: manifest_id
+    description: >
+      The manifest_id of a manifest to be associated with a plan of a servicetype.
+    type: string
+    in: path
+    required: true
 definitions:
   Catalog:
     description: list of service types
+    required:
+      - services
     properties:
       services:
         type: array
@@ -484,22 +506,34 @@ definitions:
           $ref: '#/definitions/ServiceType'
   ServiceType:
     description: Schema of an offered service
+    required:
+      - id
+      - name
+      - description
+      - bindable
+      - plans
     properties:
       id:
         type: string
         description: >
-          An identifier used to correlate this service in future requests to the
-          catalog. This must be unique within the client namespace, using a GUID is
-          recommended.
+          An identifier used to correlate this service in future requests to the broker.
+          This MUST be globally unique within a platform marketplace.
+          MUST be a non-empty string. Using a GUID is RECOMMENDED.
       name:
         type: string
-        description: 'The CLI-friendly name of the service that will appear in the catalog. All lowercase, no spaces.'
+        description: >
+          A CLI-friendly name of the service. All lowercase, no spaces.
+          This MUST be globally unique within a platform marketplace.
+          MUST be a non-empty string.
       description:
         type: string
-        description: A short description of the service that will appear in the catalog.
+        description: A short description of the service. MUST be a non-empty string.
       bindable:
         type: boolean
-        description: Whether the service can be bound to applications.
+        description: >
+          Specifies whether service instances of the service can be bound to applications.
+          This specifies the default for all plans of this service.
+          Plans can override this field.
       tags:
         type: array
         description: >
@@ -512,264 +546,382 @@ definitions:
           type: string
       metadata:
         $ref: '#/definitions/ServiceMetadata'
+        description: >
+          An opaque object of metadata for a service offering.
+          Controller treats this as a blob. Note that there are conventions
+          in existing brokers and controllers for fields that aid in
+          the display of catalog data.
       requires:
         type: array
         description: >
-          'A list of permissions that the user would have to give the service, if they provision it.
-          The only permission currently supported is syslog_drain.'
+          A list of permissions that the user would have to give the service,
+          if they provision it.
+          The only permissions currently supported are `syslog_drain`,
+          `route_forwarding` and `volume_mount`.
         items:
           type: string
       plan_updateable:
         type: boolean
         description: >
-          "Whether the service supports upgrade/downgrade for some plans. Please note that the
-          misspelling of the attribute plan_updatable to plan_updateable was done by mistake. Note that the
-          misspelling is kept instead of fixing it and thus maintaining backward compatibility."
+          Whether the service supports upgrade/downgrade for some plans.
+          Please note that the misspelling of the attribute `plan_updatable` to
+          `plan_updateable` was done by mistake. We have opted to keep that
+          misspelling instead of fixing it and thus breaking backward compatibility.
+          Defaults to `false`.
+        default: false
       plans:
         type: array
-        description: A list of plans for this service
+        description: >
+          A list of plans for this service, schema is defined below.
+          MUST contain at least one plan.
         items:
           $ref: '#/definitions/Plan'
       dashboard_client:
         $ref: '#/definitions/DashboardClient'
+        description: >
+          Contains the data necessary to activate the Dashboard SSO feature for this service.
   Plan:
     description: A plan for the service
+    required:
+      - id
+      - name
+      - description
     properties:
       id:
         type: string
         description: >
-          'An identifier used to correlate this plan in future requests to the catalog.
-          This must be unique within the client namespace, using a GUID is recommended.'
+          An identifier used to correlate this plan in future requests to the broker.
+          This MUST be globally unique within a platform marketplace.
+          MUST be a non-empty string. Using a GUID is RECOMMENDED.
       name:
-        # required: true
         type: string
-        description: 'The CLI-friendly name of the plan that will appear in the catalog. All lowercase, no spaces.'
+        description: >
+          The CLI-friendly name of the plan. MUST be unique within the service.
+          All lowercase, no spaces. MUST be a non-empty string.
       description:
         type: string
-        description: A short description of the service that will appear in the catalog.
+        description: >
+          A short description of the plan. MUST be a non-empty string.
       metadata:
-        type: object
-        description: 'A list of metadata for a service plan.'
+        # type: object
+        $ref: '#/definitions/PlanMetadata'
+        description: >
+          An opaque object of metadata for a service plan.
+          Controller treats this as a blob.
+          Note that there are conventions in existing brokers and controllers
+          for fields that aid in the display of catalog data.
+          Note - the ElasTest Cost model will be set here for the particular
+          offered service.
       free:
         type: boolean
         description: >
-          'This field allows the plan to be limited by the non_basic_services_allowed
-          field in a client quota.'
+          When false, service instances of this plan have a cost.
+          The default is true.
+        default: true
       bindable:
         type: boolean
         description: >
-          'Specifies whether instances of the service plan can be bound to applications.
-          This field is optional. If specified, this takes precedence over the bindable attribute of the
-          service. If not specified, the default is derived from the service.'
+          Specifies whether service instances of the service plan can be bound to
+          applications. This field is OPTIONAL. If specified, this takes precedence
+          over the bindable attribute of the service.
+          If not specified, the default is derived from the service.
   DashboardClient:
     description: 'Contains the data necessary to activate the Dashboard SSO feature for this service'
     properties:
       id:
         type: string
         description: >
-          'The id of the OAuth2 client that the service intends to use. The name may be taken,
-          in which case the API will return an error to the operator'
+          The id of the Oauth client that the dashboard will use.
+          If present, MUST be a non-empty string.
       secret:
         type: string
-        description: A secret for the dashboard client
+        description: >
+          A secret for the dashboard client. If present, MUST be a non-empty string.
       redirect_uri:
         type: string
-        description: A domain for the service dashboard that will be whitelisted by the UAA to enable SSO
+        description: >
+          A URI for the service dashboard.
+          Validated by the OAuth token server when the dashboard requests a token.
   ServiceRequest:
-    description: Service object
+    description: Request for a Service instance
+    required:
+      - service_id
+      - plan_id
+      - organization_guid
+      - space_guid
     properties:
       service_id:
         type: string
         description: >
-          'The ID of the service within the catalog above. While not strictly necessary, some
-          brokers might make use of this ID.'
+          The ID of the service (from the catalog).
+          MUST be globally unique.
+          MUST be a non-empty string.
       plan_id:
         type: string
         description: >
-          'The ID of the plan within the above service (from the catalog endpoint) that the user would
-          like provisioned. Because plans have identifiers unique to a broker, this is enough information to determine
-          what to provision.'
+          The ID of the plan (from the catalog) for which the service instance has
+          been requested. MUST be unique to a service. MUST be a non-empty string.
+      context:
+        type: object
+        description: >
+          Platform specific contextual information under which the service instance
+          is to be provisioned. Although most brokers will not use this field,
+          it could be helpful in determining data placement or applying custom
+          business rules. context will replace `organization_guid` and `space_guid`
+          in future versions of the specification - in the interim both SHOULD
+          be used to ensure interoperability with old and new implementations.
       organization_guid:
         type: string
         description: >
-          'The client GUID of the organization under which the service is to be provisioned.
-          Although most brokers will not use this field, it could be helpful in determining data placement
-          or applying custom business rules.'
+          Deprecated in favor of context. The platform GUID for the organization
+          under which the service instance is to be provisioned.
+          Although most brokers will not use this field, it might be helpful
+          for executing operations on a user's behalf.
+          MUST be a non-empty string.
       space_guid:
         type: string
-        description: 'Similar to organization_guid, but for the space.'
-      # XXX is this the correct representation for a map of params?
+        description: >
+          Deprecated in favor of context. The identifier for the project
+          space within the platform organization. Although most brokers
+          will not use this field, it might be helpful for executing operations
+          on a user's behalf. MUST be a non-empty string.
       parameters:
-        $ref: '#/definitions/Parameter'
-      # XXX this is talked about as a query parameter yet it's here in the body according to the spec???!
-      accepts_incomplete:
-        type: boolean
-  DashboardUrl:
+        type: object
+        description: >
+          Configuration options for the service instance.
+          Controller treats this as a blob.
+          Brokers SHOULD ensure that the client has provided
+          valid configuration parameters and values for the operation.
+  ServiceResponse:
     description: >
-      "The URL of a web-based management user interface for the service instance; we refer to
+      The URL of a web-based management user interface for the service instance; we refer to
       this as a service dashboard. The URL should contain enough information for the dashboard to
-      identify the resource being accessed"
+      identify the resource being accessed.
+    required:
+      - dashboard_url
     properties:
       dashboard_url:
         type: string
         description: >
-          "The URL of a web-based management user interface for the service instance; we refer
-          to this as a service dashboard. The URL should contain enough information for the dashboard to
-          identify the resource being accessed (in the example below). For information on how users can authenticate
-          with service dashboards via SSO."
+          The URL of a web-based management user interface for the service instance;
+          we refer to this as a service dashboard. The URL MUST contain enough information
+          for the dashboard to identify the resource being accessed (9189kdfsk0vfnku
+          in the example below). Note: a broker that wishes to return dashboard_url
+          for a service instance MUST return it with the initial response to the
+          provision request, even if the service is provisioned asynchronously.
+          If present, MUST be a non-empty string.
       operation:
         type: string
         description: >
-          "For async responses, service brokers can return operation state as a string.
-          This field will be provided back to the service broker on last_operation requests as a
-          URL encoded query param."
+          For asynchronous responses, service brokers MAY return an identifier
+          representing the operation. The value of this field MUST be provided
+          by the platform with requests to the Last Operation endpoint in a
+          URL encoded query parameter. If present, MUST be a non-empty string.
   Empty:
     type: string
     description: 'Expected empty response could be {}'
-  PlanUpdateRequest:
+  UpdateRequest:
     description: New/Updated Plan to be added to a service.
+    required:
+      - service_id
     properties:
-      service_id:
-        type: string
-      plan_id:
-        type: string
-        description: ID of the new plan from the catalog.
-      parameters:
-        $ref: '#/definitions/Parameter'
-      # XXX this is talked about as a query parameter yet it's here in the body according to the spec???!
-      accepts_incomplete:
-        type: boolean
+      context:
+        type: object
         description: >
-          "A value of true indicates that the marketplace and its clients support asynchronous
-          broker operations. If this parameter is not included in the request, and the broker
-          can only provision an instance of the requested plan asynchronously, the broker
-          should reject the request with a 422."
+          Contextual data under which the service instance is created.
+      service_id:
+        type: string
+        description: >
+          The ID of the service (from the catalog). MUST be globally unique.
+          MUST be a non-empty string.
+      plan_id:
+        type: string
+        description: >
+          The ID of the plan (from the catalog) for which the service instance
+          has been requested. MUST be unique to a service. If present, MUST be
+          a non-empty string. If this field is not present in the request message,
+          then the broker MUST NOT change the plan of the instance as a
+          result of this request.
+      parameters:
+        type: object
+        description: >
+          Configuration options for the service instance. An opaque object, controller
+          treats this as a blob. Brokers SHOULD ensure that the client has provided valid
+          configuration parameters and values for the operation. If this field is not
+          present in the request message, then the broker MUST NOT change the
+          parameters of the instance as a result of this request.
       previous_values:
-        $ref: '#/definitions/PlanPreviousValues'
-  PlanPreviousValues:
-    description: Information about the instance prior to the update.
+        $ref: '#/definitions/PreviousValues'
+        description: >
+          Information about the service instance prior to the update.
+  PreviousValues:
+    description: >
+      Information about the service instance prior to the update.
     properties:
       plan_id:
         type: string
-        description: ID of the plan prior to the update.
+        description: >
+          ID of the plan prior to the update. If present, MUST be a non-empty string.
       service_id:
         type: string
-        description: ID of the service for the instance.
+        description: >
+          Deprecated; determined to be unnecessary as the value is immutable.
+          ID of the service for the service instance.
+          If present, MUST be a non-empty string.
       organization_id:
         type: string
-        description: ID of the organization containing the instance.
+        description: >
+          Deprecated as it was redundant information. Organization for the service
+          instance MUST be provided by platforms in the top-level field context.
+          ID of the organization specified for the service instance. If present,
+          MUST be a non-empty string.
       space_id:
         type: string
-        description: ID of the space containing the instance.
-  Parameter:
-    description: >
-      "A key-value parameter. Clients can provide a JSON object of configuration parameters
-      with their request and this value will be passed through to the service broker.
-      Brokers are responsible for validation."
-    properties:
-      name:
-        type: string
-        description: Name of the parameter
-      value:
-        type: object
-        description: value of the parameter
+        description: >
+          Deprecated as it was redundant information. Space for the service instance MUST
+          be provided by platforms in the top-level field context. ID of the space
+          specified for the service instance. If present, MUST be a non-empty string.
   BindingRequest:
-    description: Information to bind the service to an application.
+    description: >
+      Information to bind the service to an application.
+    required:
+     - service_id
+     - plan_id
     properties:
       app_guid:
         type: string
         description: >
-          "Deprecated in favor of bind_resource.app_guid. GUID of an application
-          associated with the binding to be created."
+          Deprecated in favor of bind_resource.app_guid. GUID of an application
+          associated with the binding to be created. If present, MUST be a non-empty string.
       plan_id:
         type: string
         description: >
-          'ID of the plan from the catalog. While not strictly necessary,
-          some brokers might make use of this ID.'
+          ID of the plan from the catalog. MUST be a non-empty string.
       service_id:
         type: string
         description: >
-          'ID of the service from the catalog. While not strictly necessary,
-          some brokers might make use of this ID.'
+          ID of the service from the catalog. MUST be a non-empty string.
       parameters:
-        $ref: '#/definitions/Parameter'
+        type: object
+        description: >
+          Configuration options for the service binding. An opaque object, controller
+          treats this as a blob. Brokers SHOULD ensure that the client has
+          provided valid configuration parameters and values for the operation.
       bind_resource:
         $ref: '#/definitions/BindResource'
+        description: >
+          A JSON object that contains data for platform resources associated
+          with the binding to be created. See Bind Resource Object for more information.
   BindResource:
     description: >
-      "A JSON object that contains the required fields of the resource being bound.
-      Currently only app_guid for application bindings and route for route bindings are supported."
+      The bind_resource object contains platform specific information related to
+      the context in which the service will be used. In some cases the platform might
+      not be able to provide this information at the time of the binding request,
+      therefore the bind_resource and its fields are OPTIONAL.
     properties:
       app_guid:
         type: string
-        description: "GUID of the application that you want to bind your service to."
+        description: >
+          GUID of an application associated with the binding. For credentials bindings.
       route:
         type: string
-        description: "Route binding"
+        description: >
+          URL of the application to be intermediated. For route services bindings.
   BindingResponse:
     description: Success binding response.
     properties:
       credentials:
         type: object
-        description: 'A free-form hash of credentials that the bound application can use to access the service.'
+        description: >
+          A free-form hash of credentials that can be used by applications
+          or users to access the service.
       syslog_drain_url:
         type: string
         description: >
-          'A URL to which the client should drain logs for the bound application. requires `syslog_drain`
-          must be declared in the catalog endpoint or the client will consider the response invalid.'
+          A URL to which logs MUST be streamed. "requires":["syslog_drain"] MUST
+          be declared in the Catalog endpoint or the platform MUST consider the
+          response invalid.
       route_service_url:
         type: string
         description: >
-          "A URL to which the client should proxy requests for the bound route. `requires:route_forwarding`
-          must be declared in the catalog endpoint or the client will consider the response invalid."
+          A URL to which the platform MUST proxy requests for the address sent with
+          bind_resource.route in the request body. "requires":["route_forwarding"]
+          MUST be declared in the Catalog endpoint or the platform can consider
+          the response invalid.
       volume_mounts:
         type: array
         items:
           type: object
         description: >
-          "An array of volume mount instructions. `requires:volume_mount` must be declared in the catalog
-          endpoint or the client will consider the response invalid."
+          An array of configuration for mounting volumes. "requires":["volume_mount"]
+          MUST be declared in the Catalog endpoint or the platform can consider the
+          response invalid.
   ServiceMetadata:
-    description: metadata related to the service
+    description: >
+      metadata related to the service. The attributes are defined by the
+      best practices [here](https://docs.cloudfoundry.org/services/catalog-metadata.html#services-metadata-fields)
     properties:
       displayName:
         type: string
-        description: display name of the service.
-      listing:
-        $ref: '#/definitions/Listing'
-      provider:
-        $ref: '#/definitions/Provider'
-  Listing:
-    description: Listing information on a service.
-    properties:
-      blurb:
-        description: blurb
-        type: string
+        description: The name of the service to be displayed in graphical clients.
       imageUrl:
-        description: image URL.
         type: string
+        description: The URL to an image.
       longDescription:
-        description: Long Description
         type: string
-  Provider:
-    description: Provider of the service.
+        description: Long description
+      providerDisplayName:
+        type: string
+        description: The name of the upstream entity providing the actual service.
+      documentationUrl:
+        type: string
+        description: Link to documentation page for service.
+      supportUrl:
+        type: string
+        description: Link to support for the service.
+      extras:
+        type: object
+        description: additional attributes
+  PlanMetadata:
+    description: >
+      This is the plan metadata as required by the CloudFoundry broker best practices
     properties:
-      name:
-        description: Provider Name
+      bullets:
         type: string
+        description: Features of this plan, to be displayed in a bulleted-list
+      costs:
+        type: object
+        description: >
+          An array-of-objects that describes the costs of a service, in what currency,
+          and the unit of measure. If there are multiple costs, all of them could be
+          billed to the user (such as a monthly + usage costs at once). Each object
+          must provide the following keys: amount: { usd: float }, unit: string
+          This indicates the cost in USD of the service plan, and how frequently
+          the cost is occurred, such as “MONTHLY” or “per 1000 messages”.
+          NOTE - this will be replaced by the ElasTest cost model.
+      displayName:
+        type: string
+        description: Name of the plan to be display in graphical clients.
+      extras:
+        type: object
+        description: additional attributes
   LastOperation:
     description: status of polling last operation (async only)
+    required:
+      - state
     properties:
       state:
         description: >
-          'Valid values are in progress, succeeded, and failed. While "state": "in progress",
-          the client will continue polling. A response with "state": "succeeded" or "state": "failed"
-          will cause the client to cease polling.'
+          Valid values are in progress, succeeded, and failed.
+          While "state": "in progress", the platform SHOULD continue polling.
+          A response with "state": "succeeded" or "state": "failed"
+          MUST cause the platform to cease polling.
         type: string
       description:
         description: >
-          'Optional field. A user-facing message displayed to the API client.
-          Can be used to tell the user details about the status of the operation.'
+          A user-facing message displayed to the platform API client.
+          Can be used to tell the user details about the status of the operation.
+          If present, MUST be a non-empty string.
         type: string
   Error:
     description: Description of the error that occurred.
@@ -780,17 +932,32 @@ definitions:
           This message will be displayed to the user who initiated the request."
         type: string
   UpdateOperationResponse:
-    description: Response after issuing an update to a service instance
+    description: >
+      Response after issuing an update to a service instance
     properties:
       operation:
         description: >
-          "For async responses, service brokers can return operation state as a string.
-          This field will be provided back to the service broker on `last_operation` requests as a URL
-          encoded query param."
+          For asynchronous responses, service brokers MAY return an identifier
+          representing the operation. The value of this field MUST be provided
+          by the platform with requests to the Last Operation endpoint in a URL
+          encoded query parameter. If present, MUST be a non-empty string.
         type: string
   Manifest:
-    description: The manifest of a software component and the plan and service it is to be associated with.
+    description: >
+      The manifest of a software component and the plan and service it is to be associated with.
+    required:
+      - id
+      - plan_id
+      - service_id
+      - manifest_type
+      - manifest_content
     properties:
+      id:
+        type: string
+        description: >
+          An identifier used to correlate this manifest with the selected plan and service.
+          This MUST be globally unique within a platform marketplace.
+          MUST be a non-empty string. Using a GUID is RECOMMENDED.
       plan_id:
         description: The plan the manifest should be associated with
         type: string
@@ -802,4 +969,19 @@ definitions:
         type: string
       manifest_content:
         description: The manifest content
+        type: string
+  ServiceInstance:
+    description: service instance
+    properties:
+      service_type:
+        description: the type of the service
+        $ref: '#/definitions/ServiceType'
+      plan:
+        description: the plan that the service was created with
+        $ref: '#/definitions/Plan'
+      state:
+        description: the current state of the instance
+        $ref: '#/definitions/LastOperation'
+      context:
+        description: additional parameters of the service
         type: object

@@ -46,7 +46,7 @@ class DashboardClient(Model):
 
         :param dikt: A dict.
         :type: dict
-        :return: The Dashboard_client of this DashboardClient.
+        :return: The DashboardClient of this DashboardClient.
         :rtype: DashboardClient
         """
         return deserialize_model(dikt, cls)
@@ -55,7 +55,7 @@ class DashboardClient(Model):
     def id(self) -> str:
         """
         Gets the id of this DashboardClient.
-        'The id of the OAuth2 client that the service intends to use. The name may be taken, in which case the API will return an error to the operator' 
+        The id of the Oauth client that the dashboard will use. If present, MUST be a non-empty string. 
 
         :return: The id of this DashboardClient.
         :rtype: str
@@ -66,7 +66,7 @@ class DashboardClient(Model):
     def id(self, id: str):
         """
         Sets the id of this DashboardClient.
-        'The id of the OAuth2 client that the service intends to use. The name may be taken, in which case the API will return an error to the operator' 
+        The id of the Oauth client that the dashboard will use. If present, MUST be a non-empty string. 
 
         :param id: The id of this DashboardClient.
         :type id: str
@@ -78,7 +78,7 @@ class DashboardClient(Model):
     def secret(self) -> str:
         """
         Gets the secret of this DashboardClient.
-        A secret for the dashboard client
+        A secret for the dashboard client. If present, MUST be a non-empty string. 
 
         :return: The secret of this DashboardClient.
         :rtype: str
@@ -89,7 +89,7 @@ class DashboardClient(Model):
     def secret(self, secret: str):
         """
         Sets the secret of this DashboardClient.
-        A secret for the dashboard client
+        A secret for the dashboard client. If present, MUST be a non-empty string. 
 
         :param secret: The secret of this DashboardClient.
         :type secret: str
@@ -101,7 +101,7 @@ class DashboardClient(Model):
     def redirect_uri(self) -> str:
         """
         Gets the redirect_uri of this DashboardClient.
-        A domain for the service dashboard that will be whitelisted by the UAA to enable SSO
+        A URI for the service dashboard. Validated by the OAuth token server when the dashboard requests a token. 
 
         :return: The redirect_uri of this DashboardClient.
         :rtype: str
@@ -112,7 +112,7 @@ class DashboardClient(Model):
     def redirect_uri(self, redirect_uri: str):
         """
         Sets the redirect_uri of this DashboardClient.
-        A domain for the service dashboard that will be whitelisted by the UAA to enable SSO
+        A URI for the service dashboard. Validated by the OAuth token server when the dashboard requests a token. 
 
         :param redirect_uri: The redirect_uri of this DashboardClient.
         :type redirect_uri: str

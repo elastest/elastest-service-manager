@@ -41,7 +41,7 @@ class DashboardUrl(Model):
 
         :param dikt: A dict.
         :type: dict
-        :return: The Dashboard_url of this DashboardUrl.
+        :return: The DashboardUrl of this DashboardUrl.
         :rtype: DashboardUrl
         """
         return deserialize_model(dikt, cls)
