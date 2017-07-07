@@ -18,15 +18,13 @@ from esm.models import ServiceType
 from esm.models import UpdateOperationResponse
 from esm.models import UpdateRequest
 
+from adapters.datasource import ESM_DB
+
 from datetime import date, datetime
 from typing import List, Dict
 from six import iteritems
 from ..util import deserialize_date, deserialize_datetime
 
-
-# TODO abstract this and all interactions with DB
-CLIENT = MongoClient('localhost', 27017)  # take from env
-ESM_DB = CLIENT.esm
 
 epm = EPM()
 

@@ -10,11 +10,7 @@ from typing import List, Dict
 from six import iteritems
 from ..util import deserialize_date, deserialize_datetime
 
-# TODO externalise this
-from pymongo import MongoClient
-CLIENT = MongoClient('localhost', 27017)  # take from env
-ESM_DB = CLIENT.esm
-
+from adapters.datasource import ESM_DB
 
 def catalog():
     """
