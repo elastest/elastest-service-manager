@@ -976,9 +976,6 @@ definitions:
       service_type:
         description: the type of the service
         $ref: '#/definitions/ServiceType'
-      plan:
-        description: the plan that the service was created with
-        $ref: '#/definitions/Plan'
       state:
         description: the current state of the instance
         $ref: '#/definitions/LastOperation'
