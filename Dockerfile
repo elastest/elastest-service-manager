@@ -1,8 +1,8 @@
+FROM gliderlabs/alpine:latest
+
 LABEL maintainer "elastest-users@googlegroups.com"
 LABEL version="0.1.0"
 LABEL description="Builds the service manager docker image."
-
-FROM gliderlabs/alpine:latest
 
 WORKDIR /app
 
