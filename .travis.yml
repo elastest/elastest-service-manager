@@ -12,7 +12,4 @@ install:
   - "pip install -r requirements.txt"
   - "pip install -r test-requirements.txt"
 # command to run tests
-script: nosetests --with-xunit \
-            --with-coverage --cover-erase \
-            --cover-package=adapters --cover-package=esm \
-            --cover-min-percentage=70
+script: nosetests --with-xunit --with-coverage --cover-erase --cover-package=adapters --cover-package=esm --cover-min-percentage=70
