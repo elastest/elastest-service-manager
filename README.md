@@ -5,7 +5,7 @@ Copyright © 2017-2019 [ElasTest]. Licensed under [Apache 2.0 License].
 elastest-service-manager (esm)
 ==============================
 
-ElasTest Service Manager.
+ElasTest Service Manager. [![Build Status](https://travis-ci.org/elastest/elastest-service-manager.svg?branch=master)](https://travis-ci.org/elastest/elastest-service-manager)
 
 # What is ElasTest
 
