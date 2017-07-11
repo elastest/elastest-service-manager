@@ -125,14 +125,6 @@ class TestMongoDBStore(TestInMemoryStore):
     def setUp(self):
         super().setUp()
         self.store = MongoDBStore()
-        # from pymongo import MongoClient
-        # c = MongoClient(socketTimeoutMS=5, connectTimeoutMS=5)
-        # try:
-        #     c.database_names()
-        #     self.store = MongoDBStore()
-        # except:
-        #     self.store = InMemoryStore()
-        #     print('Warning: MongoDB not available. Using the InMemoryDB.')
 
     def tearDown(self):
         super().tearDown()
