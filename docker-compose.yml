@@ -1,0 +1,27 @@
+version: '2'
+
+services:
+  elastest-service-manager:
+    image: elastest/elastest-service-manager:latest
+    container_name: elastest-service-manager
+    hostname: elastest-service-manager
+    ports:
+      - "8080:8080"
+    networks:
+      - elastest
+
+  data-store-mongo:
+    depends_on:
+      - elastest-service-manager
+    image: mongo
+    volumes:
+      - ./mongodata:/data/db
+    hostname: ds-m
+    ports:
+      - "27017"
+    networks:
+      - elastest
+
+networks:
+  elastest:
+    external: true

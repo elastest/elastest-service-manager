@@ -13,17 +13,11 @@ from esm.models.manifest import Manifest
 from esm.models.service_type import ServiceType
 from . import BaseTestCase
 
-from adapters.datasource import ESM_DB
+from adapters.datasource import STORE
 
 
 class TestCatalogController(BaseTestCase):
     """ CatalogController integration test stubs """
-
-    def tearDown(self):
-        super().tearDown()
-
-        ESM_DB.services.delete_many({})
-        ESM_DB.manifests.delete_many({})
 
     def setUp(self):
         super().setUp()
@@ -44,6 +38,12 @@ class TestCatalogController(BaseTestCase):
             id='test', plan_id=self.test_plan.id, service_id=self.test_service.id,
             manifest_type='dummy', manifest_content=''
         )
+
+    def tearDown(self):
+        super().tearDown()
+        store = STORE
+        store.delete_service()
+        store.delete_manifest()
 
     def test_catalog(self):
         """

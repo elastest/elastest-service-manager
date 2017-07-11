@@ -19,7 +19,8 @@ from . import BaseTestCase
 from six import BytesIO
 from flask import json
 
-from adapters.datasource import ESM_DB
+# from adapters.datasource import MongoDBStore, InMemoryStore
+from adapters.datasource import STORE as store
 
 
 class TestServiceInstancesController(BaseTestCase):
@@ -28,6 +29,8 @@ class TestServiceInstancesController(BaseTestCase):
     def setUp(self):
         super().setUp()
 
+        # self.store = MongoDBStore()
+        self.store = store
         self.instance_id = 'this_is_a_test_instance'
 
         self.test_plan = Plan(
@@ -44,7 +47,7 @@ class TestServiceInstancesController(BaseTestCase):
             plan_updateable=False, plans=[self.test_plan],
             dashboard_client=None)
 
-        ESM_DB.services.insert_one(self.test_service.to_dict())
+        self.store.add_service(self.test_service)
 
         path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         with open(path + "/manifests/docker-compose.yml", "r") as mani_file:
@@ -53,15 +56,15 @@ class TestServiceInstancesController(BaseTestCase):
         self.test_manifest = Manifest(
             id='test-mani', plan_id=self.test_plan.id, service_id=self.test_service.id,
             manifest_type='dummy', manifest_content=mani)
-
         # manifest_type should be set to test for tests and therefore select the dummydriver
 
-        ESM_DB.manifests.insert_one(self.test_manifest.to_dict())
+        self.store.add_manifest(self.test_manifest)
 
     def tearDown(self):
-        super().tearDown()
-        ESM_DB.services.delete_many({})
-        ESM_DB.manifests.delete_many({})
+        self.store.delete_service()
+        self.store.delete_manifest()
+        self.store.delete_service_instance()
+        self.store.delete_last_operation()
 
     def test_create_service_instance(self):
         """
@@ -148,7 +151,8 @@ class TestServiceInstancesController(BaseTestCase):
         query_string = [('service_id', 'service_id_example'),
                         ('plan_id', 'plan_id_example'),
                         ('operation', 'operation_example')]
-        response = self.client.open('/v2/service_instances/{instance_id}/last_operation'.format(instance_id=self.instance_id),
+        response = self.client.open('/v2/service_instances/{instance_id}/last_operation'.format(
+            instance_id=self.instance_id),
                                     method='GET',
                                     query_string=query_string)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
