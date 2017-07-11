@@ -26,7 +26,7 @@ installation and development guide.
 
 ## Generated Code
 Some of the code in the ESM is generated using [swagger-codegen](https://github.com/swagger-api/swagger-codegen).
-See ```./gen_api_skels.sh``` on how the command line is to generate the code.
+See `./gen_api_skels.sh` on how the command line is to generate the code.
 The ESM uses the [Connexion](https://github.com/zalando/connexion) library on top of Flask.
 
 To run the ESM, please execute the following from the root directory:
@@ -41,7 +41,7 @@ If you want to view the Swagger UI you can simply navigate to this URL in your b
 http://localhost:8080/ui/
 ```
 
-To retreive the swagger specification of the running ESM simply use `curl` or `wget` against this URL
+To retrieve the swagger specification of the running ESM simply use `curl` or `wget` against this URL
 ```
 http://localhost:8080/swagger.json
 ```
@@ -66,14 +66,14 @@ Ensure you have all dependencies required: `pip3 install -r requirements.txt`
 
 Configure the following OS environment variables:
 
-* `SB_PORT`: this is the port under which the service broker runs. By default it runs on `8080`.
+* `ESM_PORT`: this is the port under which the service broker runs. By default it runs on `8080`.
 
 Example config and run:
 
 ```shell
-export SB_PORT=9999
+export ESM_PORT=9999
 ./runme.py
- * SB_PORT: 9999
+ * ESM_PORT: 9999
  ./runme.py
  * Running on http://0.0.0.0:9999/ (Press CTRL+C to quit)
 ```
