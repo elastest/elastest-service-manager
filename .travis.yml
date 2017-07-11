@@ -1,8 +1,35 @@
 # ref: https://docs.travis-ci.com/user/languages/python
+# note: the docker build goes to dizz as the credentials for elastest are not available yet
 language: python
+
 python:
   - "3.6"
+
+sudo: required
+
 install:
   - "pip install -r requirements.txt"
   - "pip install -r test-requirements.txt"
-script: nosetests --with-xunit --with-coverage --cover-erase --cover-package=adapters --cover-package=esm --cover-min-percentage=70
+
+env:
+  - MONGODB_TESTS=  YES
+  - DOCKER_TESTS=YES
+
+before_script:
+  - sleep 15
+  - mongo mydb_test --eval 'db.addUser("travis", "test");'
+
+script:
+  - nosetests --with-xunit --with-coverage --cover-erase --cover-package=adapters --cover-package=esm --cover-min-percentage=70
+  - docker build -t dizz/elastest-service-manager .
+  - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+
+services:
+  - docker
+  - mongodb
+
+after_success:
+  - if [ "$TRAVIS_BRANCH" == "master" ]; then
+    docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
+    docker push dizz/elastest-service-manager;
+    fi
