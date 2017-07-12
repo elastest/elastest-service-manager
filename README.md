@@ -102,6 +102,14 @@ http://localhost:8080/v2/swagger.json
 
 To use the API please see the [open service broker API specification](https://www.openservicebrokerapi.org/) or use the UI version from within your browser.
 
+### Register a Service
+
+TODO
+
+### Register a Manifest for a Service's Plan
+
+TODO
+
 ### Get the Catalog
 
 ```shell
@@ -231,9 +239,33 @@ null
 
 Currently not supported.
 
+## Extending
+
+### Data Store
+
+Subclass `adapters.datastore.Store` and implement for you persistence system.
+
+Currently supported:
+
+* `adapters.datastore.InMemoryStore`: this is a datastore driver that holds all ESM state in memory. To be used for testing only as restarting the ESM process will destroy all recorded information.
+
+
+* `adapters.datastore.MongoDB`: this is a datastore driver that persists all ESM state into mongodb. Data is kept across reboots of the ESM process.
+
+### Resource Manager
+
+Subclass `adapters.resources.Backend` and implement for you persistence system. You will then have to register your Backend driver with the `adapters.resources.EPM` class.
+
+Currently supported:
+
+* `adapters.resources.DummyBackend`: This is a NoOp driver used for speedy testing.
+
+
+* `adapters.resources.DockerBackend`: Uses a docker-compose file to deploy the service software. This can point not only to a local docker deployment (not distributed), but also to a docker swarm.
+
 ## Deploy on Docker
 
-There is a docker build file `./Dockerfile` in the root of this project. You can use this to create a docker image that can then be ran upon your docker environment.
+There is a docker build file `./Dockerfile` in the root of this project. You can use this to create a docker image that can then be ran upon your local docker environment.
 
 There is also a docker compose file `./docker-compose` in the root of this project. You can use this to bring up the ESM with a DB backend.
 
@@ -249,16 +281,22 @@ There are deployment manifests within `./deploy` that will deploy a service brok
 4. Build: `oc start-build svcbroker`.
 5. Destroy: `oc delete -f ./deploy`.
 
+## Deploy on K8s
+
+TODO
+
 ## Notes
 
 To build the swagger-codegen [tool yourself](https://github.com/swagger-api/swagger-codegen/tree/master#building)
 
 ``` sh
 # server files
-java -jar $SWAGGER_CODE_GEN_REPO/modules/swagger-codegen-cli/target/swagger-codegen-cli.jar generate -i  ./apidef/swagger/open_service_broker_api.yaml -l python-flask -o ./ -DsupportPython2=true -DpackageName=svcbroker
+# assumes a brew installation of swagger code gen
+SWAGGER_CODE_GEN="/usr/local/bin/swagger-codegen"
+$SWAGGER_CODE_GEN generate -i  ./api.yaml -l python-flask -o ./ -DpackageName=esm --import-mappings object=#
 
 # client files
-java -jar $SWAGGER_CODE_GEN_REPO/modules/swagger-codegen-cli/target/swagger-codegen-cli.jar generate -i  ./apidef/swagger/open_service_broker_api.yaml -l python -o ./client -DpackageName=svcbroker-client
+$SWAGGER_CODE_GEN generate -i  ./apidef/swagger/open_service_broker_api.yaml -l python -o ./client -DpackageName=esm-client
 ```
 
 # Source
