@@ -10,6 +10,7 @@ node('docker'){
             git 'https://github.com/elastest/elastest-service-manager'
             
             stage "Unit tests"
+                // TODO: add DOCKER_TESTS=YES and MONGODB_TESTS=YES env vars
                 echo ("Starting unit tests...")
                 sh 'tox'
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
