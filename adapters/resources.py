@@ -157,7 +157,6 @@ class DockerBackend(Backend):
             # TODO raise exception
             return
 
-        # TODO see if these can be moved into constructor
         self.options["--force"] = True
         self.options["--rmi"] = "none"
         LOG.info('destroying: {compo}'.format(compo=mani_dir + '/docker-compose.yml'))

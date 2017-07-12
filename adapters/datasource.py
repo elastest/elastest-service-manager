@@ -142,8 +142,6 @@ class MongoDBStore(Store):
             return instances
 
     def add_service_instance(self, service_instance: ServiceInstance):
-        # TODO remove boolean update flag - if the thing exists a query will tell us!
-
         result = self.ESM_DB.instances.count({'context.id': service_instance.context['id']})
         if result == 1:
             raw_svc_inst = self.ESM_DB.instances.find_one({'context.id': service_instance.context['id']})

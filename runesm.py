@@ -9,6 +9,7 @@ from esm.encoder import JSONEncoder
 if __name__ == '__main__':
     ESM_APP = connexion.App(__name__, specification_dir='./esm/swagger/')
     ESM_APP.app.json_encoder = JSONEncoder
+    # TODO consider overriding Resolver if OO holders of controller methods is required.
     ESM_APP.add_api(
         'swagger.yaml', strict_validation=True,
         arguments={'title': 'The Open Service Broker API defines the contract between the a requesting '
