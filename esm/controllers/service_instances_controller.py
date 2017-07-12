@@ -143,33 +143,21 @@ def instance_info(instance_id):
         # get the latest info
         inst_info = epm.info(instance_id=instance_id)
 
-        # -----------------------------------------------------------------------------------------------------------------
-        # TODO move this functionality into the adapter
+        if inst_info['srv_inst.state.state'] == 'failed':
+            # try epm.delete(instance_id=instance_id)?
+            return 'There has been a failure in creating the service instance.', 500
+
         # TODO need a converged state model for the SM
-        # merge the status dicts
-        states = set([v for k, v in inst_info.items() if k.endswith('state')])
+        srv_inst.state.state = inst_info['srv_inst.state.state']
+        srv_inst.state.description = inst_info['srv_inst.state.description']
 
-        # states from compose.container.Container: 'Paused', 'Restarting', 'Ghost', 'Up', 'Exit %s'
-        # states for OSBA: in progress, succeeded, and failed
-        for state in states:
-            if state.startswith('Exit'):
-                # there's been an error with docker
-                srv_inst.state.state = 'failed'
-                srv_inst.state.description = 'There was an error in creating the instance {error}'.format(error=state)
-                return 'Error with docker: {error}'.format(error=state), 500
-
-        if len(states) == 1:  # if all states of the same value
-            if states.pop() == 'Up':  # if running: Up
-                srv_inst.state.state = 'succeeded'
-                srv_inst.state.description = 'The service instance has been created successfully'
-        else:
-            # still waiting for completion
-            srv_inst.state.state = 'in progress'
-            srv_inst.state.description = 'The service instance is being created.'
-        # -----------------------------------------------------------------------------------------------------------------
+        # don't need you any more, buh-bye!
+        del inst_info['srv_inst.state.state']
+        del inst_info['srv_inst.state.description']
 
         # merge the two context dicts
         srv_inst.context = {**srv_inst.context, **inst_info}
+
         # update the service instance record - there should be an asynch method doing the update - event based
         store.add_service_instance(srv_inst)
 

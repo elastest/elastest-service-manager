@@ -121,10 +121,31 @@ class DockerBackend(Backend):
                 else:
                     info[c.name + '_' + k] = v
 
-            LOG.debug('{name} container state: {state}'.format(name=c.name, state=c.human_readable_state))
-            info[c.name + '_state'] = c.human_readable_state
             LOG.debug('{name} container command: {cmd}'.format(name=c.name, cmd=c.human_readable_command))
             info[c.name + '_cmd'] = c.human_readable_command
+
+            LOG.debug('{name} container state: {state}'.format(name=c.name, state=c.human_readable_state))
+            info[c.name + '_state'] = c.human_readable_state
+
+        states = set([v for k, v in info.items() if k.endswith('state')])
+
+        # states from compose.container.Container: 'Paused', 'Restarting', 'Ghost', 'Up', 'Exit %s'
+        # states for OSBA: in progress, succeeded, and failed
+        for state in states:
+            if state.startswith('Exit'):
+                # there's been an error with docker
+                info['srv_inst.state.state'] = 'failed'
+                info['srv_inst.state.description'] = 'There was an error in creating the instance {error}'.format(error=state)
+                # return 'Error with docker: {error}'.format(error=state), 500
+
+        if len(states) == 1:  # if all states of the same value
+            if states.pop() == 'Up':  # if running: Up
+                info['srv_inst.state.state'] = 'succeeded'
+                info['srv_inst.state.description'] = 'The service instance has been created successfully'
+        else:
+            # still waiting for completion
+            info['srv_inst.state.state'] = 'in progress'
+            info['srv_inst.state.description'] = 'The service instance is being created.'
 
         return info
 
@@ -202,17 +223,41 @@ class DummyBackend(Backend):
         super().info(instance_id)
         LOG.info('DummyBackend driver: info called')
         # TODO update to include the network info
-        dummy_data = {
+        info = {
             'testid123_spark-worker_1_image_name': 'elastest/ebs-spark-base:0.5.0',
             'testid123_spark-worker_1_image_id': 'sha256:138a91572bd6bdce7d7b49a44b91a4caf4abdf1a75f105991e18be971353d5cb',
             'testid123_spark-worker_1_state': 'Up',
             'testid123_spark-worker_1_cmd': '/usr/bin/supervisord --configuration=/opt/conf/slave.conf',
             'spark-master_image_name': 'elastest/ebs-spark-base:0.5.0',
             'spark-master_image_id': 'sha256:138a91572bd6bdce7d7b49a44b91a4caf4abdf1a75f105991e18be971353d5cb',
-            'spark-master_state': 'Up', 'spark-master_cmd': '/usr/bin/supervisord --configuration=/opt/conf/master.conf'
+            'spark-master_state': 'Up',
+            'spark-master_cmd': '/usr/bin/supervisord --configuration=/opt/conf/master.conf'
         }
-        LOG.info('Dummy data:\n{dummy}'.format(dummy=dummy_data))
-        return dummy_data
+
+        # TODO FIXME below until return is duplicated code!!!!
+        states = set([v for k, v in info.items() if k.endswith('state')])
+
+        # states from compose.container.Container: 'Paused', 'Restarting', 'Ghost', 'Up', 'Exit %s'
+        # states for OSBA: in progress, succeeded, and failed
+        for state in states:
+            if state.startswith('Exit'):
+                # there's been an error with docker
+                info['srv_inst.state.state'] = 'failed'
+                info['srv_inst.state.description'] = 'There was an error in creating the instance {error}'.format(
+                    error=state)
+                # return 'Error with docker: {error}'.format(error=state), 500
+
+        if len(states) == 1:  # if all states of the same value
+            if states.pop() == 'Up':  # if running: Up
+                info['srv_inst.state.state'] = 'succeeded'
+                info['srv_inst.state.description'] = 'The service instance has been created successfully'
+        else:
+            # still waiting for completion
+            info['srv_inst.state.state'] = 'in progress'
+            info['srv_inst.state.description'] = 'The service instance is being created.'
+
+        LOG.info('Dummy data:\n{dummy}'.format(dummy=info))
+        return info
 
 
 class TOSCABackend(Backend):
