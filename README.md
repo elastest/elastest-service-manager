@@ -9,6 +9,7 @@ ElasTest Service Manager.
 [![License badge](https://img.shields.io/badge/license-Apache2-orange.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Documentation badge](https://img.shields.io/badge/docs-latest-brightgreen.svg)](http://elastest.io/docs/api/esm/)
 [![Build Status](https://travis-ci.org/elastest/elastest-service-manager.svg?branch=master)](https://travis-ci.org/elastest/elastest-service-manager)
+[![codecov](https://codecov.io/gh/elastest/elastest-service-manager/branch/master/graph/badge.svg)](https://codecov.io/gh/elastest/elastest-service-manager)
 
 This is the elastest service manager that is responsible for providing support service instances to test jobs. 
 It's an implementation of the [Open Service Broker API](https://github.com/openservicebrokerapi/servicebroker), v2.12, 
