@@ -173,7 +173,7 @@ def instance_info(instance_id):
         # update the service instance record - there should be an asynch method doing the update - event based
         store.add_service_instance(srv_inst)
 
-        return srv_inst.to_dict(), 200
+        return srv_inst, 200
 
 
 def last_operation_status(instance_id, service_id=None, plan_id=None, operation=None):
@@ -196,16 +196,10 @@ def last_operation_status(instance_id, service_id=None, plan_id=None, operation=
 
     :rtype: LastOperation
     """
-    ok, message, code = _version_ok()
-    if not ok:
-        return message, code
-    else:
-        # TODO fixme
-        # just re-use the method and return it's http status code.
-        # inst_info = instance_info(instance_id=instance_id)
-        # si = ServiceInstance.from_dict(inst_info[0])
-        # return si.state.to_dict(), inst_info[1]
-        return 'all good', 200
+    # just re-use the method and return it's content and http status code.
+    # version check not required here as it's done in the proxied call
+    inst_info, code = instance_info(instance_id=instance_id)
+    return inst_info, code
 
 
 def service_bind(instance_id, binding_id, binding):
