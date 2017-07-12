@@ -5,7 +5,10 @@ Copyright © 2017-2019 [ElasTest]. Licensed under [Apache 2.0 License].
 # elastest-service-manager (esm)
 
 
-ElasTest Service Manager. [![Build Status](https://travis-ci.org/elastest/elastest-service-manager.svg?branch=master)](https://travis-ci.org/elastest/elastest-service-manager)
+ElasTest Service Manager. 
+[![License badge](https://img.shields.io/badge/license-Apache2-orange.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+[![Documentation badge](https://img.shields.io/badge/docs-latest-brightgreen.svg)](http://elastest.io/docs/api/esm/)
+[![Build Status](https://travis-ci.org/elastest/elastest-service-manager.svg?branch=master)](https://travis-ci.org/elastest/elastest-service-manager)
 
 This is the elastest service manager that is responsible for providing support service instances to test jobs. 
 It's an implementation of the [Open Service Broker API](https://github.com/openservicebrokerapi/servicebroker), v2.12, 
