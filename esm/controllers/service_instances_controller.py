@@ -41,8 +41,10 @@ def create_service_instance(instance_id, service, accept_incomplete=None):
     if not ok:
         return message, code
     else:
-        if connexion.request.is_json:  # TODO and if it is not?!
+        if connexion.request.is_json:
             service = ServiceRequest.from_dict(connexion.request.get_json())
+        else:
+            return "Supplied body content is not or is mal-formed JSON", 400
 
         # look up manifest based on plan id
         # based on the manifest type, select the driver
@@ -207,8 +209,10 @@ def service_bind(instance_id, binding_id, binding):
     if not ok:
         return message, code
     else:
-        if connexion.request.is_json:  # TODO and if it is not?!
+        if connexion.request.is_json:
             binding = BindingRequest.from_dict(connexion.request.get_json())
+        else:
+            return "Supplied body content is not or is mal-formed JSON", 400
         return 'Not implemented :-(', 501
 
 
@@ -251,6 +255,8 @@ def update_service_instance(instance_id, plan, accept_incomplete=None):
     if not ok:
         return message, code
     else:
-        if connexion.request.is_json:  # TODO and if it is not?!
+        if connexion.request.is_json:
             plan = UpdateRequest.from_dict(connexion.request.get_json())
+        else:
+            return "Supplied body content is not or is mal-formed JSON", 400
         return 'Not implemented :-(', 501

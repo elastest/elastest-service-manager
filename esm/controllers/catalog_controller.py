@@ -47,8 +47,10 @@ def register_service(service):
     if not ok:
         return message, code
     else:
-        if connexion.request.is_json:  # TODO and if it is not?!
+        if connexion.request.is_json:
             service = ServiceType.from_dict(connexion.request.get_json())
+        else:
+            return "Supplied body content is not or is mal-formed JSON", 400
         store.add_service(service=service)
         return Empty()
 
@@ -69,8 +71,10 @@ def store_manifest(manifest_id, manifest):
     if not ok:
         return message, code
     else:
-        if connexion.request.is_json:  # TODO and if it is not?!
+        if connexion.request.is_json:
             manifest = Manifest.from_dict(connexion.request.get_json())
+        else:
+            return "Supplied body content is not or is mal-formed JSON", 400
         manifest.id = manifest_id
         store.add_manifest(manifest)
 
