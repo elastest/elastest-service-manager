@@ -8,6 +8,9 @@ from adapters.log import LOG
 from adapters.datasource import STORE
 
 
+# TODO improve type hints for all signatures
+
+
 class Backend(object):
     def create(self, instance_id, content, c_type):
         pass

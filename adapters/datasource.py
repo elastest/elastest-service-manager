@@ -7,6 +7,7 @@ from esm.models import ServiceType
 from esm.models import ServiceInstance
 from esm.models import LastOperation
 
+# TODO improve type hints for all signatures
 
 class Store(object):
     def add_service(self, service) -> None:
