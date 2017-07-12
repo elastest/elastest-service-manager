@@ -29,6 +29,7 @@ services:
   - mongodb
 
 after_success:
+  - codecov
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
     docker push dizz/elastest-service-manager;
