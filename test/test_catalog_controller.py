@@ -2,12 +2,12 @@
 
 from __future__ import absolute_import
 
-from six import BytesIO
+# from six import BytesIO
 from flask import json
 
-from esm.models.catalog import Catalog
-from esm.models.empty import Empty
-from esm.models.error import Error
+# from esm.models.catalog import Catalog
+# from esm.models.empty import Empty
+# from esm.models.error import Error
 from esm.models.plan import Plan
 from esm.models.manifest import Manifest
 from esm.models.service_type import ServiceType
@@ -51,8 +51,10 @@ class TestCatalogController(BaseTestCase):
 
         Gets services registered within the broker
         """
+        headers = [('X_Broker_Api_Version', '2.12')]
         response = self.client.open('/v2/catalog',
-                                    method='GET')
+                                    method='GET',
+                                    headers=headers)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
     def test_register_service(self):
@@ -61,11 +63,12 @@ class TestCatalogController(BaseTestCase):
 
         Registers the service with the catalog.
         """
-
+        headers = [('X_Broker_Api_Version', '2.12')]
         response = self.client.open('/v2/et/catalog',
                                     method='PUT',
                                     data=json.dumps(self.test_service),
-                                    content_type='application/json')
+                                    content_type='application/json',
+                                    headers=headers)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
     def test_store_manifest(self):
@@ -74,17 +77,20 @@ class TestCatalogController(BaseTestCase):
 
         takes deployment description of a software service and associates with a service and plan
         """
-
+        headers = [('X_Broker_Api_Version', '2.12')]
         response = self.client.open('/v2/et/catalog',
                                     method='PUT',
                                     data=json.dumps(self.test_service),
-                                    content_type='application/json')
+                                    content_type='application/json',
+                                    headers=headers)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
+        headers = [('X_Broker_Api_Version', '2.12')]
         response = self.client.open('/v2/et/manifest/{manifest_id}'.format(manifest_id=self.test_manifest.id),
                                     method='PUT',
                                     data=json.dumps(self.test_manifest),
-                                    content_type='application/json')
+                                    content_type='application/json',
+                                    headers=headers)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
 

@@ -1,5 +1,6 @@
 import connexion
 
+from esm.controllers import _version_ok
 from esm.models import BindingRequest
 from esm.models import BindingResponse
 from esm.models import Empty
@@ -36,54 +37,58 @@ def create_service_instance(instance_id, service, accept_incomplete=None):
 
     :rtype: ServiceResponse
     """
-    if connexion.request.is_json:
-        service = ServiceRequest.from_dict(connexion.request.get_json())
-
-    # look up manifest based on plan id
-    # based on the manifest type, select the driver
-    # send the manifest for creation to the target system
-    # store the ID along with refs to service, plan and manifest
-
-    # get the manifest for the service/plan
-    # TODO some validation required here to ensure it's the right svc/plan
-    svc_type = store.get_service(service.service_id)[0]
-    if svc_type is None:
-        return 'Unrecognised service requested to be instantiated', 404
-
-    plans = svc_type.plans
-    plan = [p for p in plans if p.id == service.plan_id]
-    if len(plan) <= 0:
-        return 'no plan found.', 404
-
-    mani = store.get_manifest(plan_id=plan[0].id)[0]
-
-    if accept_incomplete:  # given docker-compose runs in detached mode this is not needed - only timing can verify
-        # TODO put this in a thread to allow for asynch processing?
-        epm.create(instance_id=instance_id, content=mani.manifest_content, c_type=mani.manifest_type)
+    ok, message, code = _version_ok()
+    if not ok:
+        return message, code
     else:
-        epm.create(instance_id=instance_id, content=mani.manifest_content, c_type=mani.manifest_type)
+        if connexion.request.is_json:  # TODO and if it is not?!
+            service = ServiceRequest.from_dict(connexion.request.get_json())
 
-    last_op = LastOperation(
-        state='creating',
-        description='service instance is being created'
-    )
+        # look up manifest based on plan id
+        # based on the manifest type, select the driver
+        # send the manifest for creation to the target system
+        # store the ID along with refs to service, plan and manifest
 
-    # store the instance Id with manifest id
-    srv_inst = ServiceInstance(
-        service_type=svc_type,
-        state=last_op,
-        context={
-            'id': instance_id,
-            'manifest_id': mani.id,
-        }
-    )
+        # get the manifest for the service/plan
+        # TODO some validation required here to ensure it's the right svc/plan
+        svc_type = store.get_service(service.service_id)[0]
+        if svc_type is None:
+            return 'Unrecognised service requested to be instantiated', 404
 
-    store.add_service_instance(srv_inst)
+        plans = svc_type.plans
+        plan = [p for p in plans if p.id == service.plan_id]
+        if len(plan) <= 0:
+            return 'no plan found.', 404
 
-    if accept_incomplete:
-        store.add_last_operation(instance_id=instance_id, last_operation=last_op)
+        mani = store.get_manifest(plan_id=plan[0].id)[0]
 
-    return 'created', 200
+        if accept_incomplete:  # given docker-compose runs in detached mode this is not needed - only timing can verify
+            # TODO put this in a thread to allow for asynch processing?
+            epm.create(instance_id=instance_id, content=mani.manifest_content, c_type=mani.manifest_type)
+        else:
+            epm.create(instance_id=instance_id, content=mani.manifest_content, c_type=mani.manifest_type)
+
+        last_op = LastOperation(
+            state='creating',
+            description='service instance is being created'
+        )
+
+        # store the instance Id with manifest id
+        srv_inst = ServiceInstance(
+            service_type=svc_type,
+            state=last_op,
+            context={
+                'id': instance_id,
+                'manifest_id': mani.id,
+            }
+        )
+
+        store.add_service_instance(srv_inst)
+
+        if accept_incomplete:
+            store.add_last_operation(instance_id=instance_id, last_operation=last_op)
+
+        return 'created', 200
 
 
 def deprovision_service_instance(instance_id, service_id, plan_id, accept_incomplete=None):
@@ -104,12 +109,14 @@ def deprovision_service_instance(instance_id, service_id, plan_id, accept_incomp
 
     :rtype: UpdateOperationResponse
     """
-    # XXX if there's bindings remove first?
-    epm.delete(instance_id=instance_id)
-
-    # TODO delete store records
-
-    return Empty(), 200
+    ok, message, code = _version_ok()
+    if not ok:
+        return message, code
+    else:
+        # XXX if there's bindings remove first?
+        # TODO delete store records
+        epm.delete(instance_id=instance_id)
+        return Empty(), 200
 
 
 def instance_info(instance_id):
@@ -123,47 +130,50 @@ def instance_info(instance_id):
 
     :rtype: ServiceType
     """
-
-    # service instance should already be recorded
-    srv_inst = store.get_service_instance(instance_id)
-    if len(srv_inst) < 1:
-        return 'no service instance found.', 404
-    srv_inst = srv_inst[0]
-
-    # get the latest info
-    inst_info = epm.info(instance_id=instance_id)
-
-    # -----------------------------------------------------------------------------------------------------------------
-    # TODO move this functionality into the adapter
-    # TODO need a converged state model for the SM
-    # merge the status dicts
-    states = set([v for k, v in inst_info.items() if k.endswith('state')])
-
-    # states from compose.container.Container: 'Paused', 'Restarting', 'Ghost', 'Up', 'Exit %s'
-    # states for OSBA: in progress, succeeded, and failed
-    for state in states:
-        if state.startswith('Exit'):
-            # there's been an error with docker
-            srv_inst.state.state = 'failed'
-            srv_inst.state.description = 'There was an error in creating the instance {error}'.format(error=state)
-            return 'Error with docker: {error}'.format(error=state), 500
-
-    if len(states) == 1:  # if all states of the same value
-        if states.pop() == 'Up':  # if running: Up
-            srv_inst.state.state = 'succeeded'
-            srv_inst.state.description = 'The service instance has been created successfully'
+    ok, message, code = _version_ok()
+    if not ok:
+        return message, code
     else:
-        # still waiting for completion
-        srv_inst.state.state = 'in progress'
-        srv_inst.state.description = 'The service instance is being created.'
-    # -----------------------------------------------------------------------------------------------------------------
+        # service instance should already be recorded
+        srv_inst = store.get_service_instance(instance_id)
+        if len(srv_inst) < 1:
+            return 'no service instance found.', 404
+        srv_inst = srv_inst[0]
 
-    # merge the two context dicts
-    srv_inst.context = {**srv_inst.context, **inst_info}
-    # update the service instance record - there should be an asynch method doing the update - event based
-    store.add_service_instance(srv_inst)
+        # get the latest info
+        inst_info = epm.info(instance_id=instance_id)
 
-    return srv_inst.to_dict(), 200
+        # -----------------------------------------------------------------------------------------------------------------
+        # TODO move this functionality into the adapter
+        # TODO need a converged state model for the SM
+        # merge the status dicts
+        states = set([v for k, v in inst_info.items() if k.endswith('state')])
+
+        # states from compose.container.Container: 'Paused', 'Restarting', 'Ghost', 'Up', 'Exit %s'
+        # states for OSBA: in progress, succeeded, and failed
+        for state in states:
+            if state.startswith('Exit'):
+                # there's been an error with docker
+                srv_inst.state.state = 'failed'
+                srv_inst.state.description = 'There was an error in creating the instance {error}'.format(error=state)
+                return 'Error with docker: {error}'.format(error=state), 500
+
+        if len(states) == 1:  # if all states of the same value
+            if states.pop() == 'Up':  # if running: Up
+                srv_inst.state.state = 'succeeded'
+                srv_inst.state.description = 'The service instance has been created successfully'
+        else:
+            # still waiting for completion
+            srv_inst.state.state = 'in progress'
+            srv_inst.state.description = 'The service instance is being created.'
+        # -----------------------------------------------------------------------------------------------------------------
+
+        # merge the two context dicts
+        srv_inst.context = {**srv_inst.context, **inst_info}
+        # update the service instance record - there should be an asynch method doing the update - event based
+        store.add_service_instance(srv_inst)
+
+        return srv_inst.to_dict(), 200
 
 
 def last_operation_status(instance_id, service_id=None, plan_id=None, operation=None):
@@ -186,13 +196,16 @@ def last_operation_status(instance_id, service_id=None, plan_id=None, operation=
 
     :rtype: LastOperation
     """
-
-    # TODO fixme
-    # just re-use the method and return it's http status code.
-    # inst_info = instance_info(instance_id=instance_id)
-    # si = ServiceInstance.from_dict(inst_info[0])
-    # return si.state.to_dict(), inst_info[1]
-    return 'all good', 200
+    ok, message, code = _version_ok()
+    if not ok:
+        return message, code
+    else:
+        # TODO fixme
+        # just re-use the method and return it's http status code.
+        # inst_info = instance_info(instance_id=instance_id)
+        # si = ServiceInstance.from_dict(inst_info[0])
+        # return si.state.to_dict(), inst_info[1]
+        return 'all good', 200
 
 
 def service_bind(instance_id, binding_id, binding):
@@ -208,9 +221,13 @@ def service_bind(instance_id, binding_id, binding):
 
     :rtype: BindingResponse
     """
-    if connexion.request.is_json:
-        binding = BindingRequest.from_dict(connexion.request.get_json())
-    return 'do some magic!'
+    ok, message, code = _version_ok()
+    if not ok:
+        return message, code
+    else:
+        if connexion.request.is_json:  # TODO and if it is not?!
+            binding = BindingRequest.from_dict(connexion.request.get_json())
+        return 'Not implemented :-(', 501
 
 
 def service_unbind(instance_id, binding_id, service_id, plan_id):
@@ -228,7 +245,11 @@ def service_unbind(instance_id, binding_id, service_id, plan_id):
 
     :rtype: Empty
     """
-    return 'do some magic!'
+    ok, message, code = _version_ok()
+    if not ok:
+        return message, code
+    else:
+        return 'Not implemented :-(', 501
 
 
 def update_service_instance(instance_id, plan, accept_incomplete=None):
@@ -244,6 +265,10 @@ def update_service_instance(instance_id, plan, accept_incomplete=None):
 
     :rtype: Empty
     """
-    if connexion.request.is_json:
-        plan = UpdateRequest.from_dict(connexion.request.get_json())
-    return 'do some magic!'
+    ok, message, code = _version_ok()
+    if not ok:
+        return message, code
+    else:
+        if connexion.request.is_json:  # TODO and if it is not?!
+            plan = UpdateRequest.from_dict(connexion.request.get_json())
+        return 'Not implemented :-(', 501

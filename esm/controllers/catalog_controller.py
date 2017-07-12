@@ -1,4 +1,5 @@
 import connexion
+from esm.controllers import _version_ok
 from esm.models.catalog import Catalog
 from esm.models.empty import Empty
 from esm.models.service_type import ServiceType
@@ -22,9 +23,13 @@ def catalog():
     """
     # get all services from the service collection
 
-    # page_number = connexion.request.headers['Page-Number']
-    services = store.get_service()
-    return Catalog(services=services)
+    ok, message, code = _version_ok()
+
+    if not ok:
+        return message, code
+    else:
+        services = store.get_service()
+        return Catalog(services=services), 200
 
 
 def register_service(service):
@@ -38,12 +43,14 @@ def register_service(service):
 
     :rtype: Empty
     """
-    if connexion.request.is_json:
-        service = ServiceType.from_dict(connexion.request.get_json())
-
-    store.add_service(service=service)
-
-    return Empty()
+    ok, message, code = _version_ok()
+    if not ok:
+        return message, code
+    else:
+        if connexion.request.is_json:  # TODO and if it is not?!
+            service = ServiceType.from_dict(connexion.request.get_json())
+        store.add_service(service=service)
+        return Empty()
 
 
 def store_manifest(manifest_id, manifest):
@@ -58,11 +65,13 @@ def store_manifest(manifest_id, manifest):
 
     :rtype: ServiceResponse
     """
+    ok, message, code = _version_ok()
+    if not ok:
+        return message, code
+    else:
+        if connexion.request.is_json:  # TODO and if it is not?!
+            manifest = Manifest.from_dict(connexion.request.get_json())
+        manifest.id = manifest_id
+        store.add_manifest(manifest)
 
-    if connexion.request.is_json:
-        manifest = Manifest.from_dict(connexion.request.get_json())
-
-    manifest.id = manifest_id
-    store.add_manifest(manifest)
-
-    return Empty()
+        return Empty()

@@ -75,11 +75,13 @@ class TestServiceInstancesController(BaseTestCase):
         service = ServiceRequest(service_id=self.test_service.id, plan_id=self.test_plan.id,
                                  organization_guid='org', space_guid='space')
         query_string = [('accept_incomplete', False)]
+        headers = [('X_Broker_Api_Version', '2.12')]
         response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id=self.instance_id),
                                     method='PUT',
                                     data=json.dumps(service),
                                     content_type='application/json',
-                                    query_string=query_string)
+                                    query_string=query_string,
+                                    headers=headers)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
     def test_deprovision_service_instance(self):
@@ -92,19 +94,23 @@ class TestServiceInstancesController(BaseTestCase):
         service = ServiceRequest(service_id=self.test_service.id, plan_id=self.test_plan.id,
                                  organization_guid='org', space_guid='space')
         query_string = [('accept_incomplete', False)]
+        headers = [('X_Broker_Api_Version', '2.12')]
         response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id=self.instance_id),
                                     method='PUT',
                                     data=json.dumps(service),
                                     content_type='application/json',
-                                    query_string=query_string)
+                                    query_string=query_string,
+                                    headers=headers)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
         query_string = [('service_id', 'srv'),
                         ('plan_id', 'plan'),
                         ('accept_incomplete', True)]
+        headers = [('X_Broker_Api_Version', '2.12')]
         response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id=self.instance_id),
                                     method='DELETE',
-                                    query_string=query_string)
+                                    query_string=query_string,
+                                    headers=headers)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
     def test_instance_info(self):
@@ -118,16 +124,19 @@ class TestServiceInstancesController(BaseTestCase):
         service = ServiceRequest(service_id=self.test_service.id, plan_id=self.test_plan.id,
                                  organization_guid='org', space_guid='space')
         query_string = [('accept_incomplete', False)]
+        headers = [('X_Broker_Api_Version', '2.12')]
         response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id=self.instance_id),
                                     method='PUT',
                                     data=json.dumps(service),
                                     content_type='application/json',
-                                    query_string=query_string)
+                                    query_string=query_string,
+                                    headers=headers)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
         # get info from the instance
+        headers = [('X_Broker_Api_Version', '2.12')]
         response = self.client.open('/v2/et/service_instances/{instance_id}'.format(instance_id=self.instance_id),
-                                    method='GET')
+                                    method='GET', headers=headers)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
     def test_last_operation_status(self):
@@ -141,20 +150,23 @@ class TestServiceInstancesController(BaseTestCase):
         service = ServiceRequest(service_id=self.test_service.id, plan_id=self.test_plan.id,
                                  organization_guid='org', space_guid='space')
         query_string = [('accept_incomplete', False)]
+        headers = [('X_Broker_Api_Version', '2.12')]
         response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id=self.instance_id),
                                     method='PUT',
                                     data=json.dumps(service),
                                     content_type='application/json',
-                                    query_string=query_string)
+                                    query_string=query_string,
+                                    headers=headers)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
         query_string = [('service_id', 'service_id_example'),
                         ('plan_id', 'plan_id_example'),
                         ('operation', 'operation_example')]
+        headers = [('X_Broker_Api_Version', '2.12')]
         response = self.client.open('/v2/service_instances/{instance_id}/last_operation'.format(
             instance_id=self.instance_id),
                                     method='GET',
-                                    query_string=query_string)
+                                    query_string=query_string, headers=headers)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
     def test_service_bind(self):
@@ -164,12 +176,14 @@ class TestServiceInstancesController(BaseTestCase):
         Binds to a service
         """
         binding = BindingRequest(service_id='svc', plan_id='plan')
+        headers = [('X_Broker_Api_Version', '2.12')]
         response = self.client.open('/v2/service_instances/{instance_id}/service_bindings/{binding_id}'.format(
             instance_id='svc_id', binding_id='binding_id_example'),
                                     method='PUT',
                                     data=json.dumps(binding),
-                                    content_type='application/json')
-        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+                                    content_type='application/json',
+                                    headers=headers)
+        self.assertStatus(response, 501, "Response body is : " + response.data.decode('utf-8'))
 
     def test_service_unbind(self):
         """
@@ -179,11 +193,13 @@ class TestServiceInstancesController(BaseTestCase):
         """
         query_string = [('service_id', 'service_id_example'),
                         ('plan_id', 'plan_id_example')]
+        headers = [('X_Broker_Api_Version', '2.12')]
         response = self.client.open('/v2/service_instances/{instance_id}/service_bindings/{binding_id}'.format(
             instance_id='svc_id', binding_id='binding_id_example'),
                                     method='DELETE',
-                                    query_string=query_string)
-        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+                                    query_string=query_string,
+                                    headers=headers)
+        self.assertStatus(response, 501, "Response body is : " + response.data.decode('utf-8'))
 
     def test_update_service_instance(self):
         """
@@ -193,12 +209,14 @@ class TestServiceInstancesController(BaseTestCase):
         """
         plan = UpdateRequest(service_id='svc')
         query_string = [('accept_incomplete', True)]
+        headers = [('X_Broker_Api_Version', '2.12')]
         response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id='svc_id'),
                                     method='PATCH',
                                     data=json.dumps(plan),
                                     content_type='application/json',
-                                    query_string=query_string)
-        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+                                    query_string=query_string,
+                                    headers=headers)
+        self.assertStatus(response, 501, "Response body is : " + response.data.decode('utf-8'))
 
 
 if __name__ == '__main__':
