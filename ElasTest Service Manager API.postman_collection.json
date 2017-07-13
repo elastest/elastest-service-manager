@@ -1,0 +1,268 @@
+{
+	"variables": [],
+	"info": {
+		"name": "ElasTest Service Manager API",
+		"_postman_id": "c15b8662-0cb9-95db-0d3d-ae17746ee48e",
+		"description": "This is the service manager API. It is an extension of the the Open Service Broker API (v2.12). The Open Service Broker API defines the contract between the a requesting client and the service broker. The broker is expected to implement several HTTP (or HTTPS) endpoints underneath a URI prefix. One or more services can be provided by a single broker, and load balancing enables horizontal scalability of redundant brokers. Multiple service provider instances can be supported by a single broker using different URL prefixes and credentials. [Learn more about the Service Broker API.] (https://github.com/openservicebrokerapi/servicebroker/). Note the [topic on orphan resolution](https://github.com/openservicebrokerapi/servicebroker/blob/master/_spec.md#orphans). It is not dealt with in this spec.\n",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "v2",
+			"description": "Folder for v2",
+			"item": [
+				{
+					"name": "Gets services registered within the broker",
+					"request": {
+						"url": "http://localhost:8080/v2/catalog",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-Broker-Api-Version",
+								"value": "2.12",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": "\"The first endpoint that a broker must implement is the service catalog. The client will initially fetch this endpoint from all brokers and make adjustments to the user-facing service catalog stored in the a client database. \\n\"\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Registers the service with the catalog.",
+					"request": {
+						"url": "http://localhost:8080/v2/et/catalog",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-Broker-Api-Version",
+								"value": "2.12",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"description\": \"this is a test service\",\n  \"id\": \"test\",\n  \"name\": \"test_svc\",\n  \"bindable\": false,\n  \"plan_updateable\": false,\n  \"plans\": [\n    {\n      \"bindable\": false,\n      \"description\": \"plan for testing\",\n      \"free\": true,\n      \"id\": \"testplan\",\n      \"name\": \"testing plan\"\n    }\n  ],\n  \"requires\": [],\n  \"tags\": [\n    \"test\",\n    \"tester\"\n  ]\n}\n"
+						},
+						"description": "Service providers need a means to register their service with a service broker. This provides this functionality. Also using PUT a service provider can update their registration. Note that this requires the complete content and will REPLACE the existing service information registered with the broker.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "takes deployment description of a software service and associates with a service and plan",
+					"request": {
+						"url": "http://localhost:8080/v2/et/manifest/test_manifest",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-Broker-Api-Version",
+								"value": "2.12",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"test-mani\",\n  \"manifest_content\": \"version: '2'</br></br>services:</br>  spark-master:</br>    image: elastest/ebs-spark-base:0.5.0</br>    container_name: spark-master</br>    ports:</br>      - \\\"8080:8080\\\"</br>    volumes:</br>      - ./spark/alluxio_conf:/opt/alluxio/conf</br>      - ./spark/spark_conf:/opt/spark/conf</br>      - ./spark/hadoop_conf:/usr/local/hadoop/etc/hadoop</br>    command: [\\\"/usr/bin/supervisord\\\", \\\"--configuration=/opt/conf/master.conf\\\"]</br>    hostname: spark-master</br>    networks:</br>      - elastest</br></br>  spark-worker:</br>    image: elastest/ebs-spark-base:0.5.0</br>    depends_on:</br>      - spark-master</br>    ports:</br>      - \\\"8081\\\"</br>    volumes:</br>      - ./spark/alluxio_conf:/opt/alluxio/conf</br>      - ./spark/spark_conf:/opt/spark/conf</br>      - ./spark/hadoop_conf:/usr/local/hadoop/etc/hadoop</br>    command: [\\\"/usr/bin/supervisord\\\", \\\"--configuration=/opt/conf/slave.conf\\\"]</br>    hostname: spark-worker</br>    networks:</br>      - elastest</br></br>networks:</br>  elastest:</br>    external: true</br>\",\n  \"manifest_type\": \"dummy\",\n  \"plan_id\": \"testplan\",\n  \"service_id\": \"test-svc\"\n}\n"
+						},
+						"description": "takes deployment description of a software service and associates with a service and plan that is already registered in the service catalog."
+					},
+					"response": []
+				},
+				{
+					"name": "Provisions a service instance",
+					"request": {
+						"url": {
+							"raw": "http://localhost:8080/v2/service_instances/test_service_instance?accept_incomplete=false",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v2",
+								"service_instances",
+								"test_service_instance"
+							],
+							"query": [
+								{
+									"key": "accept_incomplete",
+									"value": "false",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-Broker-Api-Version",
+								"value": "2.12",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"organization_guid\": \"org\",\n  \"plan_id\": \"testplan\",\n  \"service_id\": \"test-svc\",\n  \"space_guid\": \"space\"\n}"
+						},
+						"description": "When the broker receives a provision request from a client, it should synchronously take whatever action is necessary to create a new service resource for the developer. The result of provisioning varies by service type, although there are a few common actions that work for many services. Supports asynchronous operations.'\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Returns information about the service instance.",
+					"request": {
+						"url": "https:///v2/et/service_instances/:instance_id",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": "Returns information about the service instance. This is a simple read operation against the broker database and is provided as a developer/consumer convienence.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Gets the current state of the last operation upon the specified resource.",
+					"request": {
+						"url": "https:///v2/service_instances/:instance_id/last_operation?service_id={{service_id}}&plan_id={{plan_id}}&operation={{operation}}",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": "\"When a broker returns status code 202 ACCEPTED for provision, update, or deprovision, the client will begin to poll the /v2/service_instances/:guid/last_operation endpoint to obtain the state of the last requested operation. The broker response must contain the field state and an optional field description.\"\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Deprovisions a service instance.",
+					"request": {
+						"url": "https:///v2/service_instances/:instance_id?service_id={{service_id}}&plan_id={{plan_id}}&accept_incomplete={{accept_incomplete}}",
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": "'When a broker receives a deprovision request from a client, it should delete any resources it created during the provision. Usually this means that all resources are immediately reclaimed for future provisions.'\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Binds to a service",
+					"request": {
+						"url": "https:///v2/service_instances/:instance_id/service_bindings/:binding_id",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": "When the broker receives a bind request from the client, it should return information which helps an application to utilize the provisioned resource. This information is generically referred to as credentials. Applications should be issued unique credentials whenever possible, so one application access can be revoked without affecting other bound applications.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Unbinds a service",
+					"request": {
+						"url": "https:///v2/service_instances/:instance_id/service_bindings/:binding_id?service_id={{service_id}}&plan_id={{plan_id}}",
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": "When a broker receives an unbind request from the client, it should delete any resources it created in bind. Usually this means that an application immediately cannot access the resource.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Updating a Service Instance",
+					"request": {
+						"url": "https:///v2/service_instances/:instance_id?accept_incomplete={{accept_incomplete}}",
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "New Plan information."
+						},
+						"description": "Brokers that implement this endpoint can enable users to modify attributes of an existing service instance. The first attribute supports users modifying is the service plan. This effectively enables users to upgrade or downgrade their service instance to other plans. To see how users make these requests.'\n"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

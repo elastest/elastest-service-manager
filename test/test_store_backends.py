@@ -2,7 +2,7 @@ import os
 from unittest import TestCase, skipIf
 
 from esm.models import Plan, ServiceType, ServiceInstance, Manifest, LastOperation
-from adapters.datasource import InMemoryStore, MongoDBStore
+from adapters.datasource import InMemoryStore, MongoDBStore, Store
 
 
 class TestInMemoryStore(TestCase):
@@ -38,17 +38,32 @@ class TestInMemoryStore(TestCase):
         self.store.delete_manifest()
         self.store.delete_last_operation()
 
-
     def test_add(self):
+        # add
+        self.store.add_service(self.test_service)
+        self.assertGreaterEqual(len(self.store.get_service()), 1)
+        # update
         self.store.add_service(self.test_service)
         self.assertGreaterEqual(len(self.store.get_service()), 1)
 
+        # add
+        self.store.add_manifest(self.test_manifest)
+        self.assertGreaterEqual(len(self.store.get_manifest()), 1)
+        # update
         self.store.add_manifest(self.test_manifest)
         self.assertGreaterEqual(len(self.store.get_manifest()), 1)
 
+        # add
+        self.store.add_service_instance(self.test_svc_instance)
+        self.assertGreaterEqual(len(self.store.get_service_instance()), 1)
+        # update
         self.store.add_service_instance(self.test_svc_instance)
         self.assertGreaterEqual(len(self.store.get_service_instance()), 1)
 
+        # add
+        self.store.add_last_operation(self.test_svc_instance.context['id'], self.test_last_op)
+        self.assertGreaterEqual(len(self.store.get_last_operation()), 1)
+        # update
         self.store.add_last_operation(self.test_svc_instance.context['id'], self.test_last_op)
         self.assertGreaterEqual(len(self.store.get_last_operation()), 1)
 
@@ -143,3 +158,38 @@ class TestMongoDBStore(TestInMemoryStore):
 
     def test_add(self):
         super().test_add()
+
+
+class TestStore(TestCase):
+    def setUp(self):
+        self.store = Store()
+
+    def test_get(self):
+        with self.assertRaises(NotImplementedError):
+            self.store.get_service()
+        with self.assertRaises(NotImplementedError):
+            self.store.get_manifest()
+        with self.assertRaises(NotImplementedError):
+            self.store.get_service_instance()
+        with self.assertRaises(NotImplementedError):
+            self.store.get_last_operation()
+
+    def test_delete(self):
+        with self.assertRaises(NotImplementedError):
+            self.store.delete_service()
+        with self.assertRaises(NotImplementedError):
+            self.store.delete_manifest()
+        with self.assertRaises(NotImplementedError):
+            self.store.delete_service_instance()
+        with self.assertRaises(NotImplementedError):
+            self.store.delete_last_operation()
+
+    def test_add(self):
+        with self.assertRaises(NotImplementedError):
+            self.store.add_service(service=None)
+        with self.assertRaises(NotImplementedError):
+            self.store.add_manifest(manifest=None)
+        with self.assertRaises(NotImplementedError):
+            self.store.add_service_instance(service_instance=None)
+        with self.assertRaises(NotImplementedError):
+            self.store.add_last_operation(instance_id='', last_operation=None)

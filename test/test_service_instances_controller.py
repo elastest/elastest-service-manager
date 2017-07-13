@@ -21,6 +21,7 @@ from flask import json
 
 # from adapters.datasource import MongoDBStore, InMemoryStore
 from adapters.datasource import STORE as store
+from adapters.log import LOG
 
 
 class TestServiceInstancesController(BaseTestCase):
@@ -48,6 +49,7 @@ class TestServiceInstancesController(BaseTestCase):
             dashboard_client=None)
 
         self.store.add_service(self.test_service)
+        print('Service registration content of:\n {content}'.format(content=json.dumps(self.test_service)))
 
         path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         with open(path + "/manifests/docker-compose.yml", "r") as mani_file:
@@ -59,6 +61,7 @@ class TestServiceInstancesController(BaseTestCase):
         # manifest_type should be set to test for tests and therefore select the dummydriver
 
         self.store.add_manifest(self.test_manifest)
+        print('Manifest registration content of:\n {content}'.format(content=json.dumps(self.test_manifest)))
 
     def tearDown(self):
         self.store.delete_service()
@@ -76,6 +79,7 @@ class TestServiceInstancesController(BaseTestCase):
                                  organization_guid='org', space_guid='space')
         query_string = [('accept_incomplete', False)]
         headers = [('X_Broker_Api_Version', '2.12')]
+        print('Sending service instantiation content of:\n {content}'.format(content=json.dumps(service)))
         response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id=self.instance_id),
                                     method='PUT',
                                     data=json.dumps(service),

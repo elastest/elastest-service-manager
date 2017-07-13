@@ -13,6 +13,7 @@ from esm.models.manifest import Manifest
 from esm.models.service_type import ServiceType
 from . import BaseTestCase
 
+from adapters.log import LOG
 from adapters.datasource import STORE
 
 
@@ -64,6 +65,7 @@ class TestCatalogController(BaseTestCase):
         Registers the service with the catalog.
         """
         headers = [('X_Broker_Api_Version', '2.12')]
+        LOG.debug('Sending service registration content of:\n {content}'.format(content=json.dumps(self.test_service)))
         response = self.client.open('/v2/et/catalog',
                                     method='PUT',
                                     data=json.dumps(self.test_service),
@@ -78,6 +80,7 @@ class TestCatalogController(BaseTestCase):
         takes deployment description of a software service and associates with a service and plan
         """
         headers = [('X_Broker_Api_Version', '2.12')]
+        LOG.debug('Sending service registration content of:\n {content}'.format(content=json.dumps(self.test_service)))
         response = self.client.open('/v2/et/catalog',
                                     method='PUT',
                                     data=json.dumps(self.test_service),
@@ -86,6 +89,7 @@ class TestCatalogController(BaseTestCase):
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
         headers = [('X_Broker_Api_Version', '2.12')]
+        LOG.debug('Sending service registration content of:\n {content}'.format(content=json.dumps(self.test_manifest)))
         response = self.client.open('/v2/et/manifest/{manifest_id}'.format(manifest_id=self.test_manifest.id),
                                     method='PUT',
                                     data=json.dumps(self.test_manifest),

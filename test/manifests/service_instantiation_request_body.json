@@ -1,0 +1,6 @@
+{
+  "organization_guid": "org",
+  "plan_id": "testplan",
+  "service_id": "test-svc",
+  "space_guid": "space"
+}

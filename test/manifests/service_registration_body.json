@@ -1,0 +1,21 @@
+{
+  "description": "this is a test service",
+  "id": "test",
+  "name": "test_svc",
+  "bindable": false,
+  "plan_updateable": false,
+  "plans": [
+    {
+      "bindable": false,
+      "description": "plan for testing",
+      "free": true,
+      "id": "testplan",
+      "name": "testing plan"
+    }
+  ],
+  "requires": [],
+  "tags": [
+    "test",
+    "tester"
+  ]
+}

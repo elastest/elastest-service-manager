@@ -318,7 +318,9 @@ class EPM(Backend):
 
     def _get_manifest_type(self, instance_id: str) -> str:
         srv_inst = self.store.get_service_instance(instance_id=instance_id)
+        # TODO this will fail if srv_inst len is 0
         mani_id = srv_inst[0].context['manifest_id']
+        # TODO this will fail if mani is None
         mani = self.store.get_manifest(manifest_id=mani_id)[0]
         return mani.manifest_type
 

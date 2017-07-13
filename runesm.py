@@ -5,6 +5,8 @@ import os
 import connexion
 from esm.encoder import JSONEncoder
 
+from adapters.log import LOG
+
 
 if __name__ == '__main__':
     ESM_APP = connexion.App(__name__, specification_dir='./esm/swagger/')
@@ -25,6 +27,9 @@ if __name__ == '__main__':
                             'It is not dealt with in this spec. '
                    }
     )
+
+    ESM_APP.app.logger.setLevel('DEBUG')
     ESM_PORT = os.environ.get('ESM_PORT', 8080)
-    print(' * ESM_PORT: ' + str(ESM_PORT))
+    ESM_APP.app.logger.info(' * ESM_PORT: ' + str(ESM_PORT))
+    LOG.info(' * ESM_PORT: ' + str(ESM_PORT))
     ESM_APP.run(port=ESM_PORT)
