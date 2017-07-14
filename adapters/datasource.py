@@ -155,6 +155,9 @@ class MongoDBStore(Store):
     def add_service_instance(self, service_instance: ServiceInstance) -> tuple:
         result = self.ESM_DB.instances.count({'context.id': service_instance.context['id']})
         if result == 1:
+            LOG.info('A duplicate service instance was attempted to be stored. '
+                     'Updating the existing service instance {id}.'
+                     'Content supplied:\n{content}'.format(id=service_instance.context['id'], content=service_instance.to_str()))
             # Update the service instance
             raw_svc_inst = self.ESM_DB.instances.find_one({'context.id': service_instance.context['id']})
             record_id = raw_svc_inst['_id']
@@ -282,9 +285,12 @@ class InMemoryStore(Store):
         if service_instance not in self.ESM_DB.instances:
             self.ESM_DB.instances.append(service_instance)
         else:
-            LOG.warn('A duplicate service instance was attempted to be registered. '
-                     'Ignoring the request. '
-                     'Content supplied:\n{content}'.format(content=service_instance.to_str()))
+            LOG.info('A duplicate service instance was attempted to be stored. '
+                     'Updating the existing service instance {id}.'
+                     'Content supplied:\n{content}'.format(id=service_instance.context['id'], content=service_instance.to_str()))
+            instance = [i for i in self.ESM_DB.instances if i.context['id'] == service_instance.context['id']]
+            self.ESM_DB.instances.remove(instance[0])
+            self.ESM_DB.instances.append(service_instance)
 
     def get_service_instance(self, instance_id: str=None) -> List[ServiceInstance]:
         if not instance_id:
