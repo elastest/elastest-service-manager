@@ -192,10 +192,17 @@ def last_operation_status(instance_id, service_id=None, plan_id=None, operation=
 
     :rtype: LastOperation
     """
-    # just re-use the method and return it's content and http status code.
-    # version check not required here as it's done in the proxied call
-    srv_inst, code = instance_info(instance_id=instance_id)
-    return srv_inst.state, code
+    ok, message, code = _version_ok()
+    if not ok:
+        return message, code
+    else:
+        # just re-use the method and return it's content and http status code.
+        # version check not required here as it's done in the proxied call
+        srv_inst, code = instance_info(instance_id=instance_id)
+        if code == 404:
+            return srv_inst + 'No service status therefore.', code
+        else:
+            return srv_inst.state, code
 
 
 def service_bind(instance_id, binding_id, binding):
