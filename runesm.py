@@ -32,4 +32,4 @@ if __name__ == '__main__':
     ESM_PORT = os.environ.get('ESM_PORT', 8080)
     ESM_APP.app.logger.info(' * ESM_PORT: ' + str(ESM_PORT))
     LOG.info(' * ESM_PORT: ' + str(ESM_PORT))
-    ESM_APP.run(port=ESM_PORT)
+    ESM_APP.run(host='0.0.0.0', port=ESM_PORT)
