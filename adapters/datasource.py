@@ -1,3 +1,4 @@
+import os
 from typing import List
 
 from pymongo import MongoClient
@@ -34,7 +35,7 @@ class Store(object):
     def add_manifest(self, manifest: Manifest) -> None:
         raise NotImplementedError
 
-    def get_manifest(self, plan_id: str=None) -> List[Manifest]:
+    def get_manifest(self, manifest_id: str=None, plan_id: str=None) -> List[Manifest]:
         raise NotImplementedError
 
     def delete_manifest(self, manifest_id: str=None) -> None:
@@ -52,9 +53,8 @@ class Store(object):
 
 class MongoDBStore(Store):
 
-    def __init__(self) -> None:
-        # TODO make mongo host configurable - take from env
-        _client = MongoClient('localhost', 27017)
+    def __init__(self, host: str) -> None:
+        _client = MongoClient(host, 27017)
         self.ESM_DB = _client.esm
         LOG.info('Using the MongoDBStore.')
         LOG.info('MongoDBStore is persistent.')
@@ -112,11 +112,21 @@ class MongoDBStore(Store):
             print('client side error - 4XX')
             return 'the manifest already exists in the catalog', 409
 
-    def get_manifest(self, plan_id: str=None) -> List[Manifest]:
+    def get_manifest(self, manifest_id: str=None, plan_id: str=None) -> List[Manifest]:
+
+        if manifest_id and plan_id:
+            raise Exception('you can only query by manifest_id or plan_id!')
+
         if plan_id:
             return [
                 Manifest.from_dict(
                     self.ESM_DB.manifests.find_one({'plan_id': plan_id})
+                )
+            ]
+        elif manifest_id:
+            return [
+                Manifest.from_dict(
+                    self.ESM_DB.manifests.find_one({'id': manifest_id})
                 )
             ]
         else:
@@ -337,4 +347,8 @@ class InMemoryStore(Store):
             self.ESM_DB.last_operations.remove(last_op_to_delete)
 
 # TODO reevaluate this!
-STORE = InMemoryStore()
+mongo_host = os.getenv('MONGO_HOST', '')
+if len(mongo_host):
+    STORE = MongoDBStore(mongo_host)
+else:
+    STORE = InMemoryStore()
