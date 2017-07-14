@@ -139,7 +139,8 @@ class TestMongoDBStore(TestInMemoryStore):
 
     def setUp(self):
         super().setUp()
-        self.store = MongoDBStore()
+        mongo_host = os.getenv('MONGO_HOST', 'localhost')
+        self.store = MongoDBStore(host=mongo_host)
 
     def tearDown(self):
         super().tearDown()
