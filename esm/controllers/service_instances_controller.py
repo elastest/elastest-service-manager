@@ -65,7 +65,7 @@ def create_service_instance(instance_id, service, accept_incomplete=None):
         mani = store.get_manifest(plan_id=plan[0].id)[0]
 
         if accept_incomplete:  # given docker-compose runs in detached mode this is not needed - only timing can verify
-            # TODO put this in a thread to allow for asynch processing?
+            # XXX put this in a thread to allow for asynch processing?
             epm.create(instance_id=instance_id, content=mani.manifest_content, c_type=mani.manifest_type)
         else:
             epm.create(instance_id=instance_id, content=mani.manifest_content, c_type=mani.manifest_type)
@@ -74,6 +74,8 @@ def create_service_instance(instance_id, service, accept_incomplete=None):
             state='creating',
             description='service instance is being created'
         )
+
+        # store.add_last_operation(instance_id, last_op)
 
         # store the instance Id with manifest id
         srv_inst = ServiceInstance(
@@ -116,8 +118,12 @@ def deprovision_service_instance(instance_id, service_id, plan_id, accept_incomp
         return message, code
     else:
         # XXX if there's bindings remove first?
-        # TODO delete store records
+        # XXX what about undo?
         epm.delete(instance_id=instance_id)
+        store.delete_service_instance(instance_id)
+        # we don't delete the last_operation explicitly as its embedded in the service_instance document
+        # store.delete_last_operation(instance_id)
+
         return Empty(), 200
 
 
@@ -179,17 +185,17 @@ def last_operation_status(instance_id, service_id=None, plan_id=None, operation=
     :type service_id: str
     :param plan_id: ID of the plan from the catalog.
     :type plan_id: str
-    :param operation: \&quot;A broker-provided identifier for the operation. When a value for operation is included
+    :param operation: A broker-provided identifier for the operation. When a value for operation is included
     with asynchronous responses for Provision, Update, and Deprovision requests, the broker client should provide
-    the same value using this query parameter as a URL-encoded string.\&quot;
+    the same value using this query parameter as a URL-encoded string.;
     :type operation: str
 
     :rtype: LastOperation
     """
     # just re-use the method and return it's content and http status code.
     # version check not required here as it's done in the proxied call
-    inst_info, code = instance_info(instance_id=instance_id)
-    return inst_info, code
+    srv_inst, code = instance_info(instance_id=instance_id)
+    return srv_inst.state, code
 
 
 def service_bind(instance_id, binding_id, binding):
