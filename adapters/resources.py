@@ -224,16 +224,23 @@ class DummyBackend(Backend):
     def info(self, instance_id):
         super().info(instance_id)
         LOG.info('DummyBackend driver: info called')
-        # TODO update to include the network info
+
         info = {
             'testid123_spark-worker_1_image_name': 'elastest/ebs-spark-base:0.5.0',
             'testid123_spark-worker_1_image_id': 'sha256:138a91572bd6bdce7d7b49a44b91a4caf4abdf1a75f105991e18be971353d5cb',
-            'testid123_spark-worker_1_state': 'Up',
+            'testid123_spark-worker_1_8080/tcp': None,
+            'testid123_spark-worker_1_8081/tcp/HostIp': '0.0.0.0',
+            'testid123_spark-worker_1_8081/tcp/HostPort': '32784',
             'testid123_spark-worker_1_cmd': '/usr/bin/supervisord --configuration=/opt/conf/slave.conf',
+            'testid123_spark-worker_1_state': 'Up',
             'spark-master_image_name': 'elastest/ebs-spark-base:0.5.0',
             'spark-master_image_id': 'sha256:138a91572bd6bdce7d7b49a44b91a4caf4abdf1a75f105991e18be971353d5cb',
+            'spark-master_8080/tcp/HostIp': '0.0.0.0',
+            'spark-master_8080/tcp/HostPort': '8080',
+            'spark-master_cmd': '/usr/bin/supervisord --configuration=/opt/conf/master.conf',
             'spark-master_state': 'Up',
-            'spark-master_cmd': '/usr/bin/supervisord --configuration=/opt/conf/master.conf'
+            'srv_inst.state.state': 'succeeded',
+            'srv_inst.state.description': 'The service instance has been created successfully'
         }
 
         # TODO FIXME below until return is duplicated code!!!!
