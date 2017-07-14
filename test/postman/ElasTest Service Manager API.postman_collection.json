@@ -12,28 +12,6 @@
 			"description": "Folder for v2",
 			"item": [
 				{
-					"name": "Gets services registered within the broker",
-					"request": {
-						"url": "http://localhost:8080/v2/catalog",
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json",
-								"description": ""
-							},
-							{
-								"key": "X-Broker-Api-Version",
-								"value": "2.12",
-								"description": ""
-							}
-						],
-						"body": {},
-						"description": "\"The first endpoint that a broker must implement is the service catalog. The client will initially fetch this endpoint from all brokers and make adjustments to the user-facing service catalog stored in the a client database. \\n\"\n"
-					},
-					"response": []
-				},
-				{
 					"name": "Registers the service with the catalog.",
 					"request": {
 						"url": "http://localhost:8080/v2/et/catalog",
@@ -60,6 +38,28 @@
 							"raw": "{\n  \"description\": \"this is a test service\",\n  \"id\": \"test\",\n  \"name\": \"test_svc\",\n  \"bindable\": false,\n  \"plan_updateable\": false,\n  \"plans\": [\n    {\n      \"bindable\": false,\n      \"description\": \"plan for testing\",\n      \"free\": true,\n      \"id\": \"testplan\",\n      \"name\": \"testing plan\"\n    }\n  ],\n  \"requires\": [],\n  \"tags\": [\n    \"test\",\n    \"tester\"\n  ]\n}\n"
 						},
 						"description": "Service providers need a means to register their service with a service broker. This provides this functionality. Also using PUT a service provider can update their registration. Note that this requires the complete content and will REPLACE the existing service information registered with the broker.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Gets services registered within the broker",
+					"request": {
+						"url": "http://localhost:8080/v2/catalog",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-Broker-Api-Version",
+								"value": "2.12",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": "\"The first endpoint that a broker must implement is the service catalog. The client will initially fetch this endpoint from all brokers and make adjustments to the user-facing service catalog stored in the a client database. \\n\"\n"
 					},
 					"response": []
 				},
@@ -138,7 +138,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"organization_guid\": \"org\",\n  \"plan_id\": \"testplan\",\n  \"service_id\": \"test-svc\",\n  \"space_guid\": \"space\"\n}"
+							"raw": "{\n  \"organization_guid\": \"org\",\n  \"plan_id\": \"testplan\",\n  \"service_id\": \"test\",\n  \"space_guid\": \"space\"\n}"
 						},
 						"description": "When the broker receives a provision request from a client, it should synchronously take whatever action is necessary to create a new service resource for the developer. The result of provisioning varies by service type, although there are a few common actions that work for many services. Supports asynchronous operations.'\n"
 					},
@@ -147,7 +147,28 @@
 				{
 					"name": "Returns information about the service instance.",
 					"request": {
-						"url": "https:///v2/et/service_instances/:instance_id",
+						"url": {
+							"raw": "http://localhost:8080/v2/et/service_instances/:instance_id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v2",
+								"et",
+								"service_instances",
+								":instance_id"
+							],
+							"query": [],
+							"variable": [
+								{
+									"description": "",
+									"key": "instance_id",
+									"value": ""
+								}
+							]
+						},
 						"method": "GET",
 						"header": [
 							{
@@ -164,7 +185,41 @@
 				{
 					"name": "Gets the current state of the last operation upon the specified resource.",
 					"request": {
-						"url": "https:///v2/service_instances/:instance_id/last_operation?service_id={{service_id}}&plan_id={{plan_id}}&operation={{operation}}",
+						"url": {
+							"raw": "http://localhost:8080/v2/service_instances/test_service_instance/last_operation?service_id=test&plan_id=testplan&operation=test",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v2",
+								"service_instances",
+								"test_service_instance",
+								"last_operation"
+							],
+							"query": [
+								{
+									"key": "service_id",
+									"value": "test",
+									"equals": true,
+									"description": ""
+								},
+								{
+									"key": "plan_id",
+									"value": "testplan",
+									"equals": true,
+									"description": ""
+								},
+								{
+									"key": "operation",
+									"value": "test",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
 						"method": "GET",
 						"header": [
 							{
@@ -181,13 +236,51 @@
 				{
 					"name": "Deprovisions a service instance.",
 					"request": {
-						"url": "https:///v2/service_instances/:instance_id?service_id={{service_id}}&plan_id={{plan_id}}&accept_incomplete={{accept_incomplete}}",
+						"url": {
+							"raw": "http://localhost:8080/v2/service_instances/test_service_instance?service_id=test&plan_id=testplan&accept_incomplete=false",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v2",
+								"service_instances",
+								"test_service_instance"
+							],
+							"query": [
+								{
+									"key": "service_id",
+									"value": "test",
+									"equals": true,
+									"description": ""
+								},
+								{
+									"key": "plan_id",
+									"value": "testplan",
+									"equals": true,
+									"description": ""
+								},
+								{
+									"key": "accept_incomplete",
+									"value": "false",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
 						"method": "DELETE",
 						"header": [
 							{
 								"key": "Accept",
 								"value": "application/json",
 								"description": ""
+							},
+							{
+								"key": "X-Broker-Api-Version",
+								"value": "2.12",
+								"description": "OSBA Version"
 							}
 						],
 						"body": {},
@@ -198,7 +291,34 @@
 				{
 					"name": "Binds to a service",
 					"request": {
-						"url": "https:///v2/service_instances/:instance_id/service_bindings/:binding_id",
+						"url": {
+							"raw": "http://localhost:8080/v2/service_instances/:instance_id/service_bindings/:binding_id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v2",
+								"service_instances",
+								":instance_id",
+								"service_bindings",
+								":binding_id"
+							],
+							"query": [],
+							"variable": [
+								{
+									"description": "",
+									"key": "instance_id",
+									"value": ""
+								},
+								{
+									"description": "",
+									"key": "binding_id",
+									"value": ""
+								}
+							]
+						},
 						"method": "PUT",
 						"header": [
 							{
@@ -223,7 +343,47 @@
 				{
 					"name": "Unbinds a service",
 					"request": {
-						"url": "https:///v2/service_instances/:instance_id/service_bindings/:binding_id?service_id={{service_id}}&plan_id={{plan_id}}",
+						"url": {
+							"raw": "http://localhost:8080/v2/service_instances/:instance_id/service_bindings/:binding_id?service_id={{service_id}}&plan_id={{plan_id}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v2",
+								"service_instances",
+								":instance_id",
+								"service_bindings",
+								":binding_id"
+							],
+							"query": [
+								{
+									"key": "service_id",
+									"value": "{{service_id}}",
+									"equals": true,
+									"description": ""
+								},
+								{
+									"key": "plan_id",
+									"value": "{{plan_id}}",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": [
+								{
+									"description": "",
+									"key": "instance_id",
+									"value": ""
+								},
+								{
+									"description": "",
+									"key": "binding_id",
+									"value": ""
+								}
+							]
+						},
 						"method": "DELETE",
 						"header": [
 							{
@@ -240,7 +400,34 @@
 				{
 					"name": "Updating a Service Instance",
 					"request": {
-						"url": "https:///v2/service_instances/:instance_id?accept_incomplete={{accept_incomplete}}",
+						"url": {
+							"raw": "http://localhost:8080/v2/service_instances/:instance_id?accept_incomplete={{accept_incomplete}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v2",
+								"service_instances",
+								":instance_id"
+							],
+							"query": [
+								{
+									"key": "accept_incomplete",
+									"value": "{{accept_incomplete}}",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": [
+								{
+									"description": "",
+									"key": "instance_id",
+									"value": ""
+								}
+							]
+						},
 						"method": "PATCH",
 						"header": [
 							{
