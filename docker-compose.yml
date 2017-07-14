@@ -5,6 +5,9 @@ services:
     image: elastest/elastest-service-manager:latest
     container_name: elastest-service-manager
     hostname: elastest-service-manager
+    environment:
+      - ESM_PORT=8080
+      - MONGO_HOST=data-store-mongo  # note that this is the name of the mongo resource, below
     ports:
       - "8080:8080"
     networks:
