@@ -271,7 +271,34 @@ Currently supported:
 
 There is a docker build file `./Dockerfile` in the root of this project. You can use this to create a docker image that can then be ran upon your local docker environment.
 
+### To Build Locally
+
+```shell
+docker build -t elastest/elastest-service-manager:latest ./
+```
+
+
+
+### To Run Locally
+
+```shell
+docker run -p 8080:8080 elastest/elastest-service-manager
+```
+
+You can now access the service via port 8080.
+
+## Deploy on Docker-Compose
+
 There is also a docker compose file `./docker-compose` in the root of this project. You can use this to bring up the ESM with a DB backend.
+
+```shell
+docker-compose up
+```
+
+**Notes**:
+
+* By default this compose file will create a persistent mongodb service. If you do not want this then remove the `MONGO_DB` env. var. from the compose file. 
+* By default the port that the ESM will listen to is `8080`. If  you want it to listen under a different port then adjust the `ESM_PORT` env. var. in the compose file.
 
 ## Deploy on OpenShift
 
@@ -314,7 +341,7 @@ Here you can find the help you need.
 # News
 Follow us on Twitter @[ElasTest Twitter].
 
-# Contribution policy
+# Contribution Policy
 You can contribute to the ElasTest community through bug-reports, bug-fixes,
 new code or new documentation. For contributing to the ElasTest community,
 you can use the issue support of GitHub providing full information about your
