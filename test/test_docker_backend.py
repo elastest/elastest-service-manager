@@ -56,19 +56,22 @@ class TestDockerBasicBackend(TestCase):
 
     def tearDown(self):
         if self.container:
-            self.container.kill()
-            self.container.remove()
+            try:
+                self.container.kill()
+                self.container.remove()
+            except Exception as e:
+                print(e)
 
     def test_docker_create(self):
         self.container = self.client.containers.run("bfirsh/reticulate-splines", detach=True)
         print(self.container)
 
     def test_docker_info(self):
-        container = self.client.containers.run("bfirsh/reticulate-splines", detach=True)
-        print(container)
+        self.container = self.client.containers.run("bfirsh/reticulate-splines", detach=True)
+        print(self.container)
 
     def test_docker_delete(self):
-        c = self.client.containers.run("bfirsh/reticulate-splines", detach=True)
-        print(c)
-        c.kill()
-        c.remove()
+        self.container = self.client.containers.run("bfirsh/reticulate-splines", detach=True)
+        print(self.container)
+        self.container.kill()
+        self.container.remove()
