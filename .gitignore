@@ -68,3 +68,4 @@ target/
 .vscode/
 .env/
 .idea/
+/mongodata/
