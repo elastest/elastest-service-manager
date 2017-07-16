@@ -46,6 +46,9 @@ def create_service_instance(instance_id, service, accept_incomplete=None):
         else:
             return "Supplied body content is not or is mal-formed JSON", 400
 
+        svc_type = store.get_service_instance(service.service_id)
+        if len(svc_type) == 1:
+            return 'Service instance with id {id} already exists'.format(id=service.service_id), 409
         # look up manifest based on plan id
         # based on the manifest type, select the driver
         # send the manifest for creation to the target system
@@ -70,12 +73,10 @@ def create_service_instance(instance_id, service, accept_incomplete=None):
         else:
             epm.create(instance_id=instance_id, content=mani.manifest_content, c_type=mani.manifest_type)
 
-        last_op = LastOperation(
+        last_op = LastOperation(  # stored within the service instance doc
             state='creating',
             description='service instance is being created'
         )
-
-        # store.add_last_operation(instance_id, last_op)
 
         # store the instance Id with manifest id
         srv_inst = ServiceInstance(
@@ -119,12 +120,17 @@ def deprovision_service_instance(instance_id, service_id, plan_id, accept_incomp
     else:
         # XXX if there's bindings remove first?
         # XXX what about undo?
-        epm.delete(instance_id=instance_id)
-        store.delete_service_instance(instance_id)
-        # we don't delete the last_operation explicitly as its embedded in the service_instance document
-        # store.delete_last_operation(instance_id)
+        # check that the instance exists first
+        instance = store.get_service_instance(instance_id=instance_id)
+        if len(instance) == 1:
+            epm.delete(instance_id=instance_id)
+            store.delete_service_instance(instance_id)
+            # we don't delete the last_operation explicitly as its embedded in the service_instance document
+            # store.delete_last_operation(instance_id)
 
-        return Empty(), 200
+            return Empty(), 200
+        else:
+            return Empty(), 404
 
 
 def instance_info(instance_id):
