@@ -61,11 +61,15 @@ class MongoDBStore(Store):
 
     def get_service(self, service_id: str=None) -> List[ServiceType]:
         if service_id:
-            return [
-                ServiceType.from_dict(
-                    self.ESM_DB.services.find_one({'id': service_id})
-                )
-            ]
+            if self.ESM_DB.services.count({'id': service_id}) == 1:
+                return [
+                    ServiceType.from_dict(
+                        self.ESM_DB.services.find_one({'id': service_id})
+                    )
+                ]
+            else:
+                LOG.warn('Requested service type not found: {id}'.format(id=service_id))
+                return []
         else:
             services = []
 
@@ -91,44 +95,52 @@ class MongoDBStore(Store):
             self.ESM_DB.services.delete_many({})
 
     def add_manifest(self, manifest: Manifest) -> tuple:
-        # ensure the manifest-defined service and plan id exist
-        if self.ESM_DB.services.count({'id': manifest.service_id}) > 0:
-            # get the plans
-            plans = self.ESM_DB.services.find_one({'id': manifest.service_id})['plans']
-            # filter the plans to find the plan to be associated with
-            plan = [p for p in plans if p['id'] == manifest.plan_id]
-            if len(plan) != 1:
-                return 'no plan or duplicate plan found.', 401
-        else:
-            return 'the service id in the supplied manifest does not exist.', 404
+        # ensure the manifest-defined service and plan id exist?
+        # if self.ESM_DB.services.count({'id': manifest.service_id}) > 0:
+        #     # get the plans
+        #     plans = self.ESM_DB.services.find_one({'id': manifest.service_id})['plans']
+        #     # filter the plans to find the plan to be associated with
+        #     plan = [p for p in plans if p['id'] == manifest.plan_id]
+        #     if len(plan) != 1:
+        #         return 'no plan or duplicate plan found.', 401
+        # else:
+        #     return 'the service id in the supplied manifest does not exist.', 404
 
-        # save to DB
         if self.ESM_DB.manifests.count({'id': manifest.id}) == 0:
             result = self.ESM_DB.manifests.insert_one(manifest.to_dict())
             if not result.acknowledged:
                 return 'there was an issue saving the supplied manifest to the DB', 500
         else:
-            # raise Exception('Client side error - manifest already exists in the catalog!')
             print('client side error - 4XX')
             return 'the manifest already exists in the catalog', 409
+
+        return 'ok', 200
 
     def get_manifest(self, manifest_id: str=None, plan_id: str=None) -> List[Manifest]:
 
         if manifest_id and plan_id:
-            raise Exception('you can only query by manifest_id or plan_id!')
+            raise Exception('Query manifests only by manifest_id OR plan_id')
 
         if plan_id:
-            return [
-                Manifest.from_dict(
-                    self.ESM_DB.manifests.find_one({'plan_id': plan_id})
-                )
-            ]
+            if self.ESM_DB.manifests.count({'plan_id': plan_id}) == 1:
+                return [
+                    Manifest.from_dict(
+                        self.ESM_DB.manifests.find_one({'plan_id': plan_id})
+                    )
+                ]
+            else:
+                LOG.warn('Requested manifest by plan ID not found: {id}'.format(id=plan_id))
+                return []
         elif manifest_id:
-            return [
-                Manifest.from_dict(
-                    self.ESM_DB.manifests.find_one({'id': manifest_id})
-                )
-            ]
+            if self.ESM_DB.manifests.count({'id': manifest_id}) == 1:
+                return [
+                    Manifest.from_dict(
+                        self.ESM_DB.manifests.find_one({'id': manifest_id})
+                    )
+                ]
+            else:
+                LOG.warn('Requested manifest not found: {id}'.format(id=manifest_id))
+                return []
         else:
             manifests = []
 
@@ -141,17 +153,21 @@ class MongoDBStore(Store):
 
     def delete_manifest(self, manifest_id: str=None) -> None:
         if manifest_id:
-            self.ESM_DB.manifests.find_one({'id': manifest_id})
+            self.ESM_DB.manifests.delete_one({'id': manifest_id})
         else:
             self.ESM_DB.manifests.delete_many({})
 
     def get_service_instance(self, instance_id: str=None) -> List[ServiceInstance]:
         if instance_id:
-            return [
-                ServiceInstance.from_dict(
-                    self.ESM_DB.instances.find_one({'context.id': instance_id})
-                )
-            ]
+            if self.ESM_DB.instances.count({'context.id': instance_id}) == 1:
+                return [
+                    ServiceInstance.from_dict(
+                        self.ESM_DB.instances.find_one({'context.id': instance_id})
+                    )
+                ]
+            else:
+                LOG.warn('Requested service instance not found: {id}'.format(id=instance_id))
+                return []
         else:
             instances = []
 
@@ -182,7 +198,7 @@ class MongoDBStore(Store):
 
     def delete_service_instance(self, service_instance_id: str=None) -> None:
         if service_instance_id:
-            self.ESM_DB.instances.find_one({'context.id': service_instance_id})
+            self.ESM_DB.instances.delete_one({'context.id': service_instance_id})
         else:
             self.ESM_DB.instances.delete_many({})
 
@@ -193,11 +209,15 @@ class MongoDBStore(Store):
 
     def get_last_operation(self, instance_id: str=None) -> List[LastOperation]:
         if instance_id:
-            return [
-                LastOperation.from_dict(
-                    self.ESM_DB.last_operations.find_one({'id': instance_id})
-                )
-            ]
+            if self.ESM_DB.last_operations.count({'id': instance_id}) == 1:
+                return [
+                    LastOperation.from_dict(
+                        self.ESM_DB.last_operations.find_one({'id': instance_id})
+                    )
+                ]
+            else:
+                LOG.warn('Requested last operation not found: {id}'.format(id=instance_id))
+                return []
         else:
             last_ops = []
 
@@ -210,7 +230,7 @@ class MongoDBStore(Store):
 
     def delete_last_operation(self, instance_id: str=None) -> None:
         if instance_id:
-            self.ESM_DB.last_operations.find_one({'id': instance_id})
+            self.ESM_DB.last_operations.delete_one({'id': instance_id})
         else:
             self.ESM_DB.last_operations.delete_many({})
 
