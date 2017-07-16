@@ -76,6 +76,10 @@ def store_manifest(manifest_id, manifest):
         else:
             return "Supplied body content is not or is mal-formed JSON", 400
         manifest.id = manifest_id
-        store.add_manifest(manifest)
 
-        return Empty()
+        result, code = store.add_manifest(manifest)
+
+        if code == 200:
+            return Empty()
+        else:
+            return result, code
