@@ -11,6 +11,7 @@ from esm.models import LastOperation
 from adapters.log import LOG
 
 # TODO standardise on return type of None or tuple for relevant store operations
+# TODO implement exception handling
 
 
 class Store(object):
@@ -282,13 +283,15 @@ class InMemoryStore(Store):
             # TODO this will fail if service_to_delete is None
             self.ESM_DB.services.remove(service_to_delete)
 
-    def add_manifest(self, manifest: Manifest) -> None:
+    def add_manifest(self, manifest: Manifest) -> tuple:
         if manifest not in self.ESM_DB.manifests:
             self.ESM_DB.manifests.append(manifest)
+            return 'ok', 200
         else:
             LOG.warn('A duplicate manifest was attempted to be registered. '
                      'Ignoring the request. '
                      'Content supplied:\n{content}'.format(content=manifest.to_str()))
+            return 'duplicate', 400
 
     def get_manifest(self, manifest_id: str=None, plan_id: str=None) -> List[Manifest]:
         if manifest_id and plan_id:
