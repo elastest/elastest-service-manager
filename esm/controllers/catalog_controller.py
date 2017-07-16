@@ -80,6 +80,6 @@ def store_manifest(manifest_id, manifest):
         result, code = store.add_manifest(manifest)
 
         if code == 200:
-            return Empty()
+            return Empty(), code
         else:
             return result, code
