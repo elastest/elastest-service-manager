@@ -1,4 +1,4 @@
-# Copyright 2014-2017 Zuercher Hochschule fuer Angewandte Wissenschaften
+# Copyright © 2017-2019 Zuercher Hochschule fuer Angewandte Wissenschaften.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may

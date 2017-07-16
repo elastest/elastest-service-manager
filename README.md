@@ -1,6 +1,6 @@
 [![][ElasTest Logo]][ElasTest]
 
-Copyright © 2017-2019 [ElasTest]. Licensed under [Apache 2.0 License].
+Copyright © 2017-2019 Zuercher Hochschule fuer Angewandte Wissenschaften. Licensed under [Apache 2.0 License].
 
 # elastest-service-manager (esm)
 

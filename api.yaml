@@ -13,6 +13,7 @@ info:
     credentials. [Learn more about the Service Broker API.]
     (https://github.com/openservicebrokerapi/servicebroker/).
     Note the [topic on orphan resolution](https://github.com/openservicebrokerapi/servicebroker/blob/master/_spec.md#orphans). It is not dealt with in this spec.
+    Swagger file copyright: Copyright © 2017-2019 Zuercher Hochschule fuer Angewandte Wissenschaften.
 
   contact:
     name: ElasTest
