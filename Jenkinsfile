@@ -37,5 +37,7 @@ node('docker'){
                     sh 'docker login -u "$USERNAME" -p "$PASSWORD"'
                     myimage.push()
                 }
+            stage "clean up"
+                sh 'docker network rm elastest'
         }
 }
