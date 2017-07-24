@@ -8,11 +8,15 @@ node('docker'){
         mycontainer.inside("-u jenkins -v /var/run/docker.sock:/var/run/docker.sock:rw") {
 
             git 'https://github.com/elastest/elastest-service-manager'
-            
-            stage "Unit tests"
-                // TODO: add DOCKER_TESTS=YES and MONGODB_TESTS=YES env vars - can only be done with mongodb already running
-                echo ("Starting unit tests...")
+
+            stage "Setup test environment"
+                echo 'creating default elastest network'
                 sh 'docker network create elastest'
+                echo 'creating local mongodb instance'
+                sh 'docker run -d -p 27017:27017 -v /tmp/mongodata:/data/db mongo'
+
+            stage "Unit tests"
+                echo ("Starting unit tests...")
                 sh 'tox'
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
 
