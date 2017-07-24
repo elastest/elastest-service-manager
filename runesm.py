@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Copyright © 2017-2019 Zuercher Hochschule fuer Angewandte Wissenschaften.
 # All Rights Reserved.
 #
@@ -18,8 +17,6 @@ import os
 
 import connexion
 from esm.encoder import JSONEncoder
-
-from adapters.log import LOG
 
 
 if __name__ == '__main__':
@@ -45,5 +42,4 @@ if __name__ == '__main__':
     ESM_APP.app.logger.setLevel('DEBUG')
     ESM_PORT = os.environ.get('ESM_PORT', 8080)
     ESM_APP.app.logger.info(' * ESM_PORT: ' + str(ESM_PORT))
-    LOG.info(' * ESM_PORT: ' + str(ESM_PORT))
     ESM_APP.run(host='0.0.0.0', port=ESM_PORT)
