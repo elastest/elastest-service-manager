@@ -209,3 +209,8 @@ class TestStore(TestCase):
             self.store.add_service_instance(service_instance=None)
         with self.assertRaises(NotImplementedError):
             self.store.add_last_operation(instance_id='', last_operation=None)
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()
