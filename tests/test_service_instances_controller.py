@@ -240,3 +240,5 @@ class TestServiceInstancesController(BaseTestCase):
 if __name__ == '__main__':
     import unittest
     unittest.main()
+    # import nose
+    # nose.main()
