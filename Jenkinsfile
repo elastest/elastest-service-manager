@@ -2,7 +2,7 @@ node('docker'){
     stage "Container Prep"
         
         echo("the node is up")
-        def mycontainer = docker.image('dizz/docker-compose-py-siblings:latest')
+        def mycontainer = docker.image('elastest/docker-compose-py-siblings:latest')
         mycontainer.pull() // make sure we have the latest available from Docker Hub
         
         mycontainer.inside("-u jenkins -v /var/run/docker.sock:/var/run/docker.sock:rw") {
@@ -16,9 +16,9 @@ node('docker'){
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
 
             stage "Build image - Package"
-                echo ("building... maybe use packer.io to build both container and VM images?")
-                //need to be corrected to the organization because at the moment elastestci can't create new repositories in the organization
-                def myimage = docker.build "elastest/elastest-service-manager"
+                // maybe use packer.io to build both container and VM images?
+                echo ("building...")
+                def myimage = docker.build("elastest/elastest-service-manager")
 
             stage "Execute docker compose"
                 echo ("nop")
