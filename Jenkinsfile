@@ -10,10 +10,11 @@ node('docker'){
             git 'https://github.com/elastest/elastest-service-manager'
 
             stage "Setup test environment"
-                echo 'creating default elastest network'
-                sh 'docker network create elastest'
-                echo 'creating local mongodb instance'
-                sh 'docker run -d -p 27017:27017 -v /tmp/mongodata:/data/db mongo'
+                echo 'nop'
+                // echo 'creating default elastest network'
+                // sh 'docker network create elastest'
+                // echo 'creating local mongodb instance'
+                // sh 'docker run -d -p 27017:27017 -v /tmp/mongodata:/data/db mongo'
 
             stage "Unit tests"
                 echo ("Starting unit tests...")
@@ -37,7 +38,5 @@ node('docker'){
                     sh 'docker login -u "$USERNAME" -p "$PASSWORD"'
                     myimage.push()
                 }
-            stage "clean up"
-                sh 'docker network rm elastest'
         }
 }
