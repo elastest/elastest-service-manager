@@ -385,7 +385,7 @@ class InMemoryStore(Store):
             self.ESM_DB.last_operations.remove(last_op_to_delete)
 
 # TODO reevaluate this!
-mongo_host = os.getenv('MONGO_HOST', '')
+mongo_host = os.getenv('ESM_MONGO_HOST', '')
 if len(mongo_host):
     STORE = MongoDBStore(mongo_host)
 else:
