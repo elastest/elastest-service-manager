@@ -90,3 +90,10 @@ class TestDockerBasicBackend(TestCase):
         print(self.container)
         self.container.kill()
         self.container.remove()
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()
+    # import nose
+    # nose.main()
