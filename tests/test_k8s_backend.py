@@ -53,3 +53,10 @@ class TestK8SBackendWithoutSetup(TestCase):
 
     def test_k8s_create(self):
         pass
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()
+    # import nose
+    # nose.main()
