@@ -40,6 +40,8 @@ The ESM uses the [Connexion](https://github.com/zalando/connexion) library on to
 To run the ESM, please execute the following from the root directory:
 
 ```
+virtualenv .env
+source .env/bin/activate
 pip3 install -r requirements.txt
 python3 ./runesm.py
 ```
@@ -75,6 +77,7 @@ Ensure you have all dependencies required: `pip3 install -r requirements.txt`
 Configure the following OS environment variables:
 
 * `ESM_PORT`: this is the port under which the service broker runs. By default it runs on `8080`.
+* `ESM_MONGO_HOST`: this is the host where a mongodb service is running. It is used to persist ESM state. If it's not set then an in-memory store is used.
 
 Example config and run:
 
@@ -276,7 +279,6 @@ There is a docker build file `./Dockerfile` in the root of this project. You can
 ```shell
 docker build -t elastest/elastest-service-manager:latest ./
 ```
-
 
 
 ### To Run Locally
