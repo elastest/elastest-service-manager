@@ -12,6 +12,7 @@ node('docker'){
             stage "Unit tests"
                 // TODO: add DOCKER_TESTS=YES and MONGODB_TESTS=YES env vars - can only be done with mongodb already running
                 echo ("Starting unit tests...")
+                sh 'docker network create elastest'
                 sh 'tox'
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
 

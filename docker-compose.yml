@@ -1,30 +1,101 @@
 version: '2'
 
 services:
-  elastest-service-manager:
+  esm:
+    depends_on:
+      - mongo
+      - beats
+      - logstash
+      - elasticsearch
+      - rabbitmq
+    build: ./
     image: elastest/elastest-service-manager:latest
-    container_name: elastest-service-manager
     hostname: elastest-service-manager
+    container_name: elastest-service-manager
     environment:
       - ESM_PORT=8080
-      - MONGO_HOST=data-store-mongo  # note that this is the name of the mongo resource, below
+      - MONGO_HOST=mongo  # note that this is the name of the mongo resource, below
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:rw
     ports:
       - "8080:8080"
     networks:
       - elastest
 
-  data-store-mongo:
-    depends_on:
-      - elastest-service-manager
+  mongo:
     image: mongo
-    volumes:
-      - ./mongodata:/data/db
-    hostname: ds-m
+    hostname: mongo
+    container_name: mongo
     ports:
       - "27017"
+    volumes:
+      - mongo-data:/data/db
     networks:
       - elastest
 
+  beats:
+    depends_on:
+      - logstash
+    image: edujgurjc/dockbeat
+    hostname: beats
+    container_name: beats
+    environment:
+      - LOGSTASHHOST=logstash
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - elastest
+
+  logstash:
+    depends_on:
+      - rabbitmq
+      - elasticsearch
+    image: edujgurjc/logstash
+    hostname: logstash
+    container_name: logstash
+    environment:
+      - ELASTICHOST=elasticsearch
+      - RABBITHOST=rabbitmq
+      - RABBITUSER=elastest-esm
+      - RABBITPASS=elastest-esm
+    expose:
+      - 5000
+      - 5001
+      - 5044
+    networks:
+      - elastest
+
+  elasticsearch:
+    image: edujgurjc/elasticsearch
+    hostname: elasticsearch
+    container_name: elasticsearch
+    expose:
+      - 9200
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - elastest
+
+  rabbitmq:
+    image: edujgurjc/rabbitmq
+    hostname: rabbitmq
+    hostname: rabbitmq
+    container_name: rabbitmq
+    expose:
+      - 15672
+      - 5672
+      - 15671
+      - 25672
+      - 61613
+    networks:
+      - elastest
+
+volumes:
+  mongo-data:
+    driver: local
+  elasticsearch-data:
+    driver: local
+
 networks:
   elastest:
-    external: true
+    driver: bridge
