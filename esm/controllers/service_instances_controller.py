@@ -28,7 +28,7 @@ from esm.models import UpdateOperationResponse
 from esm.models import UpdateRequest
 
 from adapters.datasource import STORE as store
-from adapters.resources import EPM as epm
+from adapters.resources import RM as rm
 
 # from datetime import date, datetime
 # from typing import List, Dict
@@ -84,9 +84,9 @@ def create_service_instance(instance_id, service, accept_incomplete=None):
 
         if accept_incomplete:  # given docker-compose runs in detached mode this is not needed - only timing can verify
             # XXX put this in a thread to allow for asynch processing?
-            epm.create(instance_id=instance_id, content=mani.manifest_content, c_type=mani.manifest_type)
+            rm.create(instance_id=instance_id, content=mani.manifest_content, c_type=mani.manifest_type)
         else:
-            epm.create(instance_id=instance_id, content=mani.manifest_content, c_type=mani.manifest_type)
+            rm.create(instance_id=instance_id, content=mani.manifest_content, c_type=mani.manifest_type)
 
         last_op = LastOperation(  # stored within the service instance doc
             state='creating',
@@ -138,7 +138,12 @@ def deprovision_service_instance(instance_id, service_id, plan_id, accept_incomp
         # check that the instance exists first
         instance = store.get_service_instance(instance_id=instance_id)
         if len(instance) == 1:
-            epm.delete(instance_id=instance_id)
+            mani_id = instance[0].context['manifest_id']
+            mani = store.get_manifest(manifest_id=mani_id)
+            if len(mani) < 1:
+                return 'no service manifest found.', 404
+
+            rm.delete(instance_id=instance_id, manifest_type=mani[0].manifest_type)
             store.delete_service_instance(instance_id)
             # we don't delete the last_operation explicitly as its embedded in the service_instance document
             # store.delete_last_operation(instance_id)
@@ -170,7 +175,11 @@ def instance_info(instance_id):
         srv_inst = srv_inst[0]
 
         # get the latest info
-        inst_info = epm.info(instance_id=instance_id)
+        mani_id = srv_inst.context['manifest_id']
+        mani = store.get_manifest(manifest_id=mani_id)
+        if len(mani) < 1:
+            return 'no manifest found.', 404
+        inst_info = rm.info(instance_id=instance_id, manifest_type=mani[0].manifest_type)
 
         if inst_info['srv_inst.state.state'] == 'failed':
             # try epm.delete(instance_id=instance_id)?
