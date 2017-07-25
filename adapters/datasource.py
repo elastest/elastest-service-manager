@@ -14,7 +14,7 @@
 #    under the License.
 
 import os
-from typing import List
+from typing import Any, Dict, List
 
 from pymongo import MongoClient
 
@@ -25,12 +25,11 @@ from esm.models import LastOperation
 
 from adapters.log import LOG
 
-# TODO standardise on return type of None or tuple for relevant store operations
 # TODO implement exception handling
 
 
 class Store(object):
-    def add_service(self, service: ServiceType) -> None:
+    def add_service(self, service: ServiceType) -> tuple:
         raise NotImplementedError
 
     def get_service(self, service_id: str=None) -> List[ServiceType]:
@@ -39,7 +38,7 @@ class Store(object):
     def delete_service(self, service_id: str=None) -> None:
         raise NotImplementedError
 
-    def add_service_instance(self, service_instance: ServiceInstance) -> None:
+    def add_service_instance(self, service_instance: ServiceInstance) -> tuple:
         raise NotImplementedError
 
     def get_service_instance(self, instance_id: str=None) -> List[ServiceInstance]:
@@ -48,7 +47,7 @@ class Store(object):
     def delete_service_instance(self, service_instance_id: str=None) -> None:
         raise NotImplementedError
 
-    def add_manifest(self, manifest: Manifest) -> None:
+    def add_manifest(self, manifest: Manifest) -> tuple:
         raise NotImplementedError
 
     def get_manifest(self, manifest_id: str=None, plan_id: str=None) -> List[Manifest]:
@@ -57,7 +56,7 @@ class Store(object):
     def delete_manifest(self, manifest_id: str=None) -> None:
         raise NotImplementedError
 
-    def add_last_operation(self, instance_id: str, last_operation: LastOperation) -> None:
+    def add_last_operation(self, instance_id: str, last_operation: LastOperation) -> tuple:
         raise NotImplementedError
 
     def delete_last_operation(self, instance_id: str=None) -> None:
@@ -103,6 +102,7 @@ class MongoDBStore(Store):
                 return 'there was an issue saving the supplied service type to the DB', 500
         else:
             return 'the service already exists in the catalog. you should resubmit with a different service.', 409
+        return tuple()
 
     def delete_service(self, service_id: str=None) -> None:
         if service_id:
@@ -111,17 +111,6 @@ class MongoDBStore(Store):
             self.ESM_DB.services.delete_many({})
 
     def add_manifest(self, manifest: Manifest) -> tuple:
-        # ensure the manifest-defined service and plan id exist?
-        # if self.ESM_DB.services.count({'id': manifest.service_id}) > 0:
-        #     # get the plans
-        #     plans = self.ESM_DB.services.find_one({'id': manifest.service_id})['plans']
-        #     # filter the plans to find the plan to be associated with
-        #     plan = [p for p in plans if p['id'] == manifest.plan_id]
-        #     if len(plan) != 1:
-        #         return 'no plan or duplicate plan found.', 401
-        # else:
-        #     return 'the service id in the supplied manifest does not exist.', 404
-
         if self.ESM_DB.manifests.count({'id': manifest.id}) == 0:
             result = self.ESM_DB.manifests.insert_one(manifest.to_dict())
             if not result.acknowledged:
@@ -211,6 +200,7 @@ class MongoDBStore(Store):
             result = self.ESM_DB.instances.insert_one(service_instance.to_dict())
             if not result.acknowledged:
                 return 'there was an issue saving the service instance to the DB', 500
+        return tuple()
 
     def delete_service_instance(self, service_instance_id: str=None) -> None:
         if service_instance_id:
@@ -222,6 +212,7 @@ class MongoDBStore(Store):
         result = self.ESM_DB.last_operations.insert_one({'id': instance_id, 'last_op': last_operation.to_dict()})
         if not result.acknowledged:
             return 'there was an issue saving the service status to the DB', 500
+        return 'ok', 200
 
     def get_last_operation(self, instance_id: str=None) -> List[LastOperation]:
         if instance_id:
@@ -292,11 +283,13 @@ class InMemoryStore(Store):
             LOG.warn('Deleting ALL registered service types in the catalog.')
             self.ESM_DB.services = list()
         else:
-            service_to_delete = [s for s in self.ESM_DB.services if s.id == service_id][0]
+            service_to_delete = [s for s in self.ESM_DB.services if s.id == service_id]
+            if len(service_to_delete) < 1:
+                LOG.error('no service instance found.')
+                raise Exception('no service instance found.')
             LOG.info('Deleting the service {id} from the catalog. Content:\n{content}'.format(
-                id=service_id, content=service_to_delete.to_str()))
-            # TODO this will fail if service_to_delete is None
-            self.ESM_DB.services.remove(service_to_delete)
+                id=service_id, content=service_to_delete[0].to_str()))
+            self.ESM_DB.services.remove(service_to_delete[0])
 
     def add_manifest(self, manifest: Manifest) -> tuple:
         if manifest not in self.ESM_DB.manifests:
@@ -318,6 +311,7 @@ class InMemoryStore(Store):
             return [m for m in self.ESM_DB.manifests if m.plan_id == plan_id]
         elif manifest_id:
             return [m for m in self.ESM_DB.manifests if m.id == manifest_id]
+        return []
 
     def delete_manifest(self, manifest_id: str=None) -> None:
         if not manifest_id:
@@ -378,11 +372,13 @@ class InMemoryStore(Store):
             LOG.warn('Deleting ALL last operations in the data store.')
             self.ESM_DB.last_operations = list()
         else:
-            last_op_to_delete = [lo for lo in self.ESM_DB.last_operations if lo['id'] == instance_id][0]
+            last_op_to_delete = [lo for lo in self.ESM_DB.last_operations if lo['id'] == instance_id]
+            if len(last_op_to_delete) < 1:
+                LOG.error('no last_operation found.')
+                raise Exception('no last_operation found.')
             LOG.info('Deleting the service {id} from the catalog. Content:\n{content}'.format(
-                id=instance_id, content=last_op_to_delete))
-            # TODO this will fail if last_op_to_delete is None
-            self.ESM_DB.last_operations.remove(last_op_to_delete)
+                id=instance_id, content=last_op_to_delete[0]))
+            self.ESM_DB.last_operations.remove(last_op_to_delete[0])
 
 # TODO reevaluate this!
 mongo_host = os.getenv('ESM_MONGO_HOST', '')
