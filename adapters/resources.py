@@ -15,25 +15,23 @@
 
 import os
 import shutil
+from typing import Dict
 
 from compose.cli.main import TopLevelCommand, project_from_options
 # from kubernetes import client, config
 
 from adapters.log import LOG
-from adapters.datasource import STORE
-
-
-# TODO improve type hints for all signatures
+# from adapters.datasource import STORE
 
 
 class Backend(object):
-    def create(self, instance_id, content, c_type):
+    def create(self, instance_id: str, content: str, c_type: str, **kwargs) -> None:
         pass
 
-    def info(self, instance_id):
+    def info(self, instance_id: str, **kwargs) -> Dict[str, str]:
         pass
 
-    def delete(self, instance_id):
+    def delete(self, instance_id: str, **kwargs) -> None:
         pass
 
 
@@ -63,14 +61,14 @@ class DockerBackend(Backend):
         # TODO this location needs to be configurable
         self.manifest_cache = '/tmp'
 
-    def create(self, instance_id, content, c_type):
+    def create(self, instance_id: str, content: str, c_type: str, **kwargs) -> None:
         if c_type == 'docker-compose':
             LOG.warn('WARNING: this is for local-only deployments.')
             return self._create_compose(inst_id=instance_id, content=content)
         else:
             raise NotImplementedError('The type ({type}) of cluster manager is unknown'.format(type=c_type))
 
-    def _create_compose(self, inst_id, content):
+    def _create_compose(self, inst_id: str, content: str) -> None:
         """
         This creates a set of containers using docker compose.
         Note: the use of the docker compose python module is unsupported by docker inc.
@@ -101,7 +99,7 @@ class DockerBackend(Backend):
         cmd = TopLevelCommand(project)
         cmd.up(self.options)  # WARNING: this method can call sys.exit() but only if --abort-on-container-exit is True
 
-    def info(self, instance_id):
+    def info(self, instance_id: str, **kwargs) -> Dict[str, str]:
         mani_dir = self.manifest_cache + '/' + instance_id
 
         if not os.path.exists(mani_dir):
@@ -167,7 +165,7 @@ class DockerBackend(Backend):
 
         return info
 
-    def delete(self, instance_id):
+    def delete(self, instance_id: str, **kwargs) -> None:
         mani_dir = self.manifest_cache + '/' + instance_id
 
         if not os.path.exists(mani_dir):
@@ -202,7 +200,7 @@ class KubernetesBackend(Backend):
 #         config.load_kube_config()
 #         self.k8s_beta = client.ExtensionsV1beta1Api()
 
-    def create(self, instance_id, content, c_type):
+    def create(self, instance_id: str, content: str, c_type: str, **kwargs) -> None:
         super().create(instance_id, content, c_type)
 #
 #         # LOG.debug("# content = content.replace('</br>', '\\n') is a dirty hack - mongodb strips newlines!")
@@ -214,29 +212,25 @@ class KubernetesBackend(Backend):
 #         # print("Deployment created. status='%s'" % str(resp.status))
 #         # return resp.metadata.uid
 
-    def delete(self, instance_id):
+    def info(self, instance_id: str, **kwargs) -> Dict[str, str]:
+        super().info(instance_id)
+
+    def delete(self, instance_id: str, **kwargs) -> None:
         super().delete(instance_id)
 #         # content = ''
 #         # dep = yaml.load(content)
 #         # resp = self.k8s_beta.delete_collection_namespaced_deployment(body=dep, namespace="default")
-
-    def info(self, instance_id):
-        super().info(instance_id)
 
 
 class DummyBackend(Backend):
     def __init__(self) -> None:
         super().__init__()
 
-    def create(self, instance_id, content, c_type):
+    def create(self, instance_id: str, content: str, c_type: str, **kwargs) -> None:
         super().create(instance_id, content, c_type)
         LOG.info('DummyBackend driver: create called')
 
-    def delete(self, instance_id):
-        super().delete(instance_id)
-        LOG.info('DummyBackend driver: delete called')
-
-    def info(self, instance_id):
+    def info(self, instance_id: str, **kwargs) -> Dict[str, str]:
         super().info(instance_id)
         LOG.info('DummyBackend driver: info called')
 
@@ -283,67 +277,52 @@ class DummyBackend(Backend):
         LOG.info('Dummy data:\n{dummy}'.format(dummy=info))
         return info
 
-
-class TOSCABackend(Backend):
-    def __init__(self) -> None:
-        super().__init__()
-
-    def create(self, instance_id, content, c_type):
-        super().create(instance_id, content, c_type)
-
-    def delete(self, instance_id):
+    def delete(self, instance_id: str, **kwargs) -> None:
         super().delete(instance_id)
-
-    def info(self, instance_id):
-        super().info(instance_id)
-        return {
-            'testid123_spark-worker_1_image_name': 'elastest/ebs-spark-base:0.5.0',
-            'testid123_spark-worker_1_image_id':
-                'sha256:138a91572bd6bdce7d7b49a44b91a4caf4abdf1a75f105991e18be971353d5cb',
-            'testid123_spark-worker_1_state': 'Up',
-            'testid123_spark-worker_1_cmd': '/usr/bin/supervisord --configuration=/opt/conf/slave.conf',
-            'spark-master_image_name': 'elastest/ebs-spark-base:0.5.0',
-            'spark-master_image_id': 'sha256:138a91572bd6bdce7d7b49a44b91a4caf4abdf1a75f105991e18be971353d5cb',
-            'spark-master_state': 'Up', 'spark-master_cmd': '/usr/bin/supervisord --configuration=/opt/conf/master.conf'
-        }
+        LOG.info('DummyBackend driver: delete called')
 
 
-class EPM(Backend):
+class ResourceManager(Backend):
 
     def __init__(self) -> None:
         self.backends = {
             'docker': DockerBackend(),
             'kubernetes': KubernetesBackend(),
-            'tosca': TOSCABackend(),
-            'dummy': DummyBackend()
+            'dummy': DummyBackend(),
         }
-        self.store = STORE
         # set an alias to the docker-compose driver
         LOG.info('Adding docker-compose alias to DockerBackend')
         self.backends['docker-compose'] = self.backends.get('docker')
         LOG.info('Adding k8s alias to KubernetesBackend')
         self.backends['k8s'] = self.backends.get('kubernetes')
 
-    def create(self, instance_id: str, content: str, c_type: str):
+    def create(self, instance_id: str, content: str, c_type: str, **kwargs):
         be = self.backends.get(c_type, self.backends['dummy'])
         be.create(instance_id, content, c_type)
 
-    def info(self, instance_id: str):
-        manifest_type = self._get_manifest_type(instance_id)
-        be = self.backends.get(manifest_type, self.backends['dummy'])
+    def info(self, instance_id: str, **kwargs) -> Dict[str, str]:
+        if 'manifest_type' in kwargs:
+            manifest_type = kwargs.get('manifest_type', 'dummy')
+            be = self.backends.get(manifest_type, self.backends['dummy'])
+        else:
+            raise RuntimeError('manifest_type parameter not specified in call to info()')
         return be.info(instance_id)
 
-    def delete(self, instance_id: str):
-        manifest_type = self._get_manifest_type(instance_id)
-        be = self.backends.get(manifest_type, self.backends['dummy'])
+    def delete(self, instance_id: str, **kwargs):
+        if 'manifest_type' in kwargs:
+            manifest_type = kwargs.get('manifest_type', 'dummy')
+            be = self.backends.get(manifest_type, self.backends['dummy'])
+        else:
+            raise RuntimeError('manifest_type parameter not specified in call to info()')
+
         be.delete(instance_id)
 
-    def _get_manifest_type(self, instance_id: str) -> str:
-        srv_inst = self.store.get_service_instance(instance_id=instance_id)
-        # TODO this will fail if srv_inst len is 0
-        mani_id = srv_inst[0].context['manifest_id']
-        # TODO this will fail if mani is None
-        mani = self.store.get_manifest(manifest_id=mani_id)[0]
-        return mani.manifest_type
+    # def _get_manifest_type(self, instance_id: str) -> str:
+    #     srv_inst = self.store.get_service_instance(instance_id=instance_id)
+    #     # TODO this will fail if srv_inst len is 0
+    #     mani_id = srv_inst[0].context['manifest_id']
+    #     # TODO this will fail if mani is None
+    #     mani = self.store.get_manifest(manifest_id=mani_id)[0]
+    #     return mani.manifest_type
 
-EPM = EPM()
+RM = ResourceManager()
