@@ -69,3 +69,4 @@ target/
 .env/
 .idea/
 /mongodata/
+/.mypy_cache/
