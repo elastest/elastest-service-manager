@@ -103,9 +103,8 @@ class DockerBackend(Backend):
         mani_dir = self.manifest_cache + '/' + instance_id
 
         if not os.path.exists(mani_dir):
-            LOG.error('requested directory does not exist: {mani_dir}'.format(mani_dir=mani_dir))
-            # TODO raise exception
-            return
+            LOG.warn('requested directory does not exist: {mani_dir}'.format(mani_dir=mani_dir))
+            return {}
 
         LOG.debug('info from: {compo}'.format(compo=mani_dir + '/docker-compose.yml'))
         project = project_from_options(mani_dir, self.options)
@@ -169,8 +168,8 @@ class DockerBackend(Backend):
         mani_dir = self.manifest_cache + '/' + instance_id
 
         if not os.path.exists(mani_dir):
-            LOG.error('requested directory does not exist: {mani_dir}'.format(mani_dir=mani_dir))
-            # TODO raise exception
+            LOG.warn('requested directory does not exist: {mani_dir}'.format(mani_dir=mani_dir))
+            # raise Exception('requested directory does not exist: {mani_dir}'.format(mani_dir=mani_dir))
             return
 
         self.options["--force"] = True
@@ -204,7 +203,7 @@ class KubernetesBackend(Backend):
         super().create(instance_id, content, c_type)
 #
 #         # LOG.debug("# content = content.replace('</br>', '\\n') is a dirty hack - mongodb strips newlines!")
-#         # content = content.replace('</br>', '\n')
+#         # content = content.replace('</b  r>', '\n')
 #         #
 #         # dep = yaml.load(content)
 #         # resp = self.k8s_beta.create_namespaced_deployment(body=dep, namespace="default")
@@ -214,6 +213,7 @@ class KubernetesBackend(Backend):
 
     def info(self, instance_id: str, **kwargs) -> Dict[str, str]:
         super().info(instance_id)
+        return {}
 
     def delete(self, instance_id: str, **kwargs) -> None:
         super().delete(instance_id)
@@ -316,13 +316,5 @@ class ResourceManager(Backend):
             raise RuntimeError('manifest_type parameter not specified in call to info()')
 
         be.delete(instance_id)
-
-    # def _get_manifest_type(self, instance_id: str) -> str:
-    #     srv_inst = self.store.get_service_instance(instance_id=instance_id)
-    #     # TODO this will fail if srv_inst len is 0
-    #     mani_id = srv_inst[0].context['manifest_id']
-    #     # TODO this will fail if mani is None
-    #     mani = self.store.get_manifest(manifest_id=mani_id)[0]
-    #     return mani.manifest_type
 
 RM = ResourceManager()
