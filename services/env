@@ -1,0 +1,5 @@
+RABBIT_HOST=rabbitmq
+RABBIT_USERNAME=elastest
+RABBIT_PASSWORD=elastest
+RABBIT_VHOST=elastest
+LOGSTASH_HOST=logstash

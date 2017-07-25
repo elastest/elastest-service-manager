@@ -4,17 +4,12 @@ services:
   esm:
     depends_on:
       - mongo
-      - beats
-      - logstash
-      - elasticsearch
-      - rabbitmq
-    build: ./
     image: elastest/elastest-service-manager:latest
     hostname: elastest-service-manager
     container_name: elastest-service-manager
     environment:
       - ESM_PORT=8080
-      - MONGO_HOST=mongo  # note that this is the name of the mongo resource, below
+      - ESM_MONGO_HOST=mongo  # note that this is the name of the mongo resource, below
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw
     ports:
@@ -33,67 +28,91 @@ services:
     networks:
       - elastest
 
-  beats:
+  rabbitmq:
+    hostname: rabbitmq
+    container_name: rabbitmq
+    build: services/rabbitmq
+    image: services/rabbitmq
+    env_file:
+      - services/env
+    expose:
+      - 15672
+      - 5672
+    ports:
+      - 15672:15672
+      - 5672:5672
+    networks:
+      - elastest
+
+  kibana:
     depends_on:
-      - logstash
-    image: edujgurjc/dockbeat
-    hostname: beats
-    container_name: beats
-    environment:
-      - LOGSTASHHOST=logstash
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - elasticsearch
+    hostname: kibana
+    container_name: kibana
+    build: services/kibana/
+    image: services/kibana
+    env_file:
+      - services/env
+    ports:
+      - 5601:5601
+    networks:
+      - elastest
+
+  elasticsearch:
+    depends_on:
+      - rabbitmq
+    hostname: elasticsearch
+    container_name: elasticsearch
+    build: services/elasticsearch
+    image: services/elasticsearch
+    env_file:
+      - services/env
+    expose:
+      - 9200
+      - 9300
+    ports:
+      - 9200:9200
+      - 9300:9300
     networks:
       - elastest
 
   logstash:
     depends_on:
-      - rabbitmq
       - elasticsearch
-    image: edujgurjc/logstash
+      - rabbitmq
     hostname: logstash
     container_name: logstash
-    environment:
-      - ELASTICHOST=elasticsearch
-      - RABBITHOST=rabbitmq
-      - RABBITUSER=elastest-esm
-      - RABBITPASS=elastest-esm
+    build: services/logstash
+    image: services/logstash
+    env_file:
+      - services/env
     expose:
-      - 5000
-      - 5001
       - 5044
+      - 5000
+      - 9600
+    ports:
+      - 9600:9600
+      - 5044:5044
+      - 5000:5000
     networks:
       - elastest
 
-  elasticsearch:
-    image: edujgurjc/elasticsearch
-    hostname: elasticsearch
-    container_name: elasticsearch
-    expose:
-      - 9200
+  dockbeat:
+    depends_on:
+      - elasticsearch
+    hostname: dockbeat
+    container_name: dockbeat
+    build: services/dockbeat
+    image: services/dockbeat
     volumes:
-      - elasticsearch-data:/usr/share/elasticsearch/data
-    networks:
-      - elastest
-
-  rabbitmq:
-    image: edujgurjc/rabbitmq
-    hostname: rabbitmq
-    hostname: rabbitmq
-    container_name: rabbitmq
-    expose:
-      - 15672
-      - 5672
-      - 15671
-      - 25672
-      - 61613
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    env_file:
+      - services/env
     networks:
       - elastest
 
 volumes:
   mongo-data:
-    driver: local
-  elasticsearch-data:
     driver: local
 
 networks:
