@@ -27,8 +27,21 @@ VERSION = "0.1.0"
 # prerequisite: setuptools
 # http://pypi.python.org/pypi/setuptools
 
-# TODO read in requirements.txt
-REQUIRES = ["connexion"]
+REQUIRES = [
+    'connexion == 1.0.129',
+    'python_dateutil == 2.6.0',
+    'setuptools >= 21.0.0',
+    'pymongo',
+    'docker-compose',
+    'docker',
+    'pykube',
+    'daiquiri',
+    'healthcheck',
+    'tornado'
+]
+# TODO fix the path issue
+# r = open('requirements.txt')
+# REQUIRES = r.read().split('\n')
 
 setup(
     name=NAME,
