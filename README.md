@@ -451,7 +451,6 @@ curl http://localhost:5000/environment
 			"GOVERSION": "1.8.3",
 			"GOROOT": "/usr/local/Cellar/go/1.8.3/libexec",
 			"VIRTUAL_ENV": "/Users/andy/Source/ElasTest/elastest-service-manager/.env",
-			"PS1": "(.env) %{%f%b%k%}$(build_prompt) ",
 			"ESM_MONGO_HOST": "localhost",
 			"_": "/Users/andy/Source/ElasTest/elastest-service-manager/.env/bin/python"
 		}
