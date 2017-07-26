@@ -481,7 +481,7 @@ Currently supported:
 
 ### Resource Manager
 
-Subclass `adapters.resources.Backend` and implement for you persistence system. You will then have to register your Backend driver with the `adapters.resources.EPM` class.
+Subclass `adapters.resources.Backend` and implement for you persistence system. You will then have to register your Backend driver with the `adapters.resources.ResourceManager` class.
 
 Currently supported:
 
