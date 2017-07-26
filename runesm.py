@@ -73,6 +73,7 @@ def create_api():
                             'It is not dealt with in this spec. '
                    }
     )
+    LOG.info('OSBA API and ElasTest extensions API created.')
     return esm_app
 
 
@@ -86,18 +87,18 @@ if __name__ == '__main__':
     check_app = add_check_api()
 
     esm_port = os.environ.get('ESM_PORT', 8080)
-    LOG.info(' * ESM_PORT: ' + str(esm_port))
     esm_server = HTTPServer(WSGIContainer(esm_app))
-    esm_server.listen(esm_port)
+    esm_server.listen(address='0.0.0.0', port=esm_port)
+    LOG.info('ESM available at http://{IP}:{PORT}'.format(IP='0.0.0.0', PORT=esm_port))
 
     check_port = os.environ.get('ESM_CHECK_PORT', 5000)
-    LOG.info(' * ESM_CHECK_PORT: ' + str(esm_port))
     check_server = HTTPServer(WSGIContainer(check_app))
-    check_server.listen(check_port)
+    check_server.listen(address='0.0.0.0', port=check_port)
+    LOG.info('ESM Health available at http://{IP}:{PORT}'.format(IP='0.0.0.0', PORT=check_port))
 
     for sig in [signal.SIGTERM, signal.SIGINT, signal.SIGHUP, signal.SIGQUIT]:
         signal.signal(sig, shutdown_handler)
 
-    LOG.info('Starting...')
+    LOG.info('Press CTRL+C to quit.')
     IOLoop.instance().start()
 
