@@ -28,7 +28,10 @@ node('docker'){
 
             stage "Execute docker compose"
                 echo ("nop")
-                // sh 'docker-compose -f docker-compose.yml up -d --build'
+                // sh 'docker-compose -f docker-compose-no-mon.yml up -d --build'
+                // get the ESM IP address
+                // poll for ESM availability, curl
+                // execute a set of tests against the ESM endpoint
 
             stage "Publish"
                 echo ("Publishing as all tests succeeded...")

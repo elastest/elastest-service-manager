@@ -13,17 +13,52 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import logging
 import os
+import signal
 
 import connexion
+import flask
+from healthcheck import HealthCheck, EnvironmentDump
+from tornado.wsgi import WSGIContainer
+from tornado.httpserver import HTTPServer
+from tornado.ioloop import IOLoop
+
+import adapters.log
 from esm.encoder import JSONEncoder
 
 
-if __name__ == '__main__':
-    ESM_APP = connexion.App(__name__, specification_dir='./esm/swagger/')
-    ESM_APP.app.json_encoder = JSONEncoder
-    # TODO consider overriding Resolver if OO holders of controller methods is required.
-    ESM_APP.add_api(
+LOG = adapters.log.get_logger(name=__name__)
+
+
+def add_check_api():
+    app = flask.Flask('check_api')
+    health = HealthCheck(app, "/healthcheck")
+    envdump = EnvironmentDump(app, "/environment")
+
+    def health_check():
+
+        # check that the DB is working
+        # check that the active backends are available
+        if 1 + 1 == 2:
+            return True, "addition works"
+        else:
+            return False, "the universe is broken"
+
+    def application_data():
+        return {'maintainer': 'ElasTest',
+                'git_repo': 'https://github.com/elastest/elastest-service-manager'}
+
+    health.add_check(health_check)
+    envdump.add_section("application", application_data)
+
+    return app
+
+
+def create_api():
+    esm_app = connexion.App('esm_api', specification_dir='./esm/swagger/')
+    esm_app.app.json_encoder = JSONEncoder
+    esm_app.add_api(
         'swagger.yaml', strict_validation=True,
         arguments={'title': 'The Open Service Broker API defines the contract between the a requesting '
                             'client and the service broker. The broker is expected to implement several '
@@ -38,8 +73,31 @@ if __name__ == '__main__':
                             'It is not dealt with in this spec. '
                    }
     )
+    return esm_app
 
-    ESM_APP.app.logger.setLevel('DEBUG')
-    ESM_PORT = os.environ.get('ESM_PORT', 8080)
-    ESM_APP.app.logger.info(' * ESM_PORT: ' + str(ESM_PORT))
-    ESM_APP.run(host='0.0.0.0', port=ESM_PORT)
+
+def shutdown_handler(signum=None, frame=None):
+    LOG.info('Shutting down...')
+    IOLoop.instance().stop()
+
+
+if __name__ == '__main__':
+    esm_app = create_api()
+    check_app = add_check_api()
+
+    esm_port = os.environ.get('ESM_PORT', 8080)
+    LOG.info(' * ESM_PORT: ' + str(esm_port))
+    esm_server = HTTPServer(WSGIContainer(esm_app))
+    esm_server.listen(esm_port)
+
+    check_port = os.environ.get('ESM_CHECK_PORT', 5000)
+    LOG.info(' * ESM_CHECK_PORT: ' + str(esm_port))
+    check_server = HTTPServer(WSGIContainer(check_app))
+    check_server.listen(check_port)
+
+    for sig in [signal.SIGTERM, signal.SIGINT, signal.SIGHUP, signal.SIGQUIT]:
+        signal.signal(sig, shutdown_handler)
+
+    LOG.info('Starting...')
+    IOLoop.instance().start()
+

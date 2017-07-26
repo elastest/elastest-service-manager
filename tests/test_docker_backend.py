@@ -15,11 +15,12 @@
 
 import inspect
 import os
-from unittest import TestCase, skipIf, skip
+from unittest import TestCase, skipIf
 
 import docker
 
 from adapters.resources import DockerBackend
+
 
 INST_ID = 'test-id-123'
 

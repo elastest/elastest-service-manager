@@ -27,8 +27,10 @@ from esm.models.manifest import Manifest
 from esm.models.service_type import ServiceType
 from . import BaseTestCase
 
-from adapters.log import LOG
+import adapters.log
 from adapters.datasource import STORE
+
+LOG = adapters.log.get_logger(name=__name__)
 
 
 class TestCatalogController(BaseTestCase):

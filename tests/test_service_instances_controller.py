@@ -15,27 +15,33 @@
 #    under the License.
 
 from __future__ import absolute_import
-import inspect, os
+import inspect
+import os
 
 from esm.models.binding_request import BindingRequest
-from esm.models.binding_response import BindingResponse
-from esm.models.empty import Empty
-from esm.models.error import Error
-from esm.models.last_operation import LastOperation
 from esm.models.service_request import ServiceRequest
-from esm.models.service_response import ServiceResponse
 from esm.models import ServiceType
 from esm.models import Plan
 from esm.models import Manifest
-from esm.models.update_operation_response import UpdateOperationResponse
 from esm.models.update_request import UpdateRequest
 from . import BaseTestCase
-from six import BytesIO
+
 from flask import json
 
-# from adapters.datasource import MongoDBStore, InMemoryStore
-from adapters.datasource import STORE as store
-from adapters.log import LOG
+from adapters.datasource import STORE
+import adapters.log
+
+
+# from esm.models.binding_response import BindingResponse
+# from esm.models.empty import Empty
+# from esm.models.error import Error
+# from esm.models.last_operation import LastOperation
+# from esm.models.service_response import ServiceResponse
+# from esm.models.update_operation_response import UpdateOperationResponse
+# from six import BytesIO
+
+
+LOG = adapters.log.get_logger(name=__name__)
 
 
 class TestServiceInstancesController(BaseTestCase):
@@ -44,8 +50,7 @@ class TestServiceInstancesController(BaseTestCase):
     def setUp(self):
         super().setUp()
 
-        # self.store = MongoDBStore()
-        self.store = store
+        self.store = STORE
         self.instance_id = 'this_is_a_test_instance'
 
         self.test_plan = Plan(

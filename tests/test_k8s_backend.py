@@ -19,6 +19,7 @@ from unittest import TestCase
 
 from adapters.resources import KubernetesBackend
 
+
 INST_ID = 'test-id-123'
 
 

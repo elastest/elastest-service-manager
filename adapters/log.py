@@ -33,10 +33,21 @@
 #         self.app.logger.error('Circuit breaker failure: %r, count: %r', exc, cb.fail_counter)
 
 import daiquiri
+import logging
 
-daiquiri.setup(
-    # daiquiri.output.Syslog(),
-    # daiquiri.output.STDERR,
-    # daiquiri.output.File(directory="/var/log"),
-)
-LOG = daiquiri.getLogger()
+# daiquiri.output.Syslog()
+# daiquiri.output.File(directory="/var/log")
+log_outputs = [daiquiri.output.STDERR]
+daiquiri.setup( outputs=log_outputs)
+
+
+def get_logger(name=None, log_level=logging.DEBUG):
+    # logging.basicConfig(format='%(levelname)s %(asctime)s: \t%(message)s',
+    #                     datefmt='%m/%d/%Y %I:%M:%S %p')
+    daiquiri.setup()
+    logger = daiquiri.getLogger(name)
+    # logger = logging.getLogger(name)
+    logger.setLevel(log_level)
+
+    return logger
+

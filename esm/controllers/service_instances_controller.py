@@ -27,13 +27,11 @@ from esm.models import ServiceType
 from esm.models import UpdateOperationResponse
 from esm.models import UpdateRequest
 
-from adapters.datasource import STORE as store
-from adapters.resources import RM as rm
+from adapters.datasource import STORE
+from adapters.resources import RM
 
-# from datetime import date, datetime
-# from typing import List, Dict
-# from six import iteritems
-# from ..util import deserialize_date, deserialize_datetime
+
+# TODO need a converged state model for the SM - see info methods of backend
 
 
 def create_service_instance(instance_id, service, accept_incomplete=None):
@@ -61,7 +59,7 @@ def create_service_instance(instance_id, service, accept_incomplete=None):
         else:
             return "Supplied body content is not or is mal-formed JSON", 400
 
-        svc_type = store.get_service_instance(service.service_id)
+        svc_type = STORE.get_service_instance(service.service_id)
         if len(svc_type) == 1:
             return 'Service instance with id {id} already exists'.format(id=service.service_id), 409
         # look up manifest based on plan id
@@ -71,7 +69,7 @@ def create_service_instance(instance_id, service, accept_incomplete=None):
 
         # get the manifest for the service/plan
         # TODO some validation required here to ensure it's the right svc/plan
-        svc_type = store.get_service(service.service_id)[0]
+        svc_type = STORE.get_service(service.service_id)[0]
         if svc_type is None:
             return 'Unrecognised service requested to be instantiated', 404
 
@@ -80,13 +78,13 @@ def create_service_instance(instance_id, service, accept_incomplete=None):
         if len(plan) <= 0:
             return 'no plan found.', 404
 
-        mani = store.get_manifest(plan_id=plan[0].id)[0]
+        mani = STORE.get_manifest(plan_id=plan[0].id)[0]
 
         if accept_incomplete:  # given docker-compose runs in detached mode this is not needed - only timing can verify
             # XXX put this in a thread to allow for asynch processing?
-            rm.create(instance_id=instance_id, content=mani.manifest_content, c_type=mani.manifest_type)
+            RM.create(instance_id=instance_id, content=mani.manifest_content, c_type=mani.manifest_type)
         else:
-            rm.create(instance_id=instance_id, content=mani.manifest_content, c_type=mani.manifest_type)
+            RM.create(instance_id=instance_id, content=mani.manifest_content, c_type=mani.manifest_type)
 
         last_op = LastOperation(  # stored within the service instance doc
             state='creating',
@@ -103,10 +101,10 @@ def create_service_instance(instance_id, service, accept_incomplete=None):
             }
         )
 
-        store.add_service_instance(srv_inst)
+        STORE.add_service_instance(srv_inst)
 
         if accept_incomplete:
-            store.add_last_operation(instance_id=instance_id, last_operation=last_op)
+            STORE.add_last_operation(instance_id=instance_id, last_operation=last_op)
 
         return 'created', 200
 
@@ -136,17 +134,17 @@ def deprovision_service_instance(instance_id, service_id, plan_id, accept_incomp
         # XXX if there's bindings remove first?
         # XXX what about undo?
         # check that the instance exists first
-        instance = store.get_service_instance(instance_id=instance_id)
+        instance = STORE.get_service_instance(instance_id=instance_id)
         if len(instance) == 1:
             mani_id = instance[0].context['manifest_id']
-            mani = store.get_manifest(manifest_id=mani_id)
+            mani = STORE.get_manifest(manifest_id=mani_id)
             if len(mani) < 1:
                 return 'no service manifest found.', 404
 
-            rm.delete(instance_id=instance_id, manifest_type=mani[0].manifest_type)
-            store.delete_service_instance(instance_id)
+            RM.delete(instance_id=instance_id, manifest_type=mani[0].manifest_type)
+            STORE.delete_service_instance(instance_id)
             # we don't delete the last_operation explicitly as its embedded in the service_instance document
-            # store.delete_last_operation(instance_id)
+            # STORE.delete_last_operation(instance_id)
 
             return Empty(), 200
         else:
@@ -169,23 +167,22 @@ def instance_info(instance_id):
         return message, code
     else:
         # service instance should already be recorded
-        srv_inst = store.get_service_instance(instance_id)
+        srv_inst = STORE.get_service_instance(instance_id)
         if len(srv_inst) < 1:
             return 'no service instance found.', 404
         srv_inst = srv_inst[0]
 
         # get the latest info
         mani_id = srv_inst.context['manifest_id']
-        mani = store.get_manifest(manifest_id=mani_id)
+        mani = STORE.get_manifest(manifest_id=mani_id)
         if len(mani) < 1:
             return 'no manifest found.', 404
-        inst_info = rm.info(instance_id=instance_id, manifest_type=mani[0].manifest_type)
+        inst_info = RM.info(instance_id=instance_id, manifest_type=mani[0].manifest_type)
 
         if inst_info['srv_inst.state.state'] == 'failed':
             # try epm.delete(instance_id=instance_id)?
             return 'There has been a failure in creating the service instance.', 500
 
-        # TODO need a converged state model for the SM
         srv_inst.state.state = inst_info['srv_inst.state.state']
         srv_inst.state.description = inst_info['srv_inst.state.description']
 
@@ -197,7 +194,7 @@ def instance_info(instance_id):
         srv_inst.context = {**srv_inst.context, **inst_info}
 
         # update the service instance record - there should be an asynch method doing the update - event based
-        store.add_service_instance(srv_inst)
+        STORE.add_service_instance(srv_inst)
 
         return srv_inst, 200
 
@@ -238,8 +235,12 @@ def last_operation_status(instance_id, service_id=None, plan_id=None, operation=
 def service_bind(instance_id, binding_id, binding):
     """
     Binds to a service
-    When the broker receives a bind request from the client, it should return information which helps an application to utilize the provisioned resource. This information is generically referred to as credentials. Applications should be issued unique credentials whenever possible, so one application access can be revoked without affecting other bound applications. 
-    :param instance_id: &#39;The instance_id of a service instance is provided by the client. This ID will be used for future requests (bind and deprovision), so the broker must use it to correlate the resource it creates.&#39; 
+    When the broker receives a bind request from the client, it should return information which helps an application
+    to utilize the provisioned resource. This information is generically referred to as credentials. Applications
+    should be issued unique credentials whenever possible, so one application access can be revoked without affecting
+    other bound applications.
+    :param instance_id: The instance_id of a service instance is provided by the client. This ID will be used
+    for future requests (bind and deprovision), so the broker must use it to correlate the resource it creates.
     :type instance_id: str
     :param binding_id: The binding_id of a service binding is provided by the Cloud Controller.
     :type binding_id: str
@@ -262,8 +263,10 @@ def service_bind(instance_id, binding_id, binding):
 def service_unbind(instance_id, binding_id, service_id, plan_id):
     """
     Unbinds a service
-    When a broker receives an unbind request from the client, it should delete any resources it created in bind. Usually this means that an application immediately cannot access the resource. 
-    :param instance_id: &#39;The instance_id of a service instance is provided by the client. This ID will be used for future requests (bind and deprovision), so the broker must use it to correlate the resource it creates.&#39; 
+    When a broker receives an unbind request from the client, it should delete any resources it created in bind.
+    Usually this means that an application immediately cannot access the resource.
+    :param instance_id: The instance_id of a service instance is provided by the client. This ID will be used
+    for future requests (bind and deprovision), so the broker must use it to correlate the resource it creates.
     :type instance_id: str
     :param binding_id: The binding_id of a service binding is provided by the Cloud Controller.
     :type binding_id: str
@@ -284,8 +287,11 @@ def service_unbind(instance_id, binding_id, service_id, plan_id):
 def update_service_instance(instance_id, plan, accept_incomplete=None):
     """
     Updating a Service Instance
-    Brokers that implement this endpoint can enable users to modify attributes of an existing service instance. The first attribute supports users modifying is the service plan. This effectively enables users to upgrade or downgrade their service instance to other plans. To see how users make these requests.&#39; 
-    :param instance_id: &#39;The instance_id of a service instance is provided by the client. This ID will be used for future requests (bind and deprovision), so the broker must use it to correlate the resource it creates.&#39; 
+    Brokers that implement this endpoint can enable users to modify attributes of an existing service instance.
+    The first attribute supports users modifying is the service plan. This effectively enables users to upgrade
+    or downgrade their service instance to other plans. To see how users make these requests.&#39;
+    :param instance_id: The instance_id of a service instance is provided by the client. This ID will be used
+    for future requests (bind and deprovision), so the broker must use it to correlate the resource it creates.
     :type instance_id: str
     :param plan: New Plan information.
     :type plan: dict | bytes

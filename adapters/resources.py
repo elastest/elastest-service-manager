@@ -19,9 +19,10 @@ from typing import Dict
 
 from compose.cli.main import TopLevelCommand, project_from_options
 # from kubernetes import client, config
+import adapters.log
 
-from adapters.log import LOG
-# from adapters.datasource import STORE
+
+LOG = adapters.log.get_logger(name=__name__)
 
 
 class Backend(object):
@@ -150,7 +151,8 @@ class DockerBackend(Backend):
             if state.startswith('Exit'):
                 # there's been an error with docker
                 info['srv_inst.state.state'] = 'failed'
-                info['srv_inst.state.description'] = 'There was an error in creating the instance {error}'.format(error=state)
+                info['srv_inst.state.description'] = \
+                    'There was an error in creating the instance {error}'.format(error=state)
                 # return 'Error with docker: {error}'.format(error=state), 500
 
         if len(states) == 1:  # if all states of the same value
@@ -236,7 +238,8 @@ class DummyBackend(Backend):
 
         info = {
             'testid123_spark-worker_1_image_name': 'elastest/ebs-spark-base:0.5.0',
-            'testid123_spark-worker_1_image_id': 'sha256:138a91572bd6bdce7d7b49a44b91a4caf4abdf1a75f105991e18be971353d5cb',
+            'testid123_spark-worker_1_image_id':
+                'sha256:138a91572bd6bdce7d7b49a44b91a4caf4abdf1a75f105991e18be971353d5cb',
             'testid123_spark-worker_1_8080/tcp': None,
             'testid123_spark-worker_1_8081/tcp/HostIp': '0.0.0.0',
             'testid123_spark-worker_1_8081/tcp/HostPort': '32784',

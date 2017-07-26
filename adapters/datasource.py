@@ -14,18 +14,20 @@
 #    under the License.
 
 import os
-from typing import Any, Dict, List
+from typing import List
 
 from pymongo import MongoClient
+
+import adapters.log
 
 from esm.models import Manifest
 from esm.models import ServiceType
 from esm.models import ServiceInstance
 from esm.models import LastOperation
 
-from adapters.log import LOG
-
 # TODO implement exception handling
+
+LOG = adapters.log.get_logger(name=__name__)
 
 
 class Store(object):
@@ -188,7 +190,8 @@ class MongoDBStore(Store):
         if result == 1:
             LOG.info('A duplicate service instance was attempted to be stored. '
                      'Updating the existing service instance {id}.'
-                     'Content supplied:\n{content}'.format(id=service_instance.context['id'], content=service_instance.to_str()))
+                     'Content supplied:\n{content}'.format(id=service_instance.context['id'],
+                                                           content=service_instance.to_str()))
             # Update the service instance
             raw_svc_inst = self.ESM_DB.instances.find_one({'context.id': service_instance.context['id']})
             record_id = raw_svc_inst['_id']
@@ -263,7 +266,7 @@ class InMemoryStore(Store):
 
     def get_service(self, service_id: str=None) -> List[ServiceType]:
         if not service_id:
-            LOG.info('Returning registered services. Count: '.format(count=len(self.ESM_DB.services)))
+            LOG.info('Returning registered services. Count: {count}'.format(count=len(self.ESM_DB.services)))
             return self.ESM_DB.services
         else:
             return [s for s in self.ESM_DB.services if s.id == service_id]
@@ -329,7 +332,8 @@ class InMemoryStore(Store):
         else:
             LOG.info('A duplicate service instance was attempted to be stored. '
                      'Updating the existing service instance {id}.'
-                     'Content supplied:\n{content}'.format(id=service_instance.context['id'], content=service_instance.to_str()))
+                     'Content supplied:\n{content}'.format(id=service_instance.context['id'],
+                                                           content=service_instance.to_str()))
             instance = [i for i in self.ESM_DB.instances if i.context['id'] == service_instance.context['id']]
             self.ESM_DB.instances.remove(instance[0])
             self.ESM_DB.instances.append(service_instance)
@@ -345,7 +349,8 @@ class InMemoryStore(Store):
             LOG.warn('Deleting ALL service instances in the catalog.')
             self.ESM_DB.instances = list()
         else:
-            service_instance_to_delete = [si for si in self.ESM_DB.instances if si.context['id'] == service_instance_id][0]
+            service_instance_to_delete = [si for si in self.ESM_DB.instances if si.context['id'] ==
+                                          service_instance_id][0]
             LOG.info('Deleting the service instance {id} from the catalog. Content:\n{content}'.format(
                 id=service_instance_id, content=service_instance_to_delete.to_str()))
             self.ESM_DB.instances.remove(service_instance_to_delete)

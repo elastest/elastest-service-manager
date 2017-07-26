@@ -24,7 +24,7 @@ from esm.models.manifest import Manifest
 # from six import iteritems
 # from ..util import deserialize_date, deserialize_datetime
 
-from adapters.datasource import STORE as store
+from adapters.datasource import STORE
 
 
 def catalog():
@@ -43,7 +43,7 @@ def catalog():
     if not ok:
         return message, code
     else:
-        services = store.get_service()
+        services = STORE.get_service()
         return Catalog(services=services), 200
 
 
@@ -66,7 +66,7 @@ def register_service(service):
             service = ServiceType.from_dict(connexion.request.get_json())
         else:
             return "Supplied body content is not or is mal-formed JSON", 400
-        store.add_service(service=service)
+        STORE.add_service(service=service)
         return Empty()
 
 
@@ -92,7 +92,7 @@ def store_manifest(manifest_id, manifest):
             return "Supplied body content is not or is mal-formed JSON", 400
         manifest.id = manifest_id
 
-        result, code = store.add_manifest(manifest)
+        result, code = STORE.add_manifest(manifest)
 
         if code == 200:
             return Empty(), code
