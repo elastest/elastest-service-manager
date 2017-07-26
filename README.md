@@ -146,11 +146,53 @@ To use the API please see the [open service broker API specification](https://ww
 
 ### Register a Service
 
-TODO
+```shell
+curl -X PUT \
+  http://localhost:8080/v2/et/catalog \
+  -H 'accept: application/json' \
+  -H 'content-type: application/json' \
+  -H 'x-broker-api-version: 2.12' \
+  -d '{
+  "description": "this is a test service",
+  "id": "test",
+  "name": "test_svc",
+  "bindable": false,
+  "plan_updateable": false,
+  "plans": [
+    {
+      "bindable": false,
+      "description": "plan for testing",
+      "free": true,
+      "id": "testplan",
+      "name": "testing plan"
+    }
+  ],
+  "requires": [],
+  "tags": [
+    "test",
+    "tester"
+  ]
+}
+```
 
 ### Register a Manifest for a Service's Plan
 
-TODO
+```shell
+  curl -X PUT \
+  http://localhost:8080/v2/et/manifest/test_manifest \
+  -H 'accept: application/json' \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -H 'postman-token: af2a8114-34cb-cf54-a863-4ad4672ad8c1' \
+  -H 'x-broker-api-version: 2.12' \
+  -d '{
+  "id": "test-mani",
+  "manifest_content": "version: '\''2'\''</br></br>services:</br>  spark-master:</br>    image: elastest/ebs-spark-base:0.5.0</br>    container_name: spark-master</br>    ports:</br>      - \"8080:8080\"</br>    volumes:</br>      - ./spark/alluxio_conf:/opt/alluxio/conf</br>      - ./spark/spark_conf:/opt/spark/conf</br>      - ./spark/hadoop_conf:/usr/local/hadoop/etc/hadoop</br>    command: [\"/usr/bin/supervisord\", \"--configuration=/opt/conf/master.conf\"]</br>    hostname: spark-master</br>    networks:</br>      - elastest</br></br>  spark-worker:</br>    image: elastest/ebs-spark-base:0.5.0</br>    depends_on:</br>      - spark-master</br>    ports:</br>      - \"8081\"</br>    volumes:</br>      - ./spark/alluxio_conf:/opt/alluxio/conf</br>      - ./spark/spark_conf:/opt/spark/conf</br>      - ./spark/hadoop_conf:/usr/local/hadoop/etc/hadoop</br>    command: [\"/usr/bin/supervisord\", \"--configuration=/opt/conf/slave.conf\"]</br>    hostname: spark-worker</br>    networks:</br>      - elastest</br></br>networks:</br>  elastest:</br>    external: true</br>",
+  "manifest_type": "dummy",
+  "plan_id": "testplan",
+  "service_id": "test-svc"
+}
+```
 
 ### Get the Catalog
 
