@@ -99,6 +99,33 @@ $ python ./runesm.py
 
 The service manager endpoint should only be the scheme (http or https) and the fully qualified host name, optionally including the port number if it differs from the standard port 80 or 443.
 
+## Testing It
+
+Ensure that you run from a virtual environments:
+
+```shell
+virtualenv .env
+source .env/bin/activate
+```
+
+Ensure the test requirements are installed:
+
+`pip install -r test-requirements.txt`
+
+From the root of the project you can run all tests with:
+
+`tox`
+
+By default, the mongodb backend is enabled in tox. If you want to change this or if the Docker tests are run edit the variables `MONGODB_TESTS` and/or `DOCKER_TESTS` in `tox.ini`.
+
+If you don't want to run and use `nosetests` you can easily do so. To enable/disable the Mongo or Docker tests simply set the shell variables of `MONGODB_TESTS` and/or `DOCKER_TESTS` to `YES` or `NO`.
+
+To interact with the API after running `runsm.py`, you can use the [Postman](https://www.getpostman.com) collection that's under `tests/postman`.
+
+
+
+You can see the [current test coverage here](https://codecov.io/gh/elastest/elastest-service-manager).
+
 ## Viewing the API
 
 Navigate to the following URL in your browser
