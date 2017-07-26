@@ -546,10 +546,10 @@ docker build -t elastest/elastest-service-manager:latest ./
 ### To Run Locally
 
 ```shell
-docker run -p 8080:8080 elastest/elastest-service-manager
+docker run -p 8080:8080 -p 5000:5000 elastest/elastest-service-manager
 ```
 
-You can now access the service via port 8080.
+You can now access the ESM service via port `8080` and health checks on port `5000`.
 
 ## Deploy on Docker-Compose
 
