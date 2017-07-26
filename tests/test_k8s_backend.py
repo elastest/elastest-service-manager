@@ -14,11 +14,11 @@
 #    under the License.
 
 import inspect
-import os
 from unittest import TestCase
 
-from adapters.resources import KubernetesBackend
+import os
 
+from adapters.resources import KubernetesBackend
 
 INST_ID = 'test-id-123'
 

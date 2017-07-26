@@ -13,14 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os
-import shutil
 from typing import Dict
 
+import os
+import shutil
 from compose.cli.main import TopLevelCommand, project_from_options
+
 # from kubernetes import client, config
 import adapters.log
-
 
 LOG = adapters.log.get_logger(name=__name__)
 

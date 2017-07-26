@@ -13,17 +13,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os
 from typing import List
 
+import os
 from pymongo import MongoClient
 
 import adapters.log
 
-from esm.models import Manifest
-from esm.models import ServiceType
-from esm.models import ServiceInstance
-from esm.models import LastOperation
+from esm.models.last_operation import LastOperation
+from esm.models.manifest import Manifest
+from esm.models.service_instance import ServiceInstance
+from esm.models.service_type import ServiceType
+
 
 # TODO implement exception handling
 

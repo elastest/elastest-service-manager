@@ -16,19 +16,18 @@
 
 from __future__ import absolute_import
 
+import adapters.log
+from adapters.datasource import STORE
 # from six import BytesIO
 from flask import json
 
+from esm.models.manifest import Manifest
 # from esm.models.catalog import Catalog
 # from esm.models.empty import Empty
 # from esm.models.error import Error
 from esm.models.plan import Plan
-from esm.models.manifest import Manifest
 from esm.models.service_type import ServiceType
 from . import BaseTestCase
-
-import adapters.log
-from adapters.datasource import STORE
 
 LOG = adapters.log.get_logger(name=__name__)
 

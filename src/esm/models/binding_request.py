@@ -1,11 +1,10 @@
 # coding: utf-8
 
 from __future__ import absolute_import
+
 #
 from esm.models.bind_resource import BindResource
 from .base_model_ import Model
-from datetime import date, datetime
-from typing import List, Dict
 from ..util import deserialize_model
 
 

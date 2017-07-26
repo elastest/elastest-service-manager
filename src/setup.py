@@ -27,6 +27,7 @@ VERSION = "0.1.0"
 # prerequisite: setuptools
 # http://pypi.python.org/pypi/setuptools
 
+# TODO read in requirements.txt
 REQUIRES = ["connexion"]
 
 setup(
@@ -38,7 +39,7 @@ setup(
     keywords=["Swagger", "ElasTest Service Manager API"],
     install_requires=REQUIRES,
     packages=find_packages(),
-    package_data={'': ['swagger/swagger.yaml']},
+    package_data={'': ['esm/swagger/swagger.yaml']},
     include_package_data=True,
     long_description="""\
     This is the service manager API. It is an extension of the the Open Service Broker API. The Open Service Broker 

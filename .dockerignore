@@ -3,7 +3,7 @@ __pycache__
 .tox
 .vscode
 esm.egg-info
-services
+deploy/services
 tests
 .coverage
 .noseids

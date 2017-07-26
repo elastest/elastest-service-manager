@@ -14,13 +14,12 @@
 #    under the License.
 
 import inspect
-import os
 from unittest import TestCase, skipIf
 
 import docker
+import os
 
 from adapters.resources import DockerBackend
-
 
 INST_ID = 'test-id-123'
 

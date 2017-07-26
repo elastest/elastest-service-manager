@@ -1,11 +1,10 @@
 # coding: utf-8
 
 from __future__ import absolute_import
+
 from esm.models.parameter import Parameter
 from esm.models.plan_previous_values import PlanPreviousValues
 from .base_model_ import Model
-from datetime import date, datetime
-from typing import List, Dict
 from ..util import deserialize_model
 
 

@@ -15,20 +15,20 @@
 
 import connexion
 
-from esm.controllers import _version_ok
-from esm.models import BindingRequest
-from esm.models import BindingResponse
-from esm.models import Empty
-from esm.models import LastOperation
-from esm.models import ServiceInstance
-from esm.models import ServiceRequest
-from esm.models import ServiceResponse
-from esm.models import ServiceType
-from esm.models import UpdateOperationResponse
-from esm.models import UpdateRequest
-
 from adapters.datasource import STORE
 from adapters.resources import RM
+from esm.controllers import _version_ok
+
+from esm.models.binding_request import BindingRequest
+from esm.models.binding_response import BindingResponse
+from esm.models.empty import Empty
+from esm.models.last_operation import LastOperation
+from esm.models.service_instance import ServiceInstance
+from esm.models.service_request import ServiceRequest
+from esm.models.service_response import ServiceResponse
+from esm.models.service_type import ServiceType
+from esm.models.update_operation_response import UpdateOperationResponse
+from esm.models.update_request import UpdateRequest
 
 
 # TODO need a converged state model for the SM - see info methods of backend

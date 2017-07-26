@@ -21,6 +21,6 @@ services:
       - mongo-data:/data/db
     ports:
       - "27017"
-
-mongo-data:
+volumes:
+  mongo-data:
     driver: local

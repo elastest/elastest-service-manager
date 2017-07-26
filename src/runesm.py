@@ -13,20 +13,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
-import os
 import signal
 
 import connexion
 import flask
+import os
 from healthcheck import HealthCheck, EnvironmentDump
-from tornado.wsgi import WSGIContainer
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
+from tornado.wsgi import WSGIContainer
 
 import adapters.log
 from esm.encoder import JSONEncoder
-
 
 LOG = adapters.log.get_logger(name=__name__)
 

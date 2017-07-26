@@ -5,10 +5,10 @@ LABEL version="0.1.0"
 LABEL description="Builds the service manager docker image."
 
 WORKDIR /app
-COPY . /app
+COPY ./src /app
 
 RUN apk --update add python3 py3-pip openssl ca-certificates \
-    && pip3 install -r /app/requirements.txt
+    && pip3 install -r /app/requirements.txt && rm /app/requirements.txt
 
 ENV ESM_PORT 8080
 ENV ESM_CHECK_PORT 5000

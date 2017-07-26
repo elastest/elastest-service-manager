@@ -14,10 +14,18 @@
 #    under the License.
 
 import os
-from unittest import TestCase, skipIf
+from unittest import TestCase
+from unittest import skipIf
 
-from esm.models import Plan, ServiceType, ServiceInstance, Manifest, LastOperation
-from adapters.datasource import InMemoryStore, MongoDBStore, Store
+from adapters.datasource import InMemoryStore
+from adapters.datasource import MongoDBStore
+from adapters.datasource import Store
+
+from esm.models.plan import Plan
+from esm.models.service_type import ServiceType
+from esm.models.service_instance import ServiceInstance
+from esm.models.manifest import Manifest
+from esm.models.last_operation import LastOperation
 
 
 class TestInMemoryStore(TestCase):

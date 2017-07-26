@@ -15,22 +15,21 @@
 #    under the License.
 
 from __future__ import absolute_import
-import inspect
-import os
 
+import inspect
+
+import adapters.log
+import os
+from adapters.datasource import STORE
+from esm.models.manifest import Manifest
+from esm.models.plan import Plan
+from esm.models.service_type import ServiceType
 from esm.models.binding_request import BindingRequest
 from esm.models.service_request import ServiceRequest
-from esm.models import ServiceType
-from esm.models import Plan
-from esm.models import Manifest
-from esm.models.update_request import UpdateRequest
-from . import BaseTestCase
-
 from flask import json
 
-from adapters.datasource import STORE
-import adapters.log
-
+from esm.models.update_request import UpdateRequest
+from . import BaseTestCase
 
 # from esm.models.binding_response import BindingResponse
 # from esm.models.empty import Empty

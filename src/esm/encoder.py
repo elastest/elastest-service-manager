@@ -1,5 +1,6 @@
 from connexion.decorators import produces
 from six import iteritems
+
 from esm.models.base_model_ import Model
 
 
