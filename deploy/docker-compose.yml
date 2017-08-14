@@ -4,7 +4,7 @@ services:
   esm:
     depends_on:
       - mongo
-    image: elastest/elastest-service-manager:latest
+    image: elastest/esm:latest
     hostname: elastest-service-manager
     container_name: elastest-service-manager
     environment:
