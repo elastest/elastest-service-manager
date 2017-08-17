@@ -2,7 +2,7 @@ node('docker'){
     stage "Container Prep"
         
         echo("the node is up")
-        def mycontainer = docker.image('elastest/docker-compose-py-siblings:latest')
+        def mycontainer = docker.image('elastest/ci-docker-compose-py-siblings:latest')
         mycontainer.pull() // make sure we have the latest available from Docker Hub
         
         mycontainer.inside("-u jenkins -v /var/run/docker.sock:/var/run/docker.sock:rw") {
