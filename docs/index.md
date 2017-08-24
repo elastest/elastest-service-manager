@@ -57,8 +57,8 @@ http://localhost:8080/v2/swagger.json
 ### Deploy on Docker-Compose
 
 There is are two docker compose files:
- * `./deploy/docker-compose` in the root of this project. 
- * `./deploy/docker-compose` in the root of this project.
+ * `./deploy/docker-compose.yml`: this will create the ESM along with its DB and a full ELK stack to monitor the ESM.
+ * `./deploy/docker-compose-no-mon.yml` this will create the ESM along with only its DB.
 
  You can use this to bring up the ESM with a DB backend.
 
