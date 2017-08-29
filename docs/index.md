@@ -45,13 +45,13 @@ You can now access the ESM service via port `8080` and health checks on port `50
 Navigate to the following URL in your browser
 
 ```
-http://localhost:8080/v2/ui/
+http://localhost:8080/ui/
 ```
 
 The OSBA Swagger definition can be accessed here:
 
 ```
-http://localhost:8080/v2/swagger.json
+http://localhost:8080/swagger.json
 ```
 
 ### Deploy on Docker-Compose
