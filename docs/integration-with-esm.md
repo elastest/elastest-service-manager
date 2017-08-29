@@ -6,7 +6,6 @@ The [ElasTest Service Manager (ESM)](https://github.com/elastest/elastest-servic
 * **EDS**: [elastest-device-emulator-service](https://github.com/elastest/elastest-device-emulator-service )
 * **EMS**: [elastest-monitoring-service](https://github.com/elastest/elastest-monitoring-service)
 * **EBS**: [elastest-bigdata-service](https://github.com/elastest/elastest-bigdata-service )
-* **EDM**: [elastest-data-manager](https://github.com/elastest/elastest-data-manager)
 * **ESS**: [elastest-security-service](https://github.com/elastest/elastest-security-service)
 
 
@@ -28,7 +27,7 @@ To create a service instance of any type, including the ElasTest services listed
   * `description`
   * `metadata`: **This is mandatory from the ElasTest perspective** as it contains required information to calculate the cost of a TJob run.
 
-  ElasTest extends this plan model to include [the cost model defined in WP4](https://github.com/elastest/elastest-cost-engine/blob/master/docs/index.md). This cost model is used by the TORM to calculate the cost of running a TJob. In order to supply the cost information, the service provider needs to supply a JSON dictionary object named `cost` inside the `metadata` object. Below is an example of this:
+  ElasTest extends this plan model to include [the cost model defined in WP4](https://github.com/elastest/elastest-cost-engine/blob/master/docs/index.md). This cost model is used by the TORM to calculate the cost of running a TJob. In order to supply the cost information, the service provider needs to supply a JSON dictionary object named `costs` inside the `metadata` object. Below is an example of this:
 
   ```json
   "metadata": {
