@@ -72,6 +72,8 @@ To create a service instance of any type, including the ElasTest services listed
 
   **NOTE: THIS MODEL IS BEING EXTENDED TO ALLOW FOR TORM INTEGRATION. The current set of mandatory fields will remain.**
 
+  * Updated version is available here
+
 ## Readying for TORM Integration
 
 The 2 informations described above **must** be packaged in a JSON document.

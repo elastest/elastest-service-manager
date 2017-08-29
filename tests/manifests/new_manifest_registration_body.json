@@ -1,0 +1,47 @@
+{
+  "id": "test-mani",
+  "manifest_content": "version: '2'</br></br>services:</br>  spark-master:</br>    image: elastest/ebs-spark-base:0.5.0</br>    container_name: spark-master</br>    ports:</br>      - \"8080:8080\"</br>    volumes:</br>      - ./spark/alluxio_conf:/opt/alluxio/conf</br>      - ./spark/spark_conf:/opt/spark/conf</br>      - ./spark/hadoop_conf:/usr/local/hadoop/etc/hadoop</br>    command: [\"/usr/bin/supervisord\", \"--configuration=/opt/conf/master.conf\"]</br>    hostname: spark-master</br>    networks:</br>      - elastest</br></br>  spark-worker:</br>    image: elastest/ebs-spark-base:0.5.0</br>    depends_on:</br>      - spark-master</br>    ports:</br>      - \"8081\"</br>    volumes:</br>      - ./spark/alluxio_conf:/opt/alluxio/conf</br>      - ./spark/spark_conf:/opt/spark/conf</br>      - ./spark/hadoop_conf:/usr/local/hadoop/etc/hadoop</br>    command: [\"/usr/bin/supervisord\", \"--configuration=/opt/conf/slave.conf\"]</br>    hostname: spark-worker</br>    networks:</br>      - elastest</br></br>networks:</br>  elastest:</br>    external: true</br>",
+  "manifest_type": "dummy",
+  "plan_id": "testplan",
+  "service_id": "test-svc",
+  "endpoints": {  // dict length must be > 0
+    "sub_service_name_1": {  // required. name of the sub-service component
+      "description": "this is a sub-service that does stuff",  // optional.
+      "main": true,  // required. whether or not this is the main front-end to the service
+      "api": {
+        "protocol": "http",  // required
+        "port": 9000,  // required
+        "path": "/v2",  // required
+        "definition": {  // required
+          "type": "openapi",  // required
+          "path": "/v2/api.yaml",  // required
+          "port": 9090  // optional, assumes port in api definition otherwise
+        }
+      },
+      "gui": {
+        "protocol": "http",  // required
+        "port": 9089,  // required
+        "path": "/gui"  // required
+      }
+    },
+    "sub_service_name_2": {  // required. name of the sub-service component
+      "description": "this is a sub-service that does stuff even better than the other",  // optional.
+      "main": true,  // required. whether or not this is the main front-end to the service
+      "api": {
+        "protocol": "http",  // required
+        "port": 9001,  // required
+        "path": "/v3",  // required
+        "definition": {  // required
+          "type": "openapi",  // required
+          "path": "/v3/api.yaml",  // required
+          "port": 9091  // optional, assumes port in api definition otherwise
+        }
+      },
+      "gui": {
+        "protocol": "http",  // required
+        "port": 9090,  // required
+        "path": "/gui"  // required
+      }
+    }
+  }
+}
