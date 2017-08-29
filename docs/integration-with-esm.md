@@ -72,7 +72,7 @@ To create a service instance of any type, including the ElasTest services listed
 
   **NOTE: THIS MODEL IS BEING EXTENDED TO ALLOW FOR TORM INTEGRATION. The current set of mandatory fields will remain.**
 
-  * Updated version is available here
+  * [Updated version is available here](https://github.com/elastest/elastest-service-manager/blob/master/tests/manifests/new_manifest_registration_body.json)
 
 ## Readying for TORM Integration
 
