@@ -45,13 +45,13 @@ You can now access the ESM service via port `8080` and health checks on port `50
 Navigate to the following URL in your browser
 
 ```
-http://localhost:8080/v2/ui/
+http://localhost:8080/ui/
 ```
 
 The OSBA Swagger definition can be accessed here:
 
 ```
-http://localhost:8080/v2/swagger.json
+http://localhost:8080/swagger.json
 ```
 
 ### Deploy on Docker-Compose
@@ -146,13 +146,13 @@ curl -X PUT \
 #### Get the Catalog
 
 ```shell
-curl -v -X GET http://127.0.0.1:9999/v2/catalog -H 'X_Broker_Api_Version: 2.12'
+curl -v -X GET http://127.0.0.1:8080/v2/catalog -H 'X_Broker_Api_Version: 2.12'
 Note: Unnecessary use of -X or --request, GET is already inferred.
 *   Trying 127.0.0.1...
 * TCP_NODELAY set
-* Connected to 127.0.0.1 (127.0.0.1) port 9999 (#0)
+* Connected to 127.0.0.1 (127.0.0.1) port 8080 (#0)
 > GET /v2/catalog HTTP/1.1
-> Host: 127.0.0.1:9999
+> Host: 127.0.0.1:8080
 > User-Agent: curl/7.51.0
 > Accept: */*
 > X_Broker_Api_Version: 2.11
@@ -188,7 +188,7 @@ Note: Unnecessary use of -X or --request, GET is already inferred.
 #### Provision (create) a service instance
 
 ```shell
-curl -v -d @payload.json -X PUT -H "X-Broker-API-Version: 2.12" -H "Content-Type: application/json" http://localhost:9999/v2/service_instances/123-123-123\?accept_incomplete\=true
+curl -v -d @payload.json -X PUT -H "X-Broker-API-Version: 2.12" -H "Content-Type: application/json" http://localhost:8080/v2/service_instances/123-123-123\?accept_incomplete\=true
 ```
 
 where `payload.json` is:
@@ -212,12 +212,12 @@ where `payload.json` is:
 *   Trying ::1...
 * TCP_NODELAY set
 * Connection failed
-* connect to ::1 port 9999 failed: Connection refused
+* connect to ::1 port 8080 failed: Connection refused
 *   Trying 127.0.0.1...
 * TCP_NODELAY set
-* Connected to localhost (127.0.0.1) port 9999 (#0)
+* Connected to localhost (127.0.0.1) port 8080 (#0)
 > PUT /v2/service_instances/123-123-123?accept_incomplete=true HTTP/1.1
-> Host: localhost:9999
+> Host: localhost:8080
 > User-Agent: curl/7.51.0
 > Accept: */*
 > X-Broker-API-Version: 2.12
@@ -241,16 +241,16 @@ where `payload.json` is:
 #### Deprovision (delete) a service instance
 
 ```shell
-curl -v -X DELETE -H "X-Broker-API-Version: 2.12" -H "Content-Type: application/json" http://localhost:9999/v2/service_instances/123-123-123\?service_id\="a_service_type"\&plan_id\="plan-id-for-free"
+curl -v -X DELETE -H "X-Broker-API-Version: 2.12" -H "Content-Type: application/json" http://localhost:8080/v2/service_instances/123-123-123\?service_id\="a_service_type"\&plan_id\="plan-id-for-free"
 *   Trying ::1...
 * TCP_NODELAY set
 * Connection failed
-* connect to ::1 port 9999 failed: Connection refused
+* connect to ::1 port 8080 failed: Connection refused
 *   Trying 127.0.0.1...
 * TCP_NODELAY set
-* Connected to localhost (127.0.0.1) port 9999 (#0)
+* Connected to localhost (127.0.0.1) port 8080 (#0)
 > DELETE /v2/service_instances/123-123-123?service_id=a_service_type&plan_id=plan-id-for-free HTTP/1.1
-> Host: localhost:9999
+> Host: localhost:8080
 > User-Agent: curl/7.51.0
 > Accept: */*
 > X-Broker-API-Version: 2.12
