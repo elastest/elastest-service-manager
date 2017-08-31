@@ -12,8 +12,8 @@ services:
       - ./spark/hadoop_conf:/usr/local/hadoop/etc/hadoop
     command: ["/usr/bin/supervisord", "--configuration=/opt/conf/master.conf"]
     hostname: spark-master
-    networks:
-      - elastest
+#    networks:
+#      - elastest
 
   spark-worker:
     image: elastest/ebs:0.1
@@ -26,9 +26,9 @@ services:
       - ./spark/spark_conf:/opt/spark/conf
       - ./spark/hadoop_conf:/usr/local/hadoop/etc/hadoop
     command: ["/usr/bin/supervisord", "--configuration=/opt/conf/slave.conf"]
-    networks:
-      - elastest
+#    networks:
+#      - elastest
 
-networks:
-  elastest:
-    external: true
+#networks:
+#  elastest:
+#    external: true
