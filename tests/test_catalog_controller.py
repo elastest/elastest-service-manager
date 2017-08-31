@@ -50,9 +50,33 @@ class TestCatalogController(BaseTestCase):
             plan_updateable=False, plans=[self.test_plan],
             dashboard_client=None)
 
+        manifest_endpoints = """{
+    "endpoints": {
+        "sub_service_name_1": {
+            "description": "this is a sub-service that does stuff",
+            "main": true,
+            "api": {
+                "protocol": "http",
+                "port": 9000,
+                "path": "/v2",
+                "definition": {
+                    "type": "openapi",
+                    "path": "/v2/api.yaml",
+                    "port": 9090
+                }
+            },
+            "gui": {
+                "protocol": "http",
+                "port": 9089,
+                "path": "/gui"
+            }
+        }
+    }
+}"""
+
         self.test_manifest = Manifest(
             id='test', plan_id=self.test_plan.id, service_id=self.test_service.id,
-            manifest_type='dummy', manifest_content=''
+            manifest_type='dummy', manifest_content='', endpoints=json.loads(manifest_endpoints)
         )
 
     def tearDown(self):
@@ -112,7 +136,49 @@ class TestCatalogController(BaseTestCase):
                                     headers=headers)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
+    def test_get_manifest(self):
+        """
+        Test case for get_manifest
+
+        returns a specific of manifest registered at with the ESM
+        """
+        headers = [('X_Broker_Api_Version', '2.12')]
+        LOG.debug('Sending service registration content of:\n {content}'.format(content=json.dumps(self.test_manifest)))
+        response = self.client.open('/v2/et/manifest/{manifest_id}'.format(manifest_id=self.test_manifest.id),
+                                    method='PUT',
+                                    data=json.dumps(self.test_manifest),
+                                    content_type='application/json',
+                                    headers=headers)
+        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+
+        headers = [('X_Broker_Api_Version', '2.12')]
+        response = self.client.open('/v2/et/manifest/{manifest_id}'.format(manifest_id=self.test_manifest.id),
+                                    method='GET',
+                                    headers=headers)
+        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+
+    def test_list_manifests(self):
+        """
+        Test case for list_manifests
+
+        returns a list of manifests registered at with the ESM
+        """
+        headers = [('X_Broker_Api_Version', '2.12')]
+        LOG.debug('Sending service registration content of:\n {content}'.format(content=json.dumps(self.test_manifest)))
+        response = self.client.open('/v2/et/manifest/{manifest_id}'.format(manifest_id=self.test_manifest.id),
+                                    method='PUT',
+                                    data=json.dumps(self.test_manifest),
+                                    content_type='application/json',
+                                    headers=headers)
+        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+
+        response = self.client.open('/v2/et/manifest',
+                                    method='GET',
+                                    headers=headers)
+        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+
 
 if __name__ == '__main__':
     import unittest
+
     unittest.main()

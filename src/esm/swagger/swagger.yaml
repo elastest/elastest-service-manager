@@ -10,7 +10,8 @@ info:
     \ can be supported by a single broker using different URL prefixes and credentials.\
     \ [Learn more about the Service Broker API.] (https://github.com/openservicebrokerapi/servicebroker/).\
     \ Note the [topic on orphan resolution](https://github.com/openservicebrokerapi/servicebroker/blob/master/_spec.md#orphans).\
-    \ It is not dealt with in this spec.\n"
+    \ It is not dealt with in this spec. Swagger file copyright: Copyright © 2017-2019\
+    \ Zuercher Hochschule fuer Angewandte Wissenschaften.\n"
   version: "2.12"
   title: "ElasTest Service Manager API"
   contact:
@@ -78,7 +79,46 @@ paths:
           schema:
             $ref: "#/definitions/Error"
       x-swagger-router-controller: "esm.controllers.catalog_controller"
+  /v2/et/manifest:
+    get:
+      tags:
+      - "catalog"
+      summary: "returns a list of manifests registered at with the ESM"
+      description: "hi!"
+      operationId: "list_manifests"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "List of manifests"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Manifest"
+      x-swagger-router-controller: "esm.controllers.catalog_controller"
   /v2/et/manifest/{manifest_id}:
+    get:
+      tags:
+      - "catalog"
+      summary: "returns a specific of manifest registered at with the ESM"
+      description: "hi!"
+      operationId: "get_manifest"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "manifest_id"
+        in: "path"
+        description: "The manifest_id of a manifest to be associated with a plan of\
+          \ a servicetype.\n"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "The requested manifest"
+          schema:
+            $ref: "#/definitions/Manifest"
+      x-swagger-router-controller: "esm.controllers.catalog_controller"
     put:
       tags:
       - "catalog"
@@ -932,16 +972,16 @@ parameters:
       \ must use it to correlate the resource it creates.'\n"
     required: true
     type: "string"
+  binding_id:
+    name: "binding_id"
+    in: "path"
+    description: "The binding_id of a service binding is provided by the Cloud Controller."
+    required: true
+    type: "string"
   manifest_id:
     name: "manifest_id"
     in: "path"
     description: "The manifest_id of a manifest to be associated with a plan of a\
       \ servicetype.\n"
-    required: true
-    type: "string"
-  binding_id:
-    name: "binding_id"
-    in: "path"
-    description: "The binding_id of a service binding is provided by the Cloud Controller."
     required: true
     type: "string"

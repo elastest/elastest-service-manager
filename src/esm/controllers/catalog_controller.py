@@ -128,3 +128,32 @@ def store_manifest(manifest_id, manifest):
             return Empty(), code
         else:
             return result, code
+
+
+def get_manifest(manifest_id):
+    """
+    returns a specific of manifest registered at with the ESM
+    hi!
+    :param manifest_id: The manifest_id of a manifest to be associated with a plan of a servicetype.
+    :type manifest_id: str
+
+    :rtype: Manifest
+    """
+
+    manifest = STORE.get_manifest(manifest_id)
+
+    if len(manifest) > 0:
+        return manifest, 200
+    else:
+        return 'Manifest {id} could not be found'.format(id=manifest_id), 404
+
+
+def list_manifests():
+    """
+    returns a list of manifests registered at with the ESM
+    hi!
+
+    :rtype: List[Manifest]
+    """
+    manifests = STORE.get_manifest()
+    return manifests, 200

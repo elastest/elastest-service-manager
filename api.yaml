@@ -92,6 +92,22 @@ paths:
             'The requested service type already exists. The ID of the service exists in the catalog already'
           schema:
             $ref: '#/definitions/Error'
+  /v2/et/manifest:
+    get:
+      operationId: listManifests
+      summary: returns a list of manifests registered at with the ESM
+      description: hi!
+      tags:
+        - catalog
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: List of manifests
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Manifest'
   /v2/et/manifest/{manifest_id}:
     # can only store the manifest. later can add further verb support
     parameters:
@@ -124,6 +140,21 @@ paths:
             The ID of the manifest exists in the catalog already'
           schema:
             $ref: '#/definitions/Error'
+    get:
+      parameters:
+        - $ref: '#/parameters/manifest_id'
+      operationId: getManifest
+      summary: returns a specific of manifest registered at with the ESM
+      description: hi!
+      tags:
+        - catalog
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: The requested manifest
+          schema:
+            $ref: '#/definitions/Manifest'
   /v2/service_instances/{instance_id}:
     parameters:
       - $ref: '#/parameters/instance_id'
@@ -971,6 +1002,17 @@ definitions:
       manifest_content:
         description: The manifest content
         type: string
+      endpoints:
+        description: A set of endpoints that the service instance exposes. This includes APIs and UIs.
+        type: object
+#        items:
+#          $ref: '#/definitions/Endpoint'
+#
+#  Endpoint:
+#    description: hi!
+#    properties:
+#      apropo
+
   ServiceInstance:
     description: service instance
     properties:
