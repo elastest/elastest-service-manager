@@ -1,0 +1,120 @@
+version: '2'
+
+services:
+  esm:
+    depends_on:
+      - mongo
+    image: elastest/esm:latest
+    hostname: elastest-service-manager
+    container_name: elastest-service-manager
+    environment:
+      - ESM_PORT=8080
+      - ESM_MONGO_HOST=mongo  # note that this is the name of the mongo resource, below
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+    ports:
+      - "8080:8080"
+    networks:
+      - elastest
+
+  mongo:
+    image: mongo
+    hostname: mongo
+    container_name: mongo
+    ports:
+      - "27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - elastest
+
+  rabbitmq:
+    hostname: rabbitmq
+    container_name: rabbitmq
+    build: services/rabbitmq
+    image: services/rabbitmq
+    env_file:
+      - services/env
+    expose:
+      - 15672
+      - 5672
+    ports:
+      - 15672:15672
+      - 5672:5672
+    networks:
+      - elastest
+
+  kibana:
+    depends_on:
+      - elasticsearch
+    hostname: kibana
+    container_name: kibana
+    build: services/kibana/
+    image: services/kibana
+    env_file:
+      - services/env
+    ports:
+      - 5601:5601
+    networks:
+      - elastest
+
+  elasticsearch:
+    depends_on:
+      - rabbitmq
+    hostname: elasticsearch
+    container_name: elasticsearch
+    build: services/elasticsearch
+    image: services/elasticsearch
+    env_file:
+      - services/env
+    expose:
+      - 9200
+      - 9300
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      - elastest
+
+  logstash:
+    depends_on:
+      - elasticsearch
+      - rabbitmq
+    hostname: logstash
+    container_name: logstash
+    build: services/logstash
+    image: services/logstash
+    env_file:
+      - services/env
+    expose:
+      - 5044
+      - 5000
+      - 9600
+    ports:
+      - 9600:9600
+      - 5044:5044
+      - 5000:5000
+    networks:
+      - elastest
+
+  dockbeat:
+    depends_on:
+      - elasticsearch
+    hostname: dockbeat
+    container_name: dockbeat
+    build: services/dockbeat
+    image: services/dockbeat
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    env_file:
+      - services/env
+    networks:
+      - elastest
+
+volumes:
+  mongo-data:
+    driver: local
+
+networks:
+  elastest:
+    driver: bridge
