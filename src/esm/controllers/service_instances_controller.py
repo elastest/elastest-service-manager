@@ -78,7 +78,10 @@ def create_service_instance(instance_id, service, accept_incomplete=None):
         if len(plan) <= 0:
             return 'no plan found.', 404
 
-        mani = STORE.get_manifest(plan_id=plan[0].id)[0]
+        mani = STORE.get_manifest(plan_id=plan[0].id)
+        if len(mani) <= 0:
+            return 'no manifest for service {plan} found.'.format(plan=service.plan_id), 404
+        mani = mani[0]
 
         if accept_incomplete:  # given docker-compose runs in detached mode this is not needed - only timing can verify
             # XXX put this in a thread to allow for asynch processing?
