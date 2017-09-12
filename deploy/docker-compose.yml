@@ -1,4 +1,4 @@
-version: '2'
+version: '2.1'
 
 services:
   esm:
@@ -12,6 +12,8 @@ services:
       - ESM_MONGO_HOST=mongo  # the mongo service
     ports:
       - "8080:8080"
+    networks:
+      - elastest
 
   mongo:
     image: mongo
@@ -24,3 +26,6 @@ services:
 volumes:
   mongo-data:
     driver: local
+networks:
+    elastest:
+      driver: bridge
