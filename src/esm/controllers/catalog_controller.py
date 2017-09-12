@@ -120,6 +120,8 @@ def store_manifest(manifest_id, manifest):
             manifest = Manifest.from_dict(connexion.request.get_json())
         else:
             return "Supplied body content is not or is mal-formed JSON", 400
+        if manifest.manifest_content.find('</br>') > 0:  # TODO(dizz) remove this check in R4
+            return "Manifest content contains '</br>'. Please remove these and replace with '\n'", 400
         manifest.id = manifest_id
 
         result, code = STORE.add_manifest(manifest)

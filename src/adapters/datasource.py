@@ -115,6 +115,9 @@ class MongoDBStore(Store):
 
     def add_manifest(self, manifest: Manifest) -> tuple:
         if self.ESM_DB.manifests.count({'id': manifest.id}) == 0:
+            LOG.debug("replacing newlines - mongodb strips these!")
+            manifest.manifest_content = manifest.manifest_content.replace('\n', '</br>')
+
             result = self.ESM_DB.manifests.insert_one(manifest.to_dict())
             if not result.acknowledged:
                 return 'there was an issue saving the supplied manifest to the DB', 500
@@ -131,21 +134,19 @@ class MongoDBStore(Store):
 
         if plan_id:
             if self.ESM_DB.manifests.count({'plan_id': plan_id}) == 1:
-                return [
-                    Manifest.from_dict(
-                        self.ESM_DB.manifests.find_one({'plan_id': plan_id})
-                    )
-                ]
+                m = self.ESM_DB.manifests.find_one({'plan_id': plan_id})
+                LOG.debug("replacing <br/> with newlines")
+                m.manifest_content = m.manifest_content.replace('</br>', '\n')
+                return [Manifest.from_dict(m)]
             else:
                 LOG.warn('Requested manifest by plan ID not found: {id}'.format(id=plan_id))
                 return []
         elif manifest_id:
             if self.ESM_DB.manifests.count({'id': manifest_id}) == 1:
-                return [
-                    Manifest.from_dict(
-                        self.ESM_DB.manifests.find_one({'id': manifest_id})
-                    )
-                ]
+                m = self.ESM_DB.manifests.find_one({'id': manifest_id})
+                LOG.debug("replacing <br/> with newlines")
+                m.manifest_content = m.manifest_content.replace('</br>', '\n')
+                return [Manifest.from_dict(m)]
             else:
                 LOG.warn('Requested manifest not found: {id}'.format(id=manifest_id))
                 return []
@@ -153,6 +154,8 @@ class MongoDBStore(Store):
             manifests = []
 
             for manifest in self.ESM_DB.manifests.find():
+                LOG.debug("replacing <br/> with newlines")
+                manifest['manifest_content'] = manifest['manifest_content'].replace('</br>', '\n')
                 manifests.append(
                     Manifest().from_dict(manifest)
                 )
@@ -386,7 +389,7 @@ class InMemoryStore(Store):
                 id=instance_id, content=last_op_to_delete[0]))
             self.ESM_DB.last_operations.remove(last_op_to_delete[0])
 
-# TODO reevaluate this!
+
 mongo_host = os.getenv('ESM_MONGO_HOST', '')
 if len(mongo_host):
     STORE = MongoDBStore(mongo_host)
