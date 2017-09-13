@@ -71,12 +71,15 @@ class TestServiceInstancesController(BaseTestCase):
 
         path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         with open(path + "/manifests/docker-compose.yml", "r") as mani_file:
-            mani = mani_file.read().replace('\n', '</br>')
+            mani = mani_file.read()
+
+        with open(path + '/manifests/test_endpoints.json', 'r') as ep_file:
+            ep = ep_file.read()
 
         self.test_manifest = Manifest(
             id='test-mani', plan_id=self.test_plan.id, service_id=self.test_service.id,
-            manifest_type='dummy', manifest_content=mani)
-        # manifest_type should be set to test for tests and therefore select the dummydriver
+            manifest_type='dummy', manifest_content=mani, endpoints=json.loads(ep)
+        )
 
         self.store.add_manifest(self.test_manifest)
         print('Manifest registration content of:\n {content}'.format(content=json.dumps(self.test_manifest)))

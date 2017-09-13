@@ -14,7 +14,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import sys
+import os
+import inspect
 from setuptools import setup, find_packages
 
 NAME = "esm"
@@ -27,6 +28,8 @@ VERSION = "0.1.0"
 # prerequisite: setuptools
 # http://pypi.python.org/pypi/setuptools
 
+
+# XXX update if requirements.txt content is changed
 REQUIRES = [
     'connexion == 1.0.129',
     'python_dateutil == 2.6.0',
@@ -39,9 +42,6 @@ REQUIRES = [
     'healthcheck',
     'tornado'
 ]
-# TODO fix the path issue
-# r = open('requirements.txt')
-# REQUIRES = r.read().split('\n')
 
 setup(
     name=NAME,

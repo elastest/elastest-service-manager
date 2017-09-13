@@ -16,11 +16,13 @@
 
 from __future__ import absolute_import
 
-import adapters.log
-from adapters.datasource import STORE
-# from six import BytesIO
+import os
+import inspect
+
 from flask import json
 
+import adapters.log
+from adapters.datasource import STORE
 from esm.models.manifest import Manifest
 # from esm.models.catalog import Catalog
 # from esm.models.empty import Empty
@@ -50,33 +52,16 @@ class TestCatalogController(BaseTestCase):
             plan_updateable=False, plans=[self.test_plan],
             dashboard_client=None)
 
-        manifest_endpoints = """{
-    "endpoints": {
-        "sub_service_name_1": {
-            "description": "this is a sub-service that does stuff",
-            "main": true,
-            "api": {
-                "protocol": "http",
-                "port": 9000,
-                "path": "/v2",
-                "definition": {
-                    "type": "openapi",
-                    "path": "/v2/api.yaml",
-                    "port": 9090
-                }
-            },
-            "gui": {
-                "protocol": "http",
-                "port": 9089,
-                "path": "/gui"
-            }
-        }
-    }
-}"""
+        path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        with open(path + "/manifests/docker-compose.yml", "r") as mani_file:
+            mani = mani_file.read()
+
+        with open(path + '/manifests/test_endpoints.json', 'r') as ep_file:
+            ep = ep_file.read()
 
         self.test_manifest = Manifest(
             id='test', plan_id=self.test_plan.id, service_id=self.test_service.id,
-            manifest_type='dummy', manifest_content='', endpoints=json.loads(manifest_endpoints)
+            manifest_type='dummy', manifest_content=mani, endpoints=json.loads(ep)
         )
 
     def tearDown(self):

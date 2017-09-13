@@ -14,6 +14,8 @@
 #    under the License.
 
 import os
+import inspect
+import json
 from unittest import TestCase
 from unittest import skipIf
 
@@ -46,9 +48,17 @@ class TestInMemoryStore(TestCase):
             plan_updateable=False, plans=[self.test_plan],
             dashboard_client=None)
 
+        path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        with open(path + "/manifests/docker-compose.yml", "r") as mani_file:
+            mani = mani_file.read()
+
+        with open(path + '/manifests/test_endpoints.json', 'r') as ep_file:
+            ep = ep_file.read()
+
         self.test_manifest = Manifest(
             id='test-mani', plan_id=self.test_plan.id, service_id=self.test_service.id,
-            manifest_type='dummy', manifest_content='')
+            manifest_type='dummy', manifest_content=mani, endpoints=json.loads(ep)
+        )
 
         self.test_svc_instance = ServiceInstance(service_type=self.test_service, context={'id': 'test_svc_inst'})
 

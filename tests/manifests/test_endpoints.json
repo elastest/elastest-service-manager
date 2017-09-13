@@ -1,0 +1,23 @@
+{
+  "endpoints": {
+    "sub_service_name_1": {
+      "description": "this is a sub-service that does stuff",
+      "main": true,
+      "api": {
+        "protocol": "http",
+        "port": 9000,
+        "path": "/v2",
+        "definition": {
+          "type": "openapi",
+          "path": "/v2/api.yaml",
+          "port": 9090
+        }
+      },
+      "gui": {
+        "protocol": "http",
+        "port": 9089,
+        "path": "/gui"
+      }
+    }
+  }
+}

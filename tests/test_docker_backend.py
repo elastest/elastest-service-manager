@@ -31,7 +31,7 @@ class TestDockerCompose(TestCase):
         self.docker = DockerBackend()
         path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         with open(path+"/manifests/docker-compose.yml", "r") as mani:
-            content = mani.read().replace("\n", "</br>")
+            content = mani.read()
             self.docker.create(instance_id=INST_ID, content=content, c_type="docker-compose")
 
     def tearDown(self):
@@ -59,7 +59,7 @@ class TestDockerComposeWithoutSetup(TestCase):
     def test_docker_create_cmd(self):
         path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         with open(path + "/manifests/docker-compose.yml", "r") as mani:
-            content = mani.read().replace("\n", "</br>")
+            content = mani.read()
         self.docker.create(instance_id=INST_ID, content=content, c_type="docker-compose")
 
 

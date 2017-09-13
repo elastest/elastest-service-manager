@@ -77,11 +77,6 @@ class DockerBackend(Backend):
         :return:
         """
 
-        # XXX this is a dirty hack - mongodb strips newlines!
-        LOG.debug("# content = content.replace('</br>', '\\n') is a dirty hack - mongodb strips newlines!")
-        content = content.replace('</br>', '\n')
-        LOG.debug(content)
-
         # when we get the manifest, we have to dump it to a temporary file
         # to allow for multiple stack instances we need to have multiple projects!
         # this means multiple directories
@@ -118,7 +113,6 @@ class DockerBackend(Backend):
         #     self.project.containers(service_names=options['SERVICE'], one_off=OneOffFilter.only),
         #     key=attrgetter('name'))
 
-        # XXX questionable flattening of information - is it necessary? looks fugly...
         info = dict()
         for c in containers:
             LOG.debug('{name} container image name: {img_name}'
@@ -191,27 +185,23 @@ class DockerBackend(Backend):
 class KubernetesBackend(Backend):
     def __init__(self) -> None:
         super().__init__()
-#         # self.directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))
-#         # prefix = "k8s_"
-#         # Identify all kubernetes files to process
-#         # self.files = [os.path.join(self.directory, filename) for filename in os.listdir(self.directory)
-#         #               if filename.startswith(prefix) and filename.endswith(".yaml")]
-#         # k8s_config_file = os.path.abspath(os.path.join(self.directory, 'k8s_config'))
-#         # self.api = pykube.HTTPClient(pykube.KubeConfig.from_file(k8s_config_file))
-#         config.load_kube_config()
-#         self.k8s_beta = client.ExtensionsV1beta1Api()
+        # self.directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+        # prefix = "k8s_"
+        # Identify all kubernetes files to process
+        # self.files = [os.path.join(self.directory, filename) for filename in os.listdir(self.directory)
+        #               if filename.startswith(prefix) and filename.endswith(".yaml")]
+        # k8s_config_file = os.path.abspath(os.path.join(self.directory, 'k8s_config'))
+        # self.api = pykube.HTTPClient(pykube.KubeConfig.from_file(k8s_config_file))
+        # config.load_kube_config()
+        # self.k8s_beta = client.ExtensionsV1beta1Api()
 
     def create(self, instance_id: str, content: str, c_type: str, **kwargs) -> None:
         super().create(instance_id, content, c_type)
-#
-#         # LOG.debug("# content = content.replace('</br>', '\\n') is a dirty hack - mongodb strips newlines!")
-#         # content = content.replace('</b  r>', '\n')
-#         #
-#         # dep = yaml.load(content)
-#         # resp = self.k8s_beta.create_namespaced_deployment(body=dep, namespace="default")
-#         # print("Deployment created. status='%s'" % str(resp.metadata.uid))
-#         # print("Deployment created. status='%s'" % str(resp.status))
-#         # return resp.metadata.uid
+        # dep = yaml.load(content)
+        # resp = self.k8s_beta.create_namespaced_deployment(body=dep, namespace="default")
+        # print("Deployment created. status='%s'" % str(resp.metadata.uid))
+        # print("Deployment created. status='%s'" % str(resp.status))
+        # return resp.metadata.uid
 
     def info(self, instance_id: str, **kwargs) -> Dict[str, str]:
         super().info(instance_id)
@@ -219,9 +209,9 @@ class KubernetesBackend(Backend):
 
     def delete(self, instance_id: str, **kwargs) -> None:
         super().delete(instance_id)
-#         # content = ''
-#         # dep = yaml.load(content)
-#         # resp = self.k8s_beta.delete_collection_namespaced_deployment(body=dep, namespace="default")
+        # content = ''
+        # dep = yaml.load(content)
+        # resp = self.k8s_beta.delete_collection_namespaced_deployment(body=dep, namespace="default")
 
 
 class DummyBackend(Backend):
@@ -319,5 +309,6 @@ class ResourceManager(Backend):
             raise RuntimeError('manifest_type parameter not specified in call to info()')
 
         be.delete(instance_id)
+
 
 RM = ResourceManager()
