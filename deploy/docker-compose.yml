@@ -8,10 +8,12 @@ services:
     container_name: esm
     hostname: esm
     environment:
-      - ESM_PORT=8080
+      - ESM_PORT=8095
       - ESM_MONGO_HOST=mongo  # the mongo service
+    expose:
+      - 8095
     ports:
-      - "8080:8080"
+      - "8095:8095"
     networks:
       - elastest
 
