@@ -25,6 +25,8 @@ services:
       - mongo-data:/data/db
     ports:
       - "27017"
+    networks:
+      - elastest
 volumes:
   mongo-data:
     driver: local
