@@ -91,6 +91,7 @@ class DockerBackend(Backend):
         m = open(mani_dir + '/docker-compose.yml', 'wt')
         m.write(content)
         m.close()
+        # XXX can supply external parameters here... requires a little unsupported hacking
         project = project_from_options(mani_dir, self.options)
         cmd = TopLevelCommand(project)
         cmd.up(self.options)  # WARNING: this method can call sys.exit() but only if --abort-on-container-exit is True
@@ -130,6 +131,11 @@ class DockerBackend(Backend):
                         info[c.name + '_' + k + '/HostPort'] = i['HostPort']
                 else:
                     info[c.name + '_' + k] = v
+
+            # add the IP address of the container
+            # XXX assumes there's only 1 IP address assigned to container
+            ip = [value.get('IPAddress') for value in c.dictionary['NetworkSettings']['Networks'].values()]
+            info[c.name + '_' + 'Ip'] = ip[0]
 
             LOG.debug('{name} container command: {cmd}'.format(name=c.name, cmd=c.human_readable_command))
             info[c.name + '_cmd'] = c.human_readable_command
