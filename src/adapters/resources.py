@@ -13,11 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from typing import Dict
-
 import os
 import shutil
-from compose.cli.main import TopLevelCommand, project_from_options
+from typing import Dict
+
+# XXX these docker imports are internal and not supported to be used by external processes
+from compose.cli.main import TopLevelCommand
+from compose.cli.command import get_project, get_config_path_from_options, Environment
+from compose.cli.docker_client import tls_config_from_options
 
 # from kubernetes import client, config
 import adapters.log
@@ -69,7 +72,7 @@ class DockerBackend(Backend):
         else:
             raise NotImplementedError('The type ({type}) of cluster manager is unknown'.format(type=c_type))
 
-    def _create_compose(self, inst_id: str, content: str) -> None:
+    def _create_compose(self, inst_id: str, content: str, **kwargs) -> None:
         """
         This creates a set of containers using docker compose.
         Note: the use of the docker compose python module is unsupported by docker inc.
@@ -91,10 +94,32 @@ class DockerBackend(Backend):
         m = open(mani_dir + '/docker-compose.yml', 'wt')
         m.write(content)
         m.close()
-        # XXX can supply external parameters here... requires a little unsupported hacking
-        project = project_from_options(mani_dir, self.options)
+
+        # XXX can supply external parameters here...
+        # XXX parameters is the name set in the OSBA spec for additional parameters supplied on provisioning
+        # XXX if none supplied, we use an empty dict
+        parameters = kwargs.get('parameters', dict())
+        project = self._project_from_options(mani_dir, self.options, parameters)
         cmd = TopLevelCommand(project)
         cmd.up(self.options)  # WARNING: this method can call sys.exit() but only if --abort-on-container-exit is True
+
+    # this method is taken from from compose.cli.command.project_from_options
+    # but changed to take environment from an external callee.
+    def _project_from_options(self, project_dir, options, parameters):
+        environment = Environment.from_command_line(parameters)
+        host = options.get('--host')
+        if host is not None:
+            host = host.lstrip('=')
+        return get_project(
+            project_dir,
+            get_config_path_from_options(project_dir, options, environment),
+            project_name=options.get('--project-name'),
+            verbose=options.get('--verbose'),
+            host=host,
+            tls_config=tls_config_from_options(options),
+            environment=environment,
+            override_dir=options.get('--project-directory'),
+        )
 
     def info(self, instance_id: str, **kwargs) -> Dict[str, str]:
         mani_dir = self.manifest_cache + '/' + instance_id
@@ -104,7 +129,8 @@ class DockerBackend(Backend):
             return {}
 
         LOG.debug('info from: {compo}'.format(compo=mani_dir + '/docker-compose.yml'))
-        project = project_from_options(mani_dir, self.options)
+        parameters = kwargs.get('parameters', dict())
+        project = self._project_from_options(mani_dir, self.options, parameters)
         # cmd = TopLevelCommand(project)
 
         containers = project.containers(service_names=self.options['SERVICE'], stopped=True)
@@ -177,7 +203,8 @@ class DockerBackend(Backend):
         self.options["--force"] = True
         self.options["--rmi"] = "none"
         LOG.info('destroying: {compo}'.format(compo=mani_dir + '/docker-compose.yml'))
-        project = project_from_options(mani_dir, self.options)
+        parameters = kwargs.get('parameters', dict())
+        project = self._project_from_options(mani_dir, self.options, parameters)
         cmd = TopLevelCommand(project)
         cmd.down(self.options)
         try:
@@ -297,7 +324,7 @@ class ResourceManager(Backend):
 
     def create(self, instance_id: str, content: str, c_type: str, **kwargs):
         be = self.backends.get(c_type, self.backends['dummy'])
-        be.create(instance_id, content, c_type)
+        be.create(instance_id, content, c_type, **kwargs)
 
     def info(self, instance_id: str, **kwargs) -> Dict[str, str]:
         if 'manifest_type' in kwargs:
@@ -305,7 +332,8 @@ class ResourceManager(Backend):
             be = self.backends.get(manifest_type, self.backends['dummy'])
         else:
             raise RuntimeError('manifest_type parameter not specified in call to info()')
-        return be.info(instance_id)
+
+        return be.info(instance_id, **kwargs)
 
     def delete(self, instance_id: str, **kwargs):
         if 'manifest_type' in kwargs:
@@ -314,7 +342,7 @@ class ResourceManager(Backend):
         else:
             raise RuntimeError('manifest_type parameter not specified in call to info()')
 
-        be.delete(instance_id)
+        be.delete(instance_id, **kwargs)
 
 
 RM = ResourceManager()

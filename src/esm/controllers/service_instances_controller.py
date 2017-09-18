@@ -85,9 +85,11 @@ def create_service_instance(instance_id, service, accept_incomplete=None):
 
         if accept_incomplete:  # given docker-compose runs in detached mode this is not needed - only timing can verify
             # XXX put this in a thread to allow for asynch processing?
-            RM.create(instance_id=instance_id, content=mani.manifest_content, c_type=mani.manifest_type)
+            RM.create(instance_id=instance_id, content=mani.manifest_content,
+                      c_type=mani.manifest_type, parameters=service.parameters)
         else:
-            RM.create(instance_id=instance_id, content=mani.manifest_content, c_type=mani.manifest_type)
+            RM.create(instance_id=instance_id, content=mani.manifest_content,
+                      c_type=mani.manifest_type, parameters=service.parameters)
 
         last_op = LastOperation(  # stored within the service instance doc
             state='creating',
