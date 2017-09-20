@@ -31,17 +31,23 @@ LOG = adapters.log.get_logger(name=__name__)
 
 def add_check_api():
     app = flask.Flask('check_api')
-    health = HealthCheck(app, "/healthcheck")
+    health = HealthCheck(app, "/health")
     envdump = EnvironmentDump(app, "/environment")
 
     def health_check():
 
-        # check that the DB is working
-        # check that the active backends are available
+        # TODO check that the datasource backend is working
+        # TODO check that the active resource backends are available
+        db_engines_ok = True
+        maintenance = False
         if 1 + 1 == 2:
-            return True, "addition works"
+            return {'status', 'up'}
+        elif db_engines_ok:
+            return {'status', 'up'}
+        elif not maintenance:
+            return {'status', 'out_of_service'}
         else:
-            return False, "the universe is broken"
+            return {'status', 'down'}
 
     def application_data():
         return {'maintainer': 'ElasTest',
