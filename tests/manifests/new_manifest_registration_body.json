@@ -19,7 +19,7 @@
                 "path": "/v2/api.yaml",  // required
                 "port": 9090  // optional, assumes port in api definition otherwise
               },
-              "health_path": "/eus/v1/application/health"
+              "health_path": "/eus/v1/application/health"  // optional, only if the health endpoint's path differs
             }
         ]
       },
