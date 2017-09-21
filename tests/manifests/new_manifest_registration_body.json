@@ -9,14 +9,18 @@
       "description": "this is a sub-service that does stuff",  // optional.
       "main": true,  // required. whether or not this is the main front-end to the service
       "api": {
-        "protocol": "http",  // required
-        "port": 9000,  // required
-        "path": "/v2",  // required
-        "definition": {  // required
-          "type": "openapi",  // required
-          "path": "/v2/api.yaml",  // required
-          "port": 9090  // optional, assumes port in api definition otherwise
-        }
+          [
+            {
+              "protocol": "http",  // required
+              "port": 9000,  // required
+              "path": "/v2",  // required
+              "definition": {  // required
+                "type": "openapi",  // required
+                "path": "/v2/api.yaml",  // required
+                "port": 9090  // optional, assumes port in api definition otherwise
+              }
+            }
+        ]
       },
       "gui": {
         "protocol": "http",  // required
