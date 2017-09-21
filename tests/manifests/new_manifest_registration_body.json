@@ -9,7 +9,7 @@
       "description": "this is a sub-service that does stuff",  // optional.
       "main": true,  // required. whether or not this is the main front-end to the service
       "api": {
-          [
+          [  // array is optional, allows for more than 1 endpoint exposed from one service
             {
               "protocol": "http",  // required
               "port": 9000,  // required
@@ -18,7 +18,8 @@
                 "type": "openapi",  // required
                 "path": "/v2/api.yaml",  // required
                 "port": 9090  // optional, assumes port in api definition otherwise
-              }
+              },
+              "health_path": "/eus/v1/application/health"
             }
         ]
       },
