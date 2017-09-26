@@ -5,6 +5,8 @@ services:
     image: elastest/esm:latest
     container_name: esm
     hostname: esm
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:rw
     environment:
       - ESM_PORT=37005
       - ET_EDM_ALLUXIO_API=http://edm-alluxio-master:19999/
