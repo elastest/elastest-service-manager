@@ -109,6 +109,31 @@ class TestServiceInstancesController(BaseTestCase):
                                     headers=headers)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
+    def test_create_service_instance_with_params(self):
+        """
+        Test case for create_service_instance
+
+        Provisions a service instance
+        """
+
+        params = dict()
+        params['TEST'] = 'value'
+        params['TEST1'] = 'value1'
+
+        service = ServiceRequest(service_id=self.test_service.id, plan_id=self.test_plan.id,
+                                 organization_guid='org', space_guid='space', parameters=params)
+
+        query_string = [('accept_incomplete', False)]
+        headers = [('X_Broker_Api_Version', '2.12')]
+        print('Sending service instantiation content of:\n {content}'.format(content=json.dumps(service)))
+        response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id=self.instance_id),
+                                    method='PUT',
+                                    data=json.dumps(service),
+                                    content_type='application/json',
+                                    query_string=query_string,
+                                    headers=headers)
+        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+
     def test_deprovision_service_instance(self):
         """
         Test case for deprovision_service_instance
