@@ -5,5 +5,6 @@ pymongo
 docker-compose
 docker
 pykube
+daiquiri
 healthcheck
 tornado
