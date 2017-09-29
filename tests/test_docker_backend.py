@@ -62,6 +62,31 @@ class TestDockerComposeWithoutSetup(TestCase):
             content = mani.read()
         self.docker.create(instance_id=INST_ID, content=content, c_type="docker-compose")
 
+    def test_docker_create_cmd_with_params(self):
+        path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        with open(path + "/manifests/docker-compose.yml", "r") as mani:
+            content = mani.read()
+
+        params = dict()
+        params['TEST'] = 'value'
+        params['TEST1'] = 'value1'
+
+        self.docker.create(instance_id=INST_ID, content=content, c_type="docker-compose", parameters=params)
+        info = self.docker.info(instance_id=INST_ID)
+
+        # this check can likely be done a better way...
+        p1 = False
+        p2 = False
+        for k, v in info.items():
+            if k.endswith('TEST'):
+                p1 = True
+            if k.endswith('TEST1'):
+                p2 = True
+        self.assertTrue(p1)
+        self.assertTrue(p2)
+
+        print('check')
+
 
 @skipIf(os.getenv('DOCKER_TESTS', 'NO') != 'YES', "DOCKER_TESTS not set in environment variables")
 class TestDockerBasicBackend(TestCase):
