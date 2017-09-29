@@ -16,11 +16,11 @@
 import os
 import shutil
 from typing import Dict
+import yaml
 
 # XXX these docker imports are internal and not supported to be used by external processes
 from compose.cli.main import TopLevelCommand
-from compose.cli.command import get_project, get_config_path_from_options, Environment
-from compose.cli.docker_client import tls_config_from_options
+from compose.cli.command import project_from_options
 
 # from kubernetes import client, config
 import adapters.log
@@ -68,7 +68,7 @@ class DockerBackend(Backend):
     def create(self, instance_id: str, content: str, c_type: str, **kwargs) -> None:
         if c_type == 'docker-compose':
             LOG.warn('WARNING: this is for local-only deployments.')
-            return self._create_compose(inst_id=instance_id, content=content)
+            return self._create_compose(inst_id=instance_id, content=content, **kwargs)
         else:
             raise NotImplementedError('The type ({type}) of cluster manager is unknown'.format(type=c_type))
 
@@ -89,37 +89,35 @@ class DockerBackend(Backend):
             os.makedirs(mani_dir)
         else:
             LOG.info('The instance is already running with the following project: {mani_dir}'.format(mani_dir=mani_dir))
+            LOG.warn('Content in this directory will be overwritten.')
+            # XXX shouldn't this raise an exception?
+
+        # can supply external parameters here...
+        # parameters is the name set in the OSBA spec for additional parameters supplied on provisioning
+        # if none supplied, we use an empty dict
+        # add optionally supplied parameters as environment variables
+        # XXX this is a naive approach and should be revisited
+        parameters = kwargs.get('parameters', dict())
+        env_list = list()
+        for k, v in parameters.items():
+            LOG.info('Including as environment variable: {k}={v}'.format(k=k, v=v))
+            env_list.append(k + '=' + v)
+
+        if len(env_list) > 0:
+            m = yaml.load(content)
+            for k, v in m['services'].items():
+                v['environment'] = env_list
+            # yaml.Dumper.ignore_aliases = True
+            content = yaml.dump(m)
 
         LOG.debug('writing to: {compo}'.format(compo=mani_dir + '/docker-compose.yml'))
         m = open(mani_dir + '/docker-compose.yml', 'wt')
         m.write(content)
         m.close()
 
-        # XXX can supply external parameters here...
-        # XXX parameters is the name set in the OSBA spec for additional parameters supplied on provisioning
-        # XXX if none supplied, we use an empty dict
-        parameters = kwargs.get('parameters', dict())
-        project = self._project_from_options(mani_dir, self.options, parameters)
+        project = project_from_options(mani_dir, self.options)
         cmd = TopLevelCommand(project)
         cmd.up(self.options)  # WARNING: this method can call sys.exit() but only if --abort-on-container-exit is True
-
-    # this method is taken from from compose.cli.command.project_from_options
-    # but changed to take environment from an external callee.
-    def _project_from_options(self, project_dir, options, parameters):
-        environment = Environment.from_command_line(parameters)
-        host = options.get('--host')
-        if host is not None:
-            host = host.lstrip('=')
-        return get_project(
-            project_dir,
-            get_config_path_from_options(project_dir, options, environment),
-            project_name=options.get('--project-name'),
-            verbose=options.get('--verbose'),
-            host=host,
-            tls_config=tls_config_from_options(options),
-            environment=environment,
-            override_dir=options.get('--project-directory'),
-        )
 
     def info(self, instance_id: str, **kwargs) -> Dict[str, str]:
         mani_dir = self.manifest_cache + '/' + instance_id
@@ -129,8 +127,7 @@ class DockerBackend(Backend):
             return {}
 
         LOG.debug('info from: {compo}'.format(compo=mani_dir + '/docker-compose.yml'))
-        parameters = kwargs.get('parameters', dict())
-        project = self._project_from_options(mani_dir, self.options, parameters)
+        project = project_from_options(mani_dir, self.options)
         # cmd = TopLevelCommand(project)
 
         containers = project.containers(service_names=self.options['SERVICE'], stopped=True)
@@ -149,7 +146,6 @@ class DockerBackend(Backend):
             info[c.name + '_image_id'] = c.image
 
             LOG.debug(c.ports)
-
             for k, v in c.ports.items():
                 if isinstance(v, list):
                     for i in v:
@@ -157,6 +153,10 @@ class DockerBackend(Backend):
                         info[c.name + '_' + k + '/HostPort'] = i['HostPort']
                 else:
                     info[c.name + '_' + k] = v
+
+            LOG.debug(c.environment)
+            for k, v in c.environment.items():
+                info[c.name + '_environment_' + k] = v
 
             # add the IP address of the container
             # XXX assumes there's only 1 IP address assigned to container
@@ -203,15 +203,14 @@ class DockerBackend(Backend):
         self.options["--force"] = True
         self.options["--rmi"] = "none"
         LOG.info('destroying: {compo}'.format(compo=mani_dir + '/docker-compose.yml'))
-        parameters = kwargs.get('parameters', dict())
-        project = self._project_from_options(mani_dir, self.options, parameters)
+        project = project_from_options(mani_dir, self.options)
         cmd = TopLevelCommand(project)
         cmd.down(self.options)
+
         try:
             shutil.rmtree(mani_dir)
         except PermissionError:
             # Done to let travis pass
-            # TODO make location of mani_dir configurable
             LOG.warn('Could not delete the directory {dir}'.format(dir=mani_dir))
 
 
