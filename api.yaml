@@ -96,7 +96,7 @@ paths:
     get:
       operationId: listManifests
       summary: returns a list of manifests registered at with the ESM
-      description: hi!
+      description: returns a list of manifests registered at with the ESM
       tags:
         - catalog
       produces:
