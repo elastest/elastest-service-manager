@@ -156,6 +156,36 @@ def deprovision_service_instance(instance_id, service_id, plan_id, accept_incomp
             return Empty(), 404
 
 
+def _get_instance(srv_inst):
+    # get the latest info
+    mani_id = srv_inst.context['manifest_id']
+    mani = STORE.get_manifest(manifest_id=mani_id)
+    if len(mani) < 1:
+        return 'no manifest found.', 404
+    # Get the latest info of the instance
+    # could also use STORE.get_service_instance(srv_inst) but will not have all details
+    inst_info = RM.info(instance_id=srv_inst.context['id'], manifest_type=mani[0].manifest_type)
+
+    if inst_info['srv_inst.state.state'] == 'failed':
+        # try epm.delete(instance_id=instance_id)?
+        return 'There has been a failure in creating the service instance.', 500
+
+    srv_inst.state.state = inst_info['srv_inst.state.state']
+    srv_inst.state.description = inst_info['srv_inst.state.description']
+
+    # don't need you any more, buh-bye!
+    del inst_info['srv_inst.state.state']
+    del inst_info['srv_inst.state.description']
+
+    # merge the two context dicts
+    srv_inst.context = {**srv_inst.context, **inst_info}
+
+    # update the service instance record - there should be an asynch method doing the update - event based
+    STORE.add_service_instance(srv_inst)
+
+    return srv_inst
+
+
 def instance_info(instance_id):
     """
     Returns information about the service instance.
@@ -165,7 +195,7 @@ def instance_info(instance_id):
     for future requests (bind and deprovision), so the broker must use it to correlate the resource it creates.&#39;
     :type instance_id: str
 
-    :rtype: ServiceType
+    :rtype: ServiceInstance
     """
     ok, message, code = _version_ok()
     if not ok:
@@ -177,31 +207,28 @@ def instance_info(instance_id):
             return 'no service instance found.', 404
         srv_inst = srv_inst[0]
 
-        # get the latest info
-        mani_id = srv_inst.context['manifest_id']
-        mani = STORE.get_manifest(manifest_id=mani_id)
-        if len(mani) < 1:
-            return 'no manifest found.', 404
-        inst_info = RM.info(instance_id=instance_id, manifest_type=mani[0].manifest_type)
-
-        if inst_info['srv_inst.state.state'] == 'failed':
-            # try epm.delete(instance_id=instance_id)?
-            return 'There has been a failure in creating the service instance.', 500
-
-        srv_inst.state.state = inst_info['srv_inst.state.state']
-        srv_inst.state.description = inst_info['srv_inst.state.description']
-
-        # don't need you any more, buh-bye!
-        del inst_info['srv_inst.state.state']
-        del inst_info['srv_inst.state.description']
-
-        # merge the two context dicts
-        srv_inst.context = {**srv_inst.context, **inst_info}
-
-        # update the service instance record - there should be an asynch method doing the update - event based
-        STORE.add_service_instance(srv_inst)
+        srv_inst = _get_instance(srv_inst)
 
         return srv_inst, 200
+
+
+def all_instance_info():
+    """
+    Returns information about the service instance.
+    Returns all service instances that are accessible to the end-user on this service manager.
+
+    :rtype: List[ServiceInstance]
+    """
+    ok, message, code = _version_ok()
+    if not ok:
+        return message, code
+    else:
+        instances = STORE.get_service_instance()
+        insts = list()
+        for inst in instances:
+            insts.append(_get_instance(inst))
+
+        return insts, 200
 
 
 def last_operation_status(instance_id, service_id=None, plan_id=None, operation=None):
