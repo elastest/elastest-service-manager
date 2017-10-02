@@ -84,7 +84,7 @@ paths:
       tags:
       - "catalog"
       summary: "returns a list of manifests registered at with the ESM"
-      description: "hi!"
+      description: "returns a list of manifests registered at with the ESM"
       operationId: "list_manifests"
       produces:
       - "application/json"
@@ -336,6 +336,25 @@ paths:
           schema:
             $ref: "#/definitions/Error"
       x-swagger-router-controller: "esm.controllers.service_instances_controller"
+  /v2/et/service_instances:
+    get:
+      tags:
+      - "service_instances"
+      summary: "Returns information about the service instance."
+      description: "Returns all service instances that are accessible to the end-user\
+        \ on this service manager.\n"
+      operationId: "all_instance_info"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "a list of service descriptions"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/ServiceInstance"
+      x-swagger-router-controller: "esm.controllers.service_instances_controller"
   /v2/et/service_instances/{instance_id}:
     get:
       tags:
@@ -357,9 +376,9 @@ paths:
         type: "string"
       responses:
         200:
-          description: "serice description"
+          description: "service description"
           schema:
-            $ref: "#/definitions/ServiceType"
+            $ref: "#/definitions/ServiceInstance"
       x-swagger-router-controller: "esm.controllers.service_instances_controller"
   /v2/service_instances/{instance_id}/last_operation:
     get:
@@ -948,6 +967,11 @@ definitions:
       manifest_content:
         type: "string"
         description: "The manifest content"
+      endpoints:
+        type: "object"
+        description: "A set of endpoints that the service instance exposes. This includes\
+          \ APIs and UIs."
+        properties: {}
     description: "The manifest of a software component and the plan and service it\
       \ is to be associated with.\n"
   ServiceInstance:
@@ -960,7 +984,8 @@ definitions:
         $ref: "#/definitions/LastOperation"
       context:
         type: "object"
-        description: "additional parameters of the service"
+        description: "additional parameters of the service, including the service\
+          \ ID, manifest ID and other state info"
         properties: {}
     description: "service instance"
 parameters:

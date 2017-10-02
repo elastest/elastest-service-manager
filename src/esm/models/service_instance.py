@@ -103,7 +103,7 @@ class ServiceInstance(Model):
     def context(self) -> object:
         """
         Gets the context of this ServiceInstance.
-        additional parameters of the service
+        additional parameters of the service, including the service ID, manifest ID and other state info
 
         :return: The context of this ServiceInstance.
         :rtype: object
@@ -114,7 +114,7 @@ class ServiceInstance(Model):
     def context(self, context: object):
         """
         Sets the context of this ServiceInstance.
-        additional parameters of the service
+        additional parameters of the service, including the service ID, manifest ID and other state info
 
         :param context: The context of this ServiceInstance.
         :type context: object

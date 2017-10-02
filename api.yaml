@@ -96,7 +96,7 @@ paths:
     get:
       operationId: listManifests
       summary: returns a list of manifests registered at with the ESM
-      description: hi!
+      description: returns a list of manifests registered at with the ESM
       tags:
         - catalog
       produces:
@@ -332,6 +332,23 @@ paths:
             asynchronous service operations." }.'
           schema:
             $ref: '#/definitions/Error'
+  /v2/et/service_instances:
+    get:
+      operationId: all_instance_info
+      summary: Returns information about the service instance.
+      tags:
+        - service_instances
+      description: >
+        Returns all service instances that are accessible to the end-user on this service manager.
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: a list of service descriptions
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ServiceInstance'
   /v2/et/service_instances/{instance_id}:
     parameters:
         - $ref: '#/parameters/instance_id'
@@ -344,20 +361,13 @@ paths:
         Returns information about the service instance. This is a simple read
         operation against the broker database and is provided as a developer/consumer
         convienence.
-      # parameters:
-        # - name: X-Broker-Api-Version
-        #   in: header
-        #   description: Version of API requested
-        #   required: true
-        #   type: string
-        #   format: string
       produces:
         - application/json
       responses:
         '200':
-          description: serice description
+          description: service description
           schema:
-            $ref: '#/definitions/ServiceType'
+            $ref: '#/definitions/ServiceInstance'
   /v2/service_instances/{instance_id}/last_operation:
     parameters:
       - $ref: '#/parameters/instance_id'
@@ -1005,13 +1015,6 @@ definitions:
       endpoints:
         description: A set of endpoints that the service instance exposes. This includes APIs and UIs.
         type: object
-#        items:
-#          $ref: '#/definitions/Endpoint'
-#
-#  Endpoint:
-#    description: hi!
-#    properties:
-#      apropo
 
   ServiceInstance:
     description: service instance
@@ -1023,5 +1026,5 @@ definitions:
         description: the current state of the instance
         $ref: '#/definitions/LastOperation'
       context:
-        description: additional parameters of the service
+        description: additional parameters of the service, including the service ID, manifest ID and other state info
         type: object
