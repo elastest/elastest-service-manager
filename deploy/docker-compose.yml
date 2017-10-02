@@ -3,7 +3,6 @@ version: '3'
 services:
   esm:
     image: elastest/esm:latest
-    container_name: esm
     hostname: esm
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw
