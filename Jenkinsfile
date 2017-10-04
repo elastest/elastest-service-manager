@@ -24,7 +24,7 @@ node('docker'){
             stage "Build image - Package"
                 // maybe use packer.io to build both container and VM images?
                 echo ("building...")
-                def myimage = docker.build("elastest/esm")
+                def myimage = docker.build("elastest/esm:0.5.0-alpha1")
 
             stage "Execute docker compose"
                 echo ("nop")
