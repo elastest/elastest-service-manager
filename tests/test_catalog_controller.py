@@ -44,7 +44,9 @@ class TestCatalogController(BaseTestCase):
             metadata=None, free=True, bindable=False
         )
         self.test_service = ServiceType(
-            id='test', name='test_svc',
+            id='test',
+            name='test_svc',
+            short_name='TS',
             description='this is a test service',
             bindable=False,
             tags=['test', 'tester'],

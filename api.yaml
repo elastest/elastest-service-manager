@@ -567,6 +567,11 @@ definitions:
           A CLI-friendly name of the service. All lowercase, no spaces.
           This MUST be globally unique within a platform marketplace.
           MUST be a non-empty string.
+      short_name:
+        type: string
+        description: >
+          the textual identifier, typically a 3 character acronym, used for ElasTest services
+          (e.g. elastest-monitoring-service is EMS)
       description:
         type: string
         description: A short description of the service. MUST be a non-empty string.
