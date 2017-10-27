@@ -314,6 +314,7 @@ class EPMBackend(Backend):
         rgrp.api_client.host = self.api_endpoint
         info = rgrp.get_resource_group_by_id(id=self.sid_to_rgid[instance_id])
 
+        info = info.to_dict()
         info['srv_inst.state.state'] = 'ok'  # what should this be from EPM? the status field?
         info['srv_inst.state.description'] = ''  # what should this be from EPM?
 

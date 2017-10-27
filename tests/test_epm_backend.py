@@ -24,7 +24,7 @@ from adapters.resources import EPMBackend
 INST_ID = 'test-id-123'
 
 
-# @skipIf(os.getenv('EPM_TESTS', 'NO') != 'YES', "EPM_TESTS not set in environment variables")
+@skipIf(os.getenv('EPM_TESTS', 'NO') != 'YES', "EPM_TESTS not set in environment variables")
 class TestEPMBackend(TestCase):
     def setUp(self):
         super().setUp()
@@ -48,7 +48,7 @@ class TestEPMBackend(TestCase):
         self.epm.delete(instance_id=INST_ID)
 
 
-# @skipIf(os.getenv('EPM_TESTS', 'NO') != 'YES', "EPM_TESTS not set in environment variables")
+@skipIf(os.getenv('EPM_TESTS', 'NO') != 'YES', "EPM_TESTS not set in environment variables")
 class TestEPMBackendWithoutSetup(TestCase):
 
     def setUp(self):
