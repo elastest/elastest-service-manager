@@ -1,11 +1,12 @@
-version: '2'
+version: '2.1'
 
 services:
   spark-master:
-    image: elastest/ebs:0.1
+    image: elastest/ebs-spark:latest
     container_name: spark-master
     ports:
       - "8080:8080"
+      - "7077:7077"
     volumes:
       - ./spark/alluxio_conf:/opt/alluxio/conf
       - ./spark/spark_conf:/opt/spark/conf
@@ -16,7 +17,7 @@ services:
 #      - elastest
 
   spark-worker:
-    image: elastest/ebs:0.1
+    image: elastest/ebs-spark:latest
     depends_on:
       - spark-master
     ports:
@@ -28,6 +29,20 @@ services:
     command: ["/usr/bin/supervisord", "--configuration=/opt/conf/slave.conf"]
 #    networks:
 #      - elastest
+
+  rest-api:
+    image: elastest/ebs:latest
+    environment:
+      - EBS_PORT=5000
+      - EBS_SPARK_MASTER_URL=http://spark-master:8080/
+    volumes:
+      - ./rest-api:/app
+    links:
+      - spark-master
+    ports:
+      - 5000:5000
+#    networks:
+#        - elastest
 
 #networks:
 #  elastest:

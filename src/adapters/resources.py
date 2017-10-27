@@ -17,6 +17,8 @@ import os
 import shutil
 from typing import Dict
 import yaml
+import tarfile
+import tempfile
 
 # XXX these docker imports are internal and not supported to be used by external processes
 from compose.cli.main import TopLevelCommand
@@ -24,6 +26,8 @@ from compose.cli.command import project_from_options
 
 # from kubernetes import client, config
 import adapters.log
+from epm_client.apis.package_api import PackageApi
+from epm_client.apis.resource_group_api import ResourceGroupApi
 
 LOG = adapters.log.get_logger(name=__name__)
 
@@ -42,6 +46,7 @@ class Backend(object):
 class DockerBackend(Backend):
     def __init__(self) -> None:
         super().__init__()
+        LOG.info('Adding DockerBackend')
         self.options = {
             "--no-deps": False,
             "--abort-on-container-exit": False,  # do not set to True
@@ -214,9 +219,120 @@ class DockerBackend(Backend):
             LOG.warn('Could not delete the directory {dir}'.format(dir=mani_dir))
 
 
+class EPMBackend(Backend):
+    def __init__(self) -> None:
+        super().__init__()
+        LOG.info('Adding EPMBackend')
+        self.sid_to_rgid = dict()  # TODO make this persistent
+        self.api_endpoint = os.environ.get('ET_EPM_API', 'http://localhost:8180/') + 'v1'
+        LOG.info('EPM API Endpoint: ' + self.api_endpoint)
+
+    def create(self, instance_id: str, content: str, c_type: str, **kwargs) -> None:
+        super().create(instance_id, content, c_type, **kwargs)
+
+        if c_type != 'epm':
+            raise NotImplementedError('The type ({type}) of cluster manager is unknown'.format(type=c_type))
+
+        # create the tar file including metadata.yaml and docker-compose.yaml
+        dirpath = tempfile.mkdtemp()
+
+        with open(dirpath + 'metadata.yaml', 'w') as out:
+            out.write('name: ' + instance_id)
+
+        # update parameters if they're supplied
+        with open(dirpath + 'docker-compose.yaml', 'w') as out:
+            out.write(content)
+
+        with tarfile.open(dirpath + 'service.tar', mode='w') as tf:
+            tf.add(dirpath + 'metadata.yaml', arcname='metadata.yaml', recursive=False)
+            tf.add(dirpath + 'docker-compose.yaml', arcname='docker-compose.yml', recursive=False)
+
+        package = PackageApi()
+        package.api_client.host = self.api_endpoint
+
+        # submit service tar to EPM
+        pkg = package.receive_package(dirpath + "service.tar")
+
+        # record the service instance ID against the resource group ID returned by EPM # TODO make persistent
+        self.sid_to_rgid[instance_id] = pkg.to_dict()['id']
+
+    def info(self, instance_id: str, **kwargs) -> Dict[str, str]:
+        super().info(instance_id, **kwargs)
+        # source: we have a resource group ID. iterate through the VDUs to return the info
+        # output:
+        #
+        # {'id': 'ca35a24a-1016-46fa-8aa4-7d52e692867e',
+        #  'name': 'test-id-123',
+        #  'networks': [{'cidr': '172.23.0.0/16',
+        #                'id': '81147bc2-d6b1-4be8-9a04-2d6ec3f3a712',
+        #                'name': 'testid123_default',
+        #                'networkId': 'c7f903db071b48dc93acb13fd91b7056733fcc4214d3063de0be6a1c6000a18c',
+        #                'poPName': 'docker-local'}],
+        #  'pops': [],
+        #  'vdus': [{'computeId': '273e094737ee316856f089f5a464560d395b9315142af6f7a3e9e77d94adb692',
+        #            'events': [],
+        #            'id': '009e77d4-254a-4752-bd3f-d8bea76475d4',
+        #            'imageName': 'elastest/ebs-spark:latest',
+        #            'ip': '172.23.0.2',
+        #            'metadata': [{'id': '43117b4b-d360-427a-92f4-89fe74e84c73',
+        #                          'key': 'PORT_BINDING',
+        #                          'value': '8080:8080/tcp'},
+        #                         {'id': '9e9c45dc-de07-410b-933e-adfd559779d5',
+        #                          'key': 'PORT_BINDING',
+        #                          'value': '7077:7077/tcp'}],
+        #            'name': '/spark-master',
+        #            'netName': 'testid123_default',
+        #            'poPName': '',
+        #            'status': None},
+        #           {'computeId': 'afee33cdd0a5ce2b26f262762a1ccfce89056ff0f839a0188c30c600b9f422a9',
+        #            'events': [],
+        #            'id': '3ed4dde7-543a-4cfe-abbc-a5352c202826',
+        #            'imageName': 'elastest/ebs:latest',
+        #            'ip': '172.23.0.4',
+        #            'metadata': [{'id': '8dd88b81-4c15-4f2f-ac45-c00a3854a163',
+        #                          'key': 'PORT_BINDING',
+        #                          'value': '5000:5000/tcp'}],
+        #            'name': '/testid123_rest-api_1',
+        #            'netName': 'testid123_default',
+        #            'poPName': '',
+        #            'status': None},
+        #           {'computeId': 'fbae3639bc32390844c578bf9e183f39c7fa0c63686df08aa764839908c7bcc7',
+        #            'events': [],
+        #            'id': '1ae0af11-ff1e-4559-a574-d826f0799a67',
+        #            'imageName': 'elastest/ebs-spark:latest',
+        #            'ip': '172.23.0.3',
+        #            'metadata': [{'id': 'dc70c8ea-b470-4e76-bdd1-b5741a8c59d5',
+        #                          'key': 'PORT_BINDING',
+        #                          'value': ':8081/tcp'}],
+        #            'name': '/testid123_spark-worker_1',
+        #            'netName': 'testid123_default',
+        #            'poPName': '',
+        #            'status': None}]}
+
+        # XXX not enough to satisfy what's currently sent to end-user/TORM
+        rgrp = ResourceGroupApi()
+        rgrp.api_client.host = self.api_endpoint
+        info = rgrp.get_resource_group_by_id(id=self.sid_to_rgid[instance_id])
+
+        info['srv_inst.state.state'] = 'ok'  # what should this be from EPM? the status field?
+        info['srv_inst.state.description'] = ''  # what should this be from EPM?
+
+        return info
+
+    def delete(self, instance_id: str, **kwargs) -> None:
+        super().delete(instance_id, **kwargs)
+        # delete the resource group (created by package) by ID will remove the containers
+        # XXX note this is a synchronous operation... potential for proxy timeouts
+        package = PackageApi()
+        package.api_client.host = self.api_endpoint
+        LOG.info('Deleting the package/resource group ID: ' + self.sid_to_rgid[instance_id])
+        package.delete_package(id=self.sid_to_rgid[instance_id])
+
+
 class KubernetesBackend(Backend):
     def __init__(self) -> None:
         super().__init__()
+        LOG.info('Adding KubernetesBackend')
         # self.directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))
         # prefix = "k8s_"
         # Identify all kubernetes files to process
@@ -249,6 +365,7 @@ class KubernetesBackend(Backend):
 class DummyBackend(Backend):
     def __init__(self) -> None:
         super().__init__()
+        LOG.info('Adding DummyBackend')
 
     def create(self, instance_id: str, content: str, c_type: str, **kwargs) -> None:
         super().create(instance_id, content, c_type)
@@ -314,6 +431,7 @@ class ResourceManager(Backend):
             'docker': DockerBackend(),
             'kubernetes': KubernetesBackend(),
             'dummy': DummyBackend(),
+            'epm': EPMBackend(),
         }
         # set an alias to the docker-compose driver
         LOG.info('Adding docker-compose alias to DockerBackend')

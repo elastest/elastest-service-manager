@@ -8,3 +8,4 @@ pykube
 daiquiri
 healthcheck
 tornado
+git+https://github.com/mpauls/epm-client-python.git

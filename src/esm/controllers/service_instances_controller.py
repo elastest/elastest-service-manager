@@ -289,7 +289,7 @@ def service_bind(instance_id, binding_id, binding):
             binding = BindingRequest.from_dict(connexion.request.get_json())
         else:
             return "Supplied body content is not or is mal-formed JSON", 400
-        return 'Not implemented :-(', 501
+        return 'Not implemented. Pending selection and integration of an ET identity service', 501
 
 
 def service_unbind(instance_id, binding_id, service_id, plan_id):
@@ -313,7 +313,7 @@ def service_unbind(instance_id, binding_id, service_id, plan_id):
     if not ok:
         return message, code
     else:
-        return 'Not implemented :-(', 501
+        return 'Not implemented. Pending selection and integration of an ET identity service', 501
 
 
 def update_service_instance(instance_id, plan, accept_incomplete=None):
