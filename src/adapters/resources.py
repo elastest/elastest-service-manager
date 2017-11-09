@@ -32,6 +32,9 @@ from epm_client.apis.resource_group_api import ResourceGroupApi
 LOG = adapters.log.get_logger(name=__name__)
 
 
+# TODO better exception handling
+
+
 class Backend(object):
     def create(self, instance_id: str, content: str, c_type: str, **kwargs) -> None:
         pass
@@ -223,7 +226,7 @@ class EPMBackend(Backend):
     def __init__(self) -> None:
         super().__init__()
         LOG.info('Adding EPMBackend')
-        self.sid_to_rgid = dict()  # TODO make this persistent
+        self.sid_to_rgid = dict()  # TODO make this persistent... better that this done in the caller of the method
         self.api_endpoint = os.environ.get('ET_EPM_API', 'http://localhost:8180/') + 'v1'
         LOG.info('EPM API Endpoint: ' + self.api_endpoint)
 
@@ -254,6 +257,7 @@ class EPMBackend(Backend):
         pkg = package.receive_package(dirpath + "service.tar")
 
         # record the service instance ID against the resource group ID returned by EPM # TODO make persistent
+        # XXX better that this done in the caller of the method
         self.sid_to_rgid[instance_id] = pkg.to_dict()['id']
 
     def info(self, instance_id: str, **kwargs) -> Dict[str, str]:
@@ -312,6 +316,8 @@ class EPMBackend(Backend):
         # XXX not enough to satisfy what's currently sent to end-user/TORM
         rgrp = ResourceGroupApi()
         rgrp.api_client.host = self.api_endpoint
+
+        # XXX better that this done in the caller of the method
         info = rgrp.get_resource_group_by_id(id=self.sid_to_rgid[instance_id])
 
         info = info.to_dict()
@@ -327,6 +333,8 @@ class EPMBackend(Backend):
         package = PackageApi()
         package.api_client.host = self.api_endpoint
         LOG.info('Deleting the package/resource group ID: ' + self.sid_to_rgid[instance_id])
+
+        # XXX better that this done in the caller of the method
         package.delete_package(id=self.sid_to_rgid[instance_id])
 
 
