@@ -74,7 +74,7 @@ class DockerBackend(Backend):
         self.manifest_cache = '/tmp'
 
     def create(self, instance_id: str, content: str, c_type: str, **kwargs) -> None:
-        if c_type == 'docker-compose':
+        if c_type == 'docker-compose':  # TODO: this is not needed. just call the compose directly
             LOG.warn('WARNING: this is for local-only deployments.')
             return self._create_compose(inst_id=instance_id, content=content, **kwargs)
         else:
@@ -136,14 +136,8 @@ class DockerBackend(Backend):
 
         LOG.debug('info from: {compo}'.format(compo=mani_dir + '/docker-compose.yml'))
         project = project_from_options(mani_dir, self.options)
-        # cmd = TopLevelCommand(project)
 
         containers = project.containers(service_names=self.options['SERVICE'], stopped=True)
-
-        # containers = sorted(
-        #     self.project.containers(service_names=options['SERVICE'], stopped=True) +
-        #     self.project.containers(service_names=options['SERVICE'], one_off=OneOffFilter.only),
-        #     key=attrgetter('name'))
 
         info = dict()
         for c in containers:
@@ -321,10 +315,16 @@ class EPMBackend(Backend):
         info = rgrp.get_resource_group_by_id(id=self.sid_to_rgid[instance_id])
 
         info = info.to_dict()
-        info['srv_inst.state.state'] = 'ok'  # what should this be from EPM? the status field?
-        info['srv_inst.state.description'] = ''  # what should this be from EPM?
+        me = dict()
 
-        return info
+        for v in info['vdus']:
+            for mi in v['metadata']:
+                me[(v['name'][1:-1] + mi['key']).lower()] = mi['value']
+
+        me['srv_inst.state.state'] = 'ok'  # what should this be from EPM? the status field?
+        me['srv_inst.state.description'] = ''  # what should this be from EPM?
+
+        return me
 
     def delete(self, instance_id: str, **kwargs) -> None:
         super().delete(instance_id, **kwargs)
@@ -384,26 +384,34 @@ class DummyBackend(Backend):
         super().info(instance_id)
         LOG.info('DummyBackend driver: info called')
 
-        info = {
-            'testid123_spark-worker_1_image_name': 'elastest/ebs-spark-base:0.5.0',
-            'testid123_spark-worker_1_image_id':
-                'sha256:138a91572bd6bdce7d7b49a44b91a4caf4abdf1a75f105991e18be971353d5cb',
-            'testid123_spark-worker_1_8080/tcp': None,
-            'testid123_spark-worker_1_8081/tcp/HostIp': '0.0.0.0',
-            'testid123_spark-worker_1_8081/tcp/HostPort': '32784',
-            'testid123_spark-worker_1_cmd': '/usr/bin/supervisord --configuration=/opt/conf/slave.conf',
-            'testid123_spark-worker_1_state': 'Up',
-            'spark-master_image_name': 'elastest/ebs-spark-base:0.5.0',
-            'spark-master_image_id': 'sha256:138a91572bd6bdce7d7b49a44b91a4caf4abdf1a75f105991e18be971353d5cb',
-            'spark-master_8080/tcp/HostIp': '0.0.0.0',
-            'spark-master_8080/tcp/HostPort': '8080',
-            'spark-master_cmd': '/usr/bin/supervisord --configuration=/opt/conf/master.conf',
-            'spark-master_state': 'Up',
-            'srv_inst.state.state': 'succeeded',
-            'srv_inst.state.description': 'The service instance has been created successfully'
-        }
+        info = {}
+
+        if 'data_source' in kwargs:
+            with open(kwargs['data_source_path'], 'r') as ds:
+                import json
+                info = json.load(ds)
+        else:
+            info = {
+                'testid123_spark-worker_1_image_name': 'elastest/ebs-spark-base:0.5.0',
+                'testid123_spark-worker_1_image_id':
+                    'sha256:138a91572bd6bdce7d7b49a44b91a4caf4abdf1a75f105991e18be971353d5cb',
+                'testid123_spark-worker_1_8080/tcp': None,
+                'testid123_spark-worker_1_8081/tcp/HostIp': '0.0.0.0',
+                'testid123_spark-worker_1_8081/tcp/HostPort': '32784',
+                'testid123_spark-worker_1_cmd': '/usr/bin/supervisord --configuration=/opt/conf/slave.conf',
+                'testid123_spark-worker_1_state': 'Up',
+                'spark-master_image_name': 'elastest/ebs-spark-base:0.5.0',
+                'spark-master_image_id': 'sha256:138a91572bd6bdce7d7b49a44b91a4caf4abdf1a75f105991e18be971353d5cb',
+                'spark-master_8080/tcp/HostIp': '0.0.0.0',
+                'spark-master_8080/tcp/HostPort': '8080',
+                'spark-master_cmd': '/usr/bin/supervisord --configuration=/opt/conf/master.conf',
+                'spark-master_state': 'Up',
+                'srv_inst.state.state': 'succeeded',
+                'srv_inst.state.description': 'The service instance has been created successfully'
+            }
 
         # TODO FIXME below until return is duplicated code!!!!
+        # TODO: put in super class
         states = set([v for k, v in info.items() if k.endswith('state')])
 
         # states from compose.container.Container: 'Paused', 'Restarting', 'Ghost', 'Up', 'Exit %s'
