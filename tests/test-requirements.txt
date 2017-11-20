@@ -6,3 +6,4 @@ py>=1.4.31
 randomize>=0.13
 tox
 mypy
+tox-docker

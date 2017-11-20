@@ -71,8 +71,8 @@ class Store(object):
 
 class MongoDBStore(Store):
 
-    def __init__(self, host: str) -> None:
-        _client = MongoClient(host, 27017)
+    def __init__(self, host: str, port=27017) -> None:
+        _client = MongoClient(host, port)
         self.ESM_DB = _client.esm
         LOG.info('Using the MongoDBStore.')
         LOG.info('MongoDBStore is persistent.')
