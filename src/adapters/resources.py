@@ -74,37 +74,31 @@ class DockerBackend(Backend):
         self.manifest_cache = '/tmp'
 
     def create(self, instance_id: str, content: str, c_type: str, **kwargs) -> None:
-        if c_type == 'docker-compose':  # TODO: this is not needed. just call the compose directly
-            LOG.warn('WARNING: this is for local-only deployments.')
-            return self._create_compose(inst_id=instance_id, content=content, **kwargs)
-        else:
-            raise NotImplementedError('The type ({type}) of cluster manager is unknown'.format(type=c_type))
-
-    def _create_compose(self, inst_id: str, content: str, **kwargs) -> None:
         """
         This creates a set of containers using docker compose.
         Note: the use of the docker compose python module is unsupported by docker inc.
         :param content: the docker compose file as a string
         :return:
         """
+        if c_type != 'docker-compose':  # TODO: this is not needed. just call the compose directly
+            raise NotImplementedError('The type ({type}) of cluster manager is unknown'.format(type=c_type))
 
         # when we get the manifest, we have to dump it to a temporary file
         # to allow for multiple stack instances we need to have multiple projects!
         # this means multiple directories
-        mani_dir = self.manifest_cache + '/' + inst_id
+        mani_dir = self.manifest_cache + '/' + instance_id
 
         if not os.path.exists(mani_dir):
             os.makedirs(mani_dir)
         else:
             LOG.info('The instance is already running with the following project: {mani_dir}'.format(mani_dir=mani_dir))
-            LOG.warn('Content in this directory will be overwritten.')
+            LOG.warning('Content in this directory will be overwritten.')
             # XXX shouldn't this raise an exception?
 
         # can supply external parameters here...
         # parameters is the name set in the OSBA spec for additional parameters supplied on provisioning
         # if none supplied, we use an empty dict
         # add optionally supplied parameters as environment variables
-        # XXX this is a naive approach and should be revisited
         parameters = kwargs.get('parameters', dict())
         env_list = list()
         for k, v in parameters.items():
@@ -115,7 +109,6 @@ class DockerBackend(Backend):
             m = yaml.load(content)
             for k, v in m['services'].items():
                 v['environment'] = env_list
-            # yaml.Dumper.ignore_aliases = True
             content = yaml.dump(m)
 
         LOG.debug('writing to: {compo}'.format(compo=mani_dir + '/docker-compose.yml'))
@@ -125,81 +118,94 @@ class DockerBackend(Backend):
 
         project = project_from_options(mani_dir, self.options)
         cmd = TopLevelCommand(project)
-        cmd.up(self.options)  # WARNING: this method can call sys.exit() but only if --abort-on-container-exit is True
+        cmd.up(self.options)
 
     def info(self, instance_id: str, **kwargs) -> Dict[str, str]:
         mani_dir = self.manifest_cache + '/' + instance_id
 
         if not os.path.exists(mani_dir):
-            LOG.warn('requested directory does not exist: {mani_dir}'.format(mani_dir=mani_dir))
+            LOG.warning('requested directory does not exist: {mani_dir}'.format(mani_dir=mani_dir))
             return {}
 
         LOG.debug('info from: {compo}'.format(compo=mani_dir + '/docker-compose.yml'))
         project = project_from_options(mani_dir, self.options)
-
         containers = project.containers(service_names=self.options['SERVICE'], stopped=True)
+
+        # rg = docker_handler.convert_to_resource_group(container_ids, resource_group_name=package_name)
+        # for id in container_ids:
+        #     container = client.containers.get(id)
 
         info = dict()
         for c in containers:
-            LOG.debug('{name} container image name: {img_name}'
-                      .format(name=c.name, img_name=c.image_config['RepoTags'][0]))
-            info[c.name+'_image_name'] = c.image_config['RepoTags'][0]
-            LOG.debug('{name} container image: {img}'.format(name=c.name, img=c.image))
-            info[c.name + '_image_id'] = c.image
+            # basic info...
+            name = c.name
+            if name.endswith('_1'): name = c.name[0:-2]
+            info[name + '_image_name'] = c.image_config['RepoTags'][0]
+            info[name + '_image_id'] = c.image
+            info[name + '_net_name'] = c.dictionary["HostConfig"]["NetworkMode"]
+            info[name + '_cmd'] = c.human_readable_command
+            info[name + '_state'] = c.human_readable_state
+            info = {**info, **self.container_attrs(name, c.dictionary)}
 
-            LOG.debug(c.ports)
-            for k, v in c.ports.items():
-                if isinstance(v, list):
-                    for i in v:
-                        info[c.name + '_' + k + '/HostIp'] = i['HostIp']
-                        info[c.name + '_' + k + '/HostPort'] = i['HostPort']
-                else:
-                    info[c.name + '_' + k] = v
-
-            LOG.debug(c.environment)
+            # environment info...
             for k, v in c.environment.items():
-                info[c.name + '_environment_' + k] = v
+                info[name + '_environment_' + k] = v
 
-            # add the IP address of the container
-            # XXX assumes there's only 1 IP address assigned to container
+            # ip address info...
+            # add the IP address of the container, assumes there's only 1 IP address assigned to container
             ip = [value.get('IPAddress') for value in c.dictionary['NetworkSettings']['Networks'].values()]
-            info[c.name + '_' + 'Ip'] = ip[0]
+            info[name + '_' + 'Ip'] = ip[0]
 
-            LOG.debug('{name} container command: {cmd}'.format(name=c.name, cmd=c.human_readable_command))
-            info[c.name + '_cmd'] = c.human_readable_command
+        reconcile_state(info)
 
-            LOG.debug('{name} container state: {state}'.format(name=c.name, state=c.human_readable_state))
-            info[c.name + '_state'] = c.human_readable_state
-
-        states = set([v for k, v in info.items() if k.endswith('state')])
-
-        # states from compose.container.Container: 'Paused', 'Restarting', 'Ghost', 'Up', 'Exit %s'
-        # states for OSBA: in progress, succeeded, and failed
-        for state in states:
-            if state.startswith('Exit'):
-                # there's been an error with docker
-                info['srv_inst.state.state'] = 'failed'
-                info['srv_inst.state.description'] = \
-                    'There was an error in creating the instance {error}'.format(error=state)
-                # return 'Error with docker: {error}'.format(error=state), 500
-
-        if len(states) == 1:  # if all states of the same value
-            if states.pop() == 'Up':  # if running: Up
-                info['srv_inst.state.state'] = 'succeeded'
-                info['srv_inst.state.description'] = 'The service instance has been created successfully'
-        else:
-            # still waiting for completion
-            info['srv_inst.state.state'] = 'in progress'
-            info['srv_inst.state.description'] = 'The service instance is being created.'
-
+        LOG.debug('Stack\'s attrs:')
+        LOG.debug(info)
         return info
+
+    def container_attrs(self, name, data):
+        out = dict()
+        for x in data:
+            self._container_attrs(name, data, [x], out)
+        return out
+
+    def _container_attrs(self, name, data, names, out):
+        a = data
+        for x in names:
+            a = a[x]
+
+        if isinstance(a, str):
+            key = names[0]
+            for n in range(1, len(names)):
+                key += "_" + str(names[n])
+            out[name + '_'+ key.lower()] = str(a).strip()
+
+        if isinstance(a, list) and len(a) > 0:
+            if isinstance(a[0], str):
+                value = ""
+                key = names[0]
+                for n in range(1, len(names)):
+                    key += "_" + str(names[n])
+                for v in a:
+                    value += v + ";"
+                out[name + '_'+ key.lower()] = str(a).strip()
+            else:
+                key = names[0]
+                for n in range(1, len(names)):
+                    key += "_" + str(names[n])
+                out[name + '_'+ key.lower()] = str(a).strip()
+
+        if isinstance(a, dict):
+            for n in a:
+                new_names = []
+                new_names.extend(names)
+                new_names.append(n)
+                self._container_attrs(name, data, new_names, out)
 
     def delete(self, instance_id: str, **kwargs) -> None:
         mani_dir = self.manifest_cache + '/' + instance_id
 
         if not os.path.exists(mani_dir):
-            LOG.warn('requested directory does not exist: {mani_dir}'.format(mani_dir=mani_dir))
-            # raise Exception('requested directory does not exist: {mani_dir}'.format(mani_dir=mani_dir))
+            LOG.warning('requested directory does not exist: {mani_dir}'.format(mani_dir=mani_dir))
             return
 
         self.options["--force"] = True
@@ -213,7 +219,27 @@ class DockerBackend(Backend):
             shutil.rmtree(mani_dir)
         except PermissionError:
             # Done to let travis pass
-            LOG.warn('Could not delete the directory {dir}'.format(dir=mani_dir))
+            LOG.warning('Could not delete the directory {dir}'.format(dir=mani_dir))
+
+
+def reconcile_state(info):
+    states = set([v for k, v in info.items() if k.endswith('state')])
+    # states from compose.container.Container: 'Paused', 'Restarting', 'Ghost', 'Up', 'Exit %s'
+    # states for OSBA: in progress, succeeded, and failed
+    for state in states:
+        if state.startswith('Exit'):
+            # there's been an error with docker
+            info['srv_inst.state.state'] = 'failed'
+            info['srv_inst.state.description'] = \
+                'There was an error in creating the instance {error}'.format(error=state)
+    if len(states) == 1:  # if all states of the same value
+        if states.pop() == 'Up':  # if running: Up
+            info['srv_inst.state.state'] = 'succeeded'
+            info['srv_inst.state.description'] = 'The service instance has been created successfully'
+    else:
+        # still waiting for completion
+        info['srv_inst.state.state'] = 'in progress'
+        info['srv_inst.state.description'] = 'The service instance is being created.'
 
 
 class EPMBackend(Backend):
@@ -306,25 +332,47 @@ class EPMBackend(Backend):
         #            'netName': 'testid123_default',
         #            'poPName': '',
         #            'status': None}]}
-
-        # XXX not enough to satisfy what's currently sent to end-user/TORM
         rgrp = ResourceGroupApi()
         rgrp.api_client.host = self.api_endpoint
 
-        # XXX better that this done in the caller of the method
-        info = rgrp.get_resource_group_by_id(id=self.sid_to_rgid[instance_id])
+        # TODO better that sid_to_rgid done in the caller of the method
+        epm_info = rgrp.get_resource_group_by_id(id=self.sid_to_rgid[instance_id])
 
-        info = info.to_dict()
-        me = dict()
+        epm_info = epm_info.to_dict()
+        info = dict()
+        container_names = []
 
-        for v in info['vdus']:
+        for v in epm_info['vdus']:
             for mi in v['metadata']:
-                me[(v['name'][1:-1] + mi['key']).lower()] = mi['value']
+                # EPM prepends '/' to container names. remove this.
+                name = v['name'][1:]
+                # docker provides containers name postpended with '_1' however EPM does not. remove this.
+                if name.endswith('_1'): name = name[0:-2]
+                container_names.append(name)
+                info[(name + '_' + mi['key']).lower()] = mi['value']
 
-        me['srv_inst.state.state'] = 'ok'  # what should this be from EPM? the status field?
-        me['srv_inst.state.description'] = ''  # what should this be from EPM?
+        # adds compat with internal docker impl.
+        for name in container_names:
+            info[name + '_image_name'] = info[name + '_config_image']
+            info[name + '_image_id'] = info[name + '_image']
+            info[name + '_net_name'] = info[name + '_hostconfig_networkmode']
+            info[name + '_cmd'] = info[name + '_config_cmd']
+            info[name + '_state'] = info[name + '_state_status']
 
-        return me
+            # set IP address of container as per local docker driver
+            info[name + '_Ip'] = info[name + '_networksettings_networks_' +
+                                      info[name + '_hostconfig_networkmode'] + '_ipaddress']
+
+            # make environement vars the same as local docker driver
+            for params in info[name + '_config_env'].split(';')[:-1]:
+                pv = params.split('=')
+                info[name + '_environment_' + pv[0]] = pv[1]
+
+        reconcile_state(info)
+        LOG.debug('Stack\'s attrs:')
+        LOG.debug(info)
+
+        return info
 
     def delete(self, instance_id: str, **kwargs) -> None:
         super().delete(instance_id, **kwargs)
