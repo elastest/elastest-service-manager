@@ -39,11 +39,6 @@ import queue
 
 from pykafka import KafkaClient
 
-# daiquiri.output.Syslog()
-# daiquiri.output.File(directory="/var/log")
-# log_outputs = [daiquiri.output.STDERR]
-# daiquiri.setup( outputs=log_outputs)
-
 
 def get_logger(name=None, log_level=logging.DEBUG):
     logger = logging.getLogger(name)
