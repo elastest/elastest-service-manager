@@ -4,6 +4,7 @@ node('docker'){
         echo("the node is up")
         echo("Building docker-compose-py-siblings locally")
         git 'https://github.com/elastest/ci-images'
+        sh "ls"
         def mycontainer = docker.build('elastest/ci-docker-compose-py-siblings:latest -f ci-images/ci-docker-compose-py-siblings/Dockerfile')
         // mycontainer.pull() // make sure we have the latest available from Docker Hub
         
