@@ -2,8 +2,10 @@ node('docker'){
     stage "Container Prep"
         
         echo("the node is up")
-        def mycontainer = docker.image('elastest/ci-docker-compose-py-siblings:latest')
-        mycontainer.pull() // make sure we have the latest available from Docker Hub
+        echo("Building docker-compose-py-siblings locally")
+        git 'https://github.com/elastest/ci-images'
+        def mycontainer = docker.build('elastest/ci-docker-compose-py-siblings:latest -f ci-docker-compose-py-siblings/Dockerfile')
+        // mycontainer.pull() // make sure we have the latest available from Docker Hub
         
         mycontainer.inside("-u jenkins -v /var/run/docker.sock:/var/run/docker.sock:rw") {
             git 'https://github.com/elastest/elastest-service-manager'
