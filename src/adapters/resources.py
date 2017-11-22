@@ -80,7 +80,7 @@ class DockerBackend(Backend):
         :param content: the docker compose file as a string
         :return:
         """
-        if c_type != 'docker-compose':  # TODO: this is not needed. just call the compose directly
+        if c_type != 'docker-compose':
             raise NotImplementedError('The type ({type}) of cluster manager is unknown'.format(type=c_type))
 
         # when we get the manifest, we have to dump it to a temporary file
@@ -276,8 +276,8 @@ class EPMBackend(Backend):
         # submit service tar to EPM
         pkg = package.receive_package(dirpath + "service.tar")
 
-        # record the service instance ID against the resource group ID returned by EPM # TODO make persistent
-        # XXX better that this done in the caller of the method
+        # record the service instance ID against the resource group ID returned by EPM
+        # TODO make persistent
         self.sid_to_rgid[instance_id] = pkg.to_dict()['id']
 
     def info(self, instance_id: str, **kwargs) -> Dict[str, str]:
@@ -458,28 +458,7 @@ class DummyBackend(Backend):
                 'srv_inst.state.description': 'The service instance has been created successfully'
             }
 
-        # TODO FIXME below until return is duplicated code!!!!
-        # TODO: put in super class
-        states = set([v for k, v in info.items() if k.endswith('state')])
-
-        # states from compose.container.Container: 'Paused', 'Restarting', 'Ghost', 'Up', 'Exit %s'
-        # states for OSBA: in progress, succeeded, and failed
-        for state in states:
-            if state.startswith('Exit'):
-                # there's been an error with docker
-                info['srv_inst.state.state'] = 'failed'
-                info['srv_inst.state.description'] = 'There was an error in creating the instance {error}'.format(
-                    error=state)
-                # return 'Error with docker: {error}'.format(error=state), 500
-
-        if len(states) == 1:  # if all states of the same value
-            if states.pop() == 'Up':  # if running: Up
-                info['srv_inst.state.state'] = 'succeeded'
-                info['srv_inst.state.description'] = 'The service instance has been created successfully'
-        else:
-            # still waiting for completion
-            info['srv_inst.state.state'] = 'in progress'
-            info['srv_inst.state.description'] = 'The service instance is being created.'
+        reconcile_state(info)
 
         LOG.info('Dummy data:\n{dummy}'.format(dummy=info))
         return info

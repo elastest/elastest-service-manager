@@ -114,6 +114,20 @@ class TestServiceInstancesController(BaseTestCase):
         response = self._send_service_request()
         self.assertEqual(response.status_code, 409)
 
+    def test_create_instance_with_nonexistant_plan(self):
+        service = ServiceRequest(service_id=self.test_service.id, plan_id='WRONG_ONE',
+                                 organization_guid='org', space_guid='space')
+        query_string = [('accept_incomplete', False)]
+        headers = [('X_Broker_Api_Version', '2.12')]
+        print('Sending service instantiation content of:\n {content}'.format(content=json.dumps(service)))
+        response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id=self.instance_id),
+                                    method='PUT',
+                                    data=json.dumps(service),
+                                    content_type='application/json',
+                                    query_string=query_string,
+                                    headers=headers)
+        self.assert404(response, "Response body is : " + response.data.decode('utf-8'))
+
     def test_create_service_instance_with_params(self):
         """
         Test case for create_service_instance

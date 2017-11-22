@@ -17,8 +17,6 @@ import connexion
 
 
 def _version_ok():
-    # TODO create a decorator out of this
-
     version_requested = connexion.request.headers.get('X-Broker-Api-Version', None)
 
     if not version_requested:

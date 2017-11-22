@@ -31,8 +31,6 @@ from esm.models.update_operation_response import UpdateOperationResponse
 from esm.models.update_request import UpdateRequest
 
 
-# TODO need a converged state model for the SM - see info methods of backend
-
 
 def create_service_instance(instance_id, service, accept_incomplete=None):
     """
@@ -68,7 +66,6 @@ def create_service_instance(instance_id, service, accept_incomplete=None):
         # store the ID along with refs to service, plan and manifest
 
         # get the manifest for the service/plan
-        # TODO some validation required here to ensure it's the right svc/plan
         svc_type = STORE.get_service(service.service_id)[0]
         if svc_type is None:
             return 'Unrecognised service requested to be instantiated', 404
@@ -76,7 +73,7 @@ def create_service_instance(instance_id, service, accept_incomplete=None):
         plans = svc_type.plans
         plan = [p for p in plans if p.id == service.plan_id]
         if len(plan) <= 0:
-            return 'no plan found.', 404
+            return 'Plan {p_id} found.'.format(p_id=service.plan_id), 404
 
         mani = STORE.get_manifest(plan_id=plan[0].id)
         if len(mani) <= 0:
