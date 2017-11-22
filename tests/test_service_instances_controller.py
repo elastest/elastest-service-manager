@@ -20,7 +20,7 @@ import inspect
 
 import adapters.log
 import os
-from adapters.datasource import STORE
+from adapters.store import STORE
 from esm.models.manifest import Manifest
 from esm.models.plan import Plan
 from esm.models.service_type import ServiceType

@@ -22,7 +22,7 @@ import inspect
 from flask import json
 
 import adapters.log
-from adapters.datasource import STORE
+from adapters.store import STORE
 from esm.models.manifest import Manifest
 # from esm.models.catalog import Catalog
 # from esm.models.empty import Empty

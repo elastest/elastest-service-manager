@@ -15,7 +15,7 @@
 
 import connexion
 
-from adapters.datasource import STORE
+from adapters.store import STORE
 from adapters.resources import RM
 from esm.controllers import _version_ok
 

@@ -19,9 +19,9 @@ import json
 from unittest import TestCase
 from unittest import skipIf
 
-from adapters.datasource import InMemoryStore
-from adapters.datasource import MongoDBStore
-from adapters.datasource import Store
+from adapters.store import InMemoryStore
+from adapters.store import MongoDBStore
+from adapters.store import Store
 
 from esm.models.plan import Plan
 from esm.models.service_type import ServiceType

@@ -17,7 +17,7 @@ import connexion
 from flask import request, Response
 from functools import wraps
 
-from adapters.datasource import STORE
+from adapters.store import STORE
 from esm.controllers import _version_ok
 
 from esm.models.catalog import Catalog

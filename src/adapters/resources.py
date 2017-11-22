@@ -70,8 +70,7 @@ class DockerBackend(Backend):
             "--scale": [],  # don't need this but have to supply
         }
 
-        # TODO this location needs to be configurable
-        self.manifest_cache = '/tmp'
+        self.manifest_cache = os.environ.get('ESM_TMP_DIR', tempfile.gettempdir())
 
     def create(self, instance_id: str, content: str, c_type: str, **kwargs) -> None:
         """

@@ -20,13 +20,14 @@ from pymongo import MongoClient
 
 import adapters.log
 
-from esm.models.last_operation import LastOperation
-from esm.models.manifest import Manifest
-from esm.models.service_instance import ServiceInstance
-from esm.models.service_type import ServiceType
+from esm.models import LastOperation
+from esm.models import Manifest
+from esm.models import ServiceInstance
+from esm.models import ServiceType
 
 
 # TODO implement exception handling
+# TODO integrate MySQLStore here
 
 LOG = adapters.log.get_logger(name=__name__)
 

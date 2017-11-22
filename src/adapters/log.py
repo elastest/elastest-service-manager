@@ -76,7 +76,6 @@ class SentinelLogHandler(logging.Handler):
     def __init__(self, hosts_list, topic, series_name, batch_size=10, backup_file=None):
         logging.Handler.__init__(self)
         # Backup log file for errors
-        # TODO make optional
         self.fail_fh = backup_file
         if self.fail_fh is not None:
             self.fail_fh = open(backup_file, 'w')
@@ -149,7 +148,8 @@ class SentinelLogHandler(logging.Handler):
             self.fail_fh.write(msg + "\n")
 
     def close(self):
-        self.fail_fh.close()
+        if self.fail_fh:
+            self.fail_fh.close()
         self.producer.stop()
         logging.Handler.close(self)
 
