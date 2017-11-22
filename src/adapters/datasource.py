@@ -251,14 +251,14 @@ class MongoDBStore(Store):
             self.ESM_DB.last_operations.delete_many({})
 
 
-class DotDict(dict):
-    """dot.notation access to dictionary attributes"""
-    __getattr__ = dict.get
-    __setattr__ = dict.__setitem__
-    __delattr__ = dict.__delitem__
-
-
 class InMemoryStore(Store):
+
+    # inner class as it's not used anywhere outside this class
+    class DotDict(dict):
+        """dot.notation access to dictionary attributes"""
+        __getattr__ = dict.get
+        __setattr__ = dict.__setitem__
+        __delattr__ = dict.__delitem__
 
     def __init__(self) -> None:
         LOG.info('Using the InMemoryStore.')
@@ -268,7 +268,7 @@ class InMemoryStore(Store):
         self.ESM_DB['instances'] = list()
         self.ESM_DB['manifests'] = list()
         self.ESM_DB['last_operations'] = list()
-        self.ESM_DB = DotDict(self.ESM_DB)
+        self.ESM_DB = self.DotDict(self.ESM_DB)
 
     def get_service(self, service_id: str=None) -> List[ServiceType]:
         if not service_id:
