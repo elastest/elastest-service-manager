@@ -104,7 +104,9 @@ class MongoDBStore(Store):
             if not result.acknowledged:
                 return 'there was an issue saving the supplied service type to the DB', 500
         else:
-            return 'the service already exists in the catalog. you should resubmit with a different service.', 409
+            self.delete_service(service_id=service.id)
+            self.add_service(service=service)
+            return 'the service has been updated.', 200
         return tuple()
 
     def delete_service(self, service_id: str=None) -> None:
@@ -281,9 +283,12 @@ class InMemoryStore(Store):
             LOG.info('Adding a new service type to the catalog. '
                      'Content supplied: {content}'.format(content=service.to_str()))
         else:
-            LOG.warn('A duplicate service type was attempted to be registered. '
-                     'Ignoring the request. '
-                     'Content supplied:\n{content}'.format(content=service.to_str()))
+            # get the service in the array and replace with supplied service
+            LOG.info('Service to be updated with:\n{content}'.format(content=service.to_str()))
+            srv = [s for s in self.ESM_DB.services if s.id == service.id][0]
+            self.ESM_DB.services.remove(srv)
+            self.ESM_DB.services.append(service)
+
 
     def delete_service(self, service_id: str=None) -> None:
         if not service_id:

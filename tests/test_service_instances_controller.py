@@ -31,14 +31,6 @@ from flask import json
 from esm.models.update_request import UpdateRequest
 from . import BaseTestCase
 
-# from esm.models.binding_response import BindingResponse
-# from esm.models.empty import Empty
-# from esm.models.error import Error
-# from esm.models.last_operation import LastOperation
-# from esm.models.service_response import ServiceResponse
-# from esm.models.update_operation_response import UpdateOperationResponse
-# from six import BytesIO
-
 
 LOG = adapters.log.get_logger(name=__name__)
 
@@ -90,16 +82,14 @@ class TestServiceInstancesController(BaseTestCase):
         self.store.delete_service_instance()
         self.store.delete_last_operation()
 
-    def test_create_service_instance(self):
-        """
-        Test case for create_service_instance
+    def test_request_no_version_header(self):
+        response = self._send_service_request(headers=[])
+        self.assert400(response, "Response body is : " + response.data.decode('utf-8'))
 
-        Provisions a service instance
-        """
+    def _send_service_request(self, headers=[('X_Broker_Api_Version', '2.12')], params=None):
         service = ServiceRequest(service_id=self.test_service.id, plan_id=self.test_plan.id,
-                                 organization_guid='org', space_guid='space')
+                                 organization_guid='org', space_guid='space', parameters=params)
         query_string = [('accept_incomplete', False)]
-        headers = [('X_Broker_Api_Version', '2.12')]
         print('Sending service instantiation content of:\n {content}'.format(content=json.dumps(service)))
         response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id=self.instance_id),
                                     method='PUT',
@@ -107,7 +97,22 @@ class TestServiceInstancesController(BaseTestCase):
                                     content_type='application/json',
                                     query_string=query_string,
                                     headers=headers)
+        return response
+
+    def test_create_service_instance(self):
+        """
+        Test case for create_service_instance
+
+        Provisions a service instance
+        """
+        response = self._send_service_request()
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+
+    def test_create_instance_with_same_id(self):
+        # send the same request twice
+        self._send_service_request()
+        response = self._send_service_request()
+        self.assertEqual(response.status_code, 409)
 
     def test_create_service_instance_with_params(self):
         """
@@ -119,19 +124,7 @@ class TestServiceInstancesController(BaseTestCase):
         params = dict()
         params['TEST'] = 'value'
         params['TEST1'] = 'value1'
-
-        service = ServiceRequest(service_id=self.test_service.id, plan_id=self.test_plan.id,
-                                 organization_guid='org', space_guid='space', parameters=params)
-
-        query_string = [('accept_incomplete', False)]
-        headers = [('X_Broker_Api_Version', '2.12')]
-        print('Sending service instantiation content of:\n {content}'.format(content=json.dumps(service)))
-        response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id=self.instance_id),
-                                    method='PUT',
-                                    data=json.dumps(service),
-                                    content_type='application/json',
-                                    query_string=query_string,
-                                    headers=headers)
+        response = self._send_service_request(params=params)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
     def test_deprovision_service_instance(self):
@@ -141,22 +134,21 @@ class TestServiceInstancesController(BaseTestCase):
         Deprovisions a service instance.
         """
 
-        service = ServiceRequest(service_id=self.test_service.id, plan_id=self.test_plan.id,
-                                 organization_guid='org', space_guid='space')
-        query_string = [('accept_incomplete', False)]
-        headers = [('X_Broker_Api_Version', '2.12')]
-        response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id=self.instance_id),
-                                    method='PUT',
-                                    data=json.dumps(service),
-                                    content_type='application/json',
-                                    query_string=query_string,
-                                    headers=headers)
+        response = self._send_service_request()
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
         query_string = [('service_id', 'srv'),
                         ('plan_id', 'plan'),
                         ('accept_incomplete', True)]
         headers = [('X_Broker_Api_Version', '2.12')]
+
+        # test attempted deletion of non-existant instance
+        response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id='I_DO_NOT_EXIST'),
+                                    method='DELETE',
+                                    query_string=query_string,
+                                    headers=headers)
+        self.assert404(response, "Response body is : " + response.data.decode('utf-8'))
+
         response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id=self.instance_id),
                                     method='DELETE',
                                     query_string=query_string,
@@ -171,16 +163,7 @@ class TestServiceInstancesController(BaseTestCase):
         """
 
         # create the instance we want to get info from
-        service = ServiceRequest(service_id=self.test_service.id, plan_id=self.test_plan.id,
-                                 organization_guid='org', space_guid='space')
-        query_string = [('accept_incomplete', False)]
-        headers = [('X_Broker_Api_Version', '2.12')]
-        response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id=self.instance_id),
-                                    method='PUT',
-                                    data=json.dumps(service),
-                                    content_type='application/json',
-                                    query_string=query_string,
-                                    headers=headers)
+        response = self._send_service_request()
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
         # get info from the instance
@@ -202,16 +185,7 @@ class TestServiceInstancesController(BaseTestCase):
         """
 
         # create the instance we want to get info from
-        service = ServiceRequest(service_id=self.test_service.id, plan_id=self.test_plan.id,
-                                 organization_guid='org', space_guid='space')
-        query_string = [('accept_incomplete', False)]
-        headers = [('X_Broker_Api_Version', '2.12')]
-        response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id=self.instance_id),
-                                    method='PUT',
-                                    data=json.dumps(service),
-                                    content_type='application/json',
-                                    query_string=query_string,
-                                    headers=headers)
+        response = self._send_service_request()
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
         # get info from the instance
@@ -219,6 +193,10 @@ class TestServiceInstancesController(BaseTestCase):
         response = self.client.open('/v2/et/service_instances/{instance_id}'.format(instance_id=self.instance_id),
                                     method='GET', headers=headers)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+
+        response = self.client.open('/v2/et/service_instances/{instance_id}'.format(instance_id='I_DO_NOT_EXIST'),
+                                    method='GET', headers=headers)
+        self.assert404(response, "Response body is : " + response.data.decode('utf-8'))
 
     def test_last_operation_status(self):
         """
@@ -228,16 +206,7 @@ class TestServiceInstancesController(BaseTestCase):
         """
 
         # create the instance we want to get info from
-        service = ServiceRequest(service_id=self.test_service.id, plan_id=self.test_plan.id,
-                                 organization_guid='org', space_guid='space')
-        query_string = [('accept_incomplete', False)]
-        headers = [('X_Broker_Api_Version', '2.12')]
-        response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id=self.instance_id),
-                                    method='PUT',
-                                    data=json.dumps(service),
-                                    content_type='application/json',
-                                    query_string=query_string,
-                                    headers=headers)
+        response = self._send_service_request()
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
         query_string = [('service_id', 'service_id_example'),

@@ -84,12 +84,31 @@ class TestCatalogController(BaseTestCase):
                                     headers=headers)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
+    def test_request_no_version_header(self):
+        response = self.client.open('/v2/catalog',
+                                    method='GET')
+        self.assert400(response, "Response body is : " + response.data.decode('utf-8'))
+
     def test_register_service(self):
         """
         Test case for register_service
 
         Registers the service with the catalog.
         """
+        response = self._send_svc_reg()
+        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+
+    def test_update_service(self):
+        """
+        Test case for udpate register_service
+
+        Updates the service with the catalog via PUT.
+        """
+        self._send_svc_reg()
+        response = self._send_svc_reg()
+        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+
+    def _send_svc_reg(self):
         headers = [('X_Broker_Api_Version', '2.12')]
         LOG.debug('Sending service registration content of:\n {content}'.format(content=json.dumps(self.test_service)))
         response = self.client.open('/v2/et/catalog',
@@ -97,7 +116,7 @@ class TestCatalogController(BaseTestCase):
                                     data=json.dumps(self.test_service),
                                     content_type='application/json',
                                     headers=headers)
-        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+        return response
 
     def test_store_manifest(self):
         """
@@ -105,13 +124,7 @@ class TestCatalogController(BaseTestCase):
 
         takes deployment description of a software service and associates with a service and plan
         """
-        headers = [('X_Broker_Api_Version', '2.12')]
-        LOG.debug('Sending service registration content of:\n {content}'.format(content=json.dumps(self.test_service)))
-        response = self.client.open('/v2/et/catalog',
-                                    method='PUT',
-                                    data=json.dumps(self.test_service),
-                                    content_type='application/json',
-                                    headers=headers)
+        response = self._send_svc_reg()
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
         headers = [('X_Broker_Api_Version', '2.12')]
@@ -143,6 +156,13 @@ class TestCatalogController(BaseTestCase):
                                     method='GET',
                                     headers=headers)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+
+        # test for nonexistant manifest
+        headers = [('X_Broker_Api_Version', '2.12')]
+        response = self.client.open('/v2/et/manifest/{manifest_id}'.format(manifest_id='I_DO_NOT_EXIST'),
+                                    method='GET',
+                                    headers=headers)
+        self.assert404(response, "Response body is : " + response.data.decode('utf-8'))
 
     def test_list_manifests(self):
         """

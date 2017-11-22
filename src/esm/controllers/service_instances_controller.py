@@ -54,14 +54,14 @@ def create_service_instance(instance_id, service, accept_incomplete=None):
     if not ok:
         return message, code
     else:
+        if len(STORE.get_service_instance(instance_id=instance_id)) == 1:
+            return 'Service instance with id {id} already exists'.format(id=instance_id), 409
+
         if connexion.request.is_json:
             service = ServiceRequest.from_dict(connexion.request.get_json())
         else:
             return "Supplied body content is not or is mal-formed JSON", 400
 
-        svc_type = STORE.get_service_instance(service.service_id)
-        if len(svc_type) == 1:
-            return 'Service instance with id {id} already exists'.format(id=service.service_id), 409
         # look up manifest based on plan id
         # based on the manifest type, select the driver
         # send the manifest for creation to the target system
