@@ -68,10 +68,16 @@ class TestServiceInstancesController(BaseTestCase):
         with open(path + '/manifests/test_endpoints.json', 'r') as ep_file:
             ep = ep_file.read()
 
-        self.test_manifest = Manifest(
-            id='test-mani', plan_id=self.test_plan.id, service_id=self.test_service.id,
-            manifest_type='dummy', manifest_content=mani, endpoints=json.loads(ep)
-        )
+        if os.environ.get('DOCKER_TESTS', 'NO') == 'YES':
+            self.test_manifest = Manifest(
+                id='test-mani', plan_id=self.test_plan.id, service_id=self.test_service.id,
+                manifest_type='docker-compose', manifest_content=mani, endpoints=json.loads(ep)
+            )
+        else:
+            self.test_manifest = Manifest(
+                id='test-mani', plan_id=self.test_plan.id, service_id=self.test_service.id,
+                manifest_type='dummy', manifest_content=mani, endpoints=json.loads(ep)
+            )
 
         self.store.add_manifest(self.test_manifest)
         print('Manifest registration content of:\n {content}'.format(content=json.dumps(self.test_manifest)))
@@ -86,7 +92,7 @@ class TestServiceInstancesController(BaseTestCase):
         response = self._send_service_request(headers=[])
         self.assert400(response, "Response body is : " + response.data.decode('utf-8'))
 
-    def _send_service_request(self, headers=[('X_Broker_Api_Version', '2.12')], params=None):
+    def _send_service_request(self, headers=[('X_Broker_Api_Version', '2.12')], params={}):
         service = ServiceRequest(service_id=self.test_service.id, plan_id=self.test_plan.id,
                                  organization_guid='org', space_guid='space', parameters=params)
         query_string = [('accept_incomplete', False)]
@@ -206,8 +212,14 @@ class TestServiceInstancesController(BaseTestCase):
         headers = [('X_Broker_Api_Version', '2.12')]
         response = self.client.open('/v2/et/service_instances/{instance_id}'.format(instance_id=self.instance_id),
                                     method='GET', headers=headers)
+
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
+        # let's ensure that IP addresses are always given (key to the TORM)
+        ips = [v for k, v in json.loads(response.data)['context'].items() if k.endswith('_Ip')]
+        self.assertGreater(len(ips), 0)
+
+        # check that 404 is returned if invalid instance is requested
         response = self.client.open('/v2/et/service_instances/{instance_id}'.format(instance_id='I_DO_NOT_EXIST'),
                                     method='GET', headers=headers)
         self.assert404(response, "Response body is : " + response.data.decode('utf-8'))
