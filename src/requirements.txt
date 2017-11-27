@@ -9,3 +9,5 @@ healthcheck
 tornado
 pykafka
 git+https://github.com/mpauls/epm-client-python.git
+orator
+pymysql

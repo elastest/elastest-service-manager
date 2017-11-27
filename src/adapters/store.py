@@ -13,21 +13,22 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import time
 from typing import List
 
-import os
 from pymongo import MongoClient
+import pymysql
 
 import adapters.log
+
+from adapters.sql_store import *
 
 from esm.models import LastOperation
 from esm.models import Manifest
 from esm.models import ServiceInstance
 from esm.models import ServiceType
 
-
 # TODO implement exception handling
-# TODO integrate MySQLStore here
 
 LOG = adapters.log.get_logger(name=__name__)
 
@@ -68,6 +69,179 @@ class Store(object):
 
     def get_last_operation(self, instance_id: str=None) -> List[LastOperation]:
         raise NotImplementedError
+
+
+# TODO align method signatures
+class SQLStore(Store):
+    @staticmethod
+    def get_connection():
+        try:
+            connection = pymysql.connect(
+                host=Helper.host,
+                port=Helper.port,
+                user=Helper.user,
+                password=Helper.password,
+                db=Helper.database,
+                charset='utf8mb4',
+                cursorclass=pymysql.cursors.DictCursor
+            )
+            return connection
+        except pymysql.err.OperationalError as e:
+            print('* Error connecting to DB: ', e)
+            return None
+
+    @staticmethod
+    def set_up(wait_time=10):
+        connection = SQLStore.get_connection()
+        count = 3
+        while not connection and count:
+            # print('Retrying to connect to Database \'{}\'...'.format(Helper.database))
+            count = count - 1
+            time.sleep(wait_time)
+            connection = SQLStore.get_connection()
+
+        if connection:
+            # print('Successfully connected to Database \'{}\'...'.format(Helper.database))
+            connection.close()
+        else:
+            raise Exception('Could not connect to the DB')
+
+    @staticmethod
+    def get_service(service_id: str=None) -> List[ServiceType]:
+        if service_id:
+            if ServiceTypeAdapter.exists_in_db(service_id):
+                model_sql = ServiceTypeAdapter.find_by_id_name(service_id)
+                model = ServiceTypeAdapter.model_sql_to_model(model_sql)
+                return [model]
+            else:
+                return []
+        else:
+            return ServiceTypeAdapter.get_all()
+
+    @staticmethod
+    def add_service(service: ServiceType) -> tuple:
+        if ServiceTypeAdapter.exists_in_db(service.id):
+            return 'The service already exists in the catalog.', 409
+
+        PlanAdapter.create_table()
+        PlanServiceTypeAdapter.create_table()
+
+        ServiceTypeAdapter.save(service)
+        if ServiceTypeAdapter.exists_in_db(service.id):
+            return 'Service added successfully', 200
+        else:
+            return 'Could not save the Service in the DB', 500
+
+    @staticmethod
+    def delete_service(service_id: str = None) -> tuple:
+        if service_id:
+            if ServiceTypeAdapter.exists_in_db(service_id):
+                ServiceTypeAdapter.delete(service_id)
+                return 'Service Deleted', 200
+            else:
+                return 'Service ID not found', 500
+        else:
+            PlanServiceTypeAdapter.delete_all()
+            ServiceInstanceAdapter.delete_all()
+            ManifestAdapter.delete_all()
+            ServiceTypeAdapter.delete_all()
+            PlanAdapter.delete_all()
+            return 'Deleted all Services', 200
+
+    @staticmethod
+    def get_manifest(manifest_id: str = None, plan_id: str = None):  # -> List[Manifest]
+        if manifest_id and plan_id:
+            raise Exception('Query Manifests only by manifest_id OR plan_id')
+
+        if plan_id:
+            manifests = ManifestSQL.where('plan_id', '=', '{}'.format(plan_id)).get().serialize()
+            if manifests:
+                manifest_id = manifests[0]['id']
+
+        if manifest_id:
+            if ManifestAdapter.exists_in_db(manifest_id):
+                model_sql = ManifestAdapter.find_by_id_name(manifest_id)
+                model = ManifestAdapter.model_sql_to_model(model_sql)
+                model.manifest_content = model.manifest_content.replace('</br>', '\n')
+                return [model]
+            else:
+                return []
+        else:
+            manifests = ManifestAdapter.get_all()
+            for manifest in manifests:
+                manifest.manifest_content = manifest.manifest_content.replace('</br>', '\n')
+            return manifests
+
+    @staticmethod
+    def add_manifest(manifest) -> tuple:
+        if ManifestAdapter.exists_in_db(manifest.id):
+            return 'The Manifest already exists in the catalog.', 409
+
+        ''' Attempt to Create Table '''
+        PlanAdapter.create_table()
+        ServiceTypeAdapter.create_table()
+
+        ManifestAdapter.save(manifest)
+        if ManifestAdapter.exists_in_db(manifest.id):
+            return 'Manifest added successfully', 200
+        else:
+            return 'Could not save the Manifest in the DB', 500
+
+    @staticmethod
+    def delete_manifest(manifest_id: str = None):  # -> None:
+        if manifest_id:
+            if ManifestAdapter.exists_in_db(manifest_id):
+                ManifestAdapter.delete(manifest_id)
+                return 'Manifest Deleted', 200
+            else:
+                return 'Manifest ID not found', 500
+        else:
+            ManifestAdapter.delete_all()
+            return 'Deleted all Manifests', 200
+
+    @staticmethod
+    def get_service_instance(instance_id: str = None) -> List[ServiceInstance]:
+        if instance_id:
+            if ServiceInstanceAdapter.exists_in_db(instance_id):
+                model_sql = ServiceInstanceAdapter.find_by_id_name(instance_id)
+                model = ServiceInstanceAdapter.model_sql_to_model(model_sql)
+                return [model]
+            else:
+                return []
+        else:
+            models = ServiceInstanceAdapter.get_all()
+            return models
+
+    @staticmethod
+    def add_service_instance(instance: ServiceInstance) -> tuple:
+        id_name = ServiceInstanceAdapter.get_id(instance)
+        if ServiceInstanceAdapter.exists_in_db(id_name):
+            return 'The Instance already exists in the catalog.', 409
+
+        ''' Attempt to Create Table '''
+        PlanAdapter.create_table()
+        ServiceTypeAdapter.create_table()
+        ServiceTypeAdapter.create_table()
+        ServiceInstanceAdapter.create_table()
+        ServiceInstanceAdapter.save(instance)
+
+        id_name = ServiceInstanceAdapter.get_id(instance)
+        if ServiceInstanceAdapter.exists_in_db(id_name):
+            return 'Instance added successfully', 200
+        else:
+            return 'Could not save the Instance in the DB', 500
+
+    @staticmethod
+    def delete_service_instance(instance_id: str = None):  # -> None:
+        if instance_id:
+            if ServiceInstanceAdapter.exists_in_db(instance_id):
+                ServiceInstanceAdapter.delete(instance_id)
+                return 'Instance Deleted', 200
+            else:
+                return 'Instance ID not found', 500
+        else:
+            ServiceInstanceAdapter.delete_all()
+            return 'Deleted all Instances', 200
 
 
 class MongoDBStore(Store):
@@ -399,5 +573,7 @@ class InMemoryStore(Store):
 mongo_host = os.getenv('ESM_MONGO_HOST', '')
 if len(mongo_host):
     STORE = MongoDBStore(mongo_host)
+elif os.getenv('ESM_SQL_HOST'):
+    STORE = SQLStore()
 else:
     STORE = InMemoryStore()

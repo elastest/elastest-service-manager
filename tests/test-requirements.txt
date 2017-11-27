@@ -7,3 +7,5 @@ randomize
 tox
 mypy
 tox-docker
+orator
+pymysql
