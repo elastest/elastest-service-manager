@@ -73,15 +73,17 @@ class Store(object):
 
 # TODO align method signatures
 class SQLStore(Store):
+
     @staticmethod
     def get_connection():
         try:
+            db_helper = Helper()
             connection = pymysql.connect(
-                host=Helper.host,
-                port=Helper.port,
-                user=Helper.user,
-                password=Helper.password,
-                db=Helper.database,
+                host=db_helper.host,
+                port=db_helper.port,
+                user=db_helper.user,
+                password=db_helper.password,
+                db=db_helper.database,
                 charset='utf8mb4',
                 cursorclass=pymysql.cursors.DictCursor
             )

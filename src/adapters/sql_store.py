@@ -37,8 +37,6 @@ from esm.models.plan_metadata import PlanMetadata
 from esm.models.service_instance import ServiceInstance
 
 
-
-
 '''    *******************
     *******************
     **** TESTED CODE **
@@ -81,7 +79,7 @@ class ServiceInstanceSQL(Model):
 
     def __init__(self):
         super(ServiceInstanceSQL, self).__init__()
-        Model.set_connection_resolver(Helper.db)
+        Model.set_connection_resolver(Helper().db)
 
     ''' 
         UPDATE WITH:
@@ -95,7 +93,7 @@ class ServiceInstanceSQL(Model):
 
     @classmethod
     def create_table(cls):
-        with Helper.schema.create(cls.__table__) as table:
+        with Helper().schema.create(cls.__table__) as table:
             table.increments('id')
             ''' STRINGS '''
             table.string('id_name').unique()
@@ -112,13 +110,13 @@ class ServiceInstanceSQL(Model):
 
     @classmethod
     def table_exists(cls):
-        return Helper.schema.has_table(cls.__table__)
+        return Helper().schema.has_table(cls.__table__)
 
     @classmethod
     def delete_all(cls):
-        if Helper.schema.has_table(cls.__table__):
-            # Helper.db.table(cls.__table__).truncate()
-            Helper.schema.drop_if_exists(cls.__table__)
+        if Helper().schema.has_table(cls.__table__):
+            # Helper().db.table(cls.__table__).truncate()
+            Helper().schema.drop_if_exists(cls.__table__)
 
 
 class ServiceInstanceAdapter:
@@ -148,7 +146,7 @@ class ServiceInstanceAdapter:
         ''' OBJECT '''
         model_sql.state = LastOperationAdapter.to_blob(model.state)
         ''' OBJECT '''
-        model_sql.context = Helper.to_blob(model.context)
+        model_sql.context = Helper().to_blob(model.context)
         model_sql.id_name = ServiceInstanceAdapter.get_id(model)
         return model_sql
 
@@ -167,7 +165,7 @@ class ServiceInstanceAdapter:
         ''' OBJECT '''
         model.state = LastOperationAdapter.from_blob(model_sql.state)
         ''' OBJECT '''
-        model.context = Helper.from_blob(model_sql.context)
+        model.context = Helper().from_blob(model_sql.context)
         return model
 
     @staticmethod
@@ -194,7 +192,7 @@ class ServiceInstanceAdapter:
             ''' OBJECT '''
             model_sql.state = LastOperationAdapter.to_blob(model.state)
             ''' OBJECT '''
-            model_sql.context = Helper.to_blob(model.context)
+            model_sql.context = Helper().to_blob(model.context)
         else:
             model_sql = ServiceInstanceAdapter.model_to_model_sql(model)
             model_sql.save()
@@ -260,11 +258,11 @@ class ManifestSQL(Model):
 
     def __init__(self):
         super(ManifestSQL, self).__init__()
-        Model.set_connection_resolver(Helper.db)
+        Model.set_connection_resolver(Helper().db)
 
     @classmethod
     def create_table(cls):
-        with Helper.schema.create(cls.__table__) as table:
+        with Helper().schema.create(cls.__table__) as table:
             table.increments('id')
             ''' STRINGS '''
             table.string('id_name').unique()
@@ -286,12 +284,12 @@ class ManifestSQL(Model):
 
     @classmethod
     def table_exists(cls):
-        return Helper.schema.has_table(cls.__table__)
+        return Helper().schema.has_table(cls.__table__)
 
     @classmethod
     def delete_all(cls):
-        if Helper.schema.has_table(cls.__table__):
-            Helper.schema.drop_if_exists(cls.__table__)
+        if Helper().schema.has_table(cls.__table__):
+            Helper().schema.drop_if_exists(cls.__table__)
 
 
 ''' 
@@ -347,7 +345,7 @@ class ManifestAdapter:
             raise Exception('Bad Plan ID provided')
         model_sql.plan_id = plan.id
         ''' OBJECTS '''
-        model_sql.endpoints = Helper.to_blob(model.endpoints)
+        model_sql.endpoints = Helper().to_blob(model.endpoints)
         return model_sql
 
     @classmethod
@@ -391,7 +389,7 @@ class ManifestAdapter:
                 raise Exception('Bad Plan ID provided')
             model_sql.plan_id = PlanAdapter.find_by_id_name(model.plan_id)
             ''' OBJECTS '''
-            model_sql.endpoints = Helper.to_blob(model.endpoints)
+            model_sql.endpoints = Helper().to_blob(model.endpoints)
         else:
             model_sql = ManifestAdapter.model_to_model_sql(model)
             model_sql.save()
@@ -457,12 +455,12 @@ class PlanSQL(Model):
 
     def __init__(self):
         super(PlanSQL, self).__init__()
-        Model.set_connection_resolver(Helper.db)
+        Model.set_connection_resolver(Helper().db)
 
     @classmethod
     def delete_all(cls):
-        if Helper.schema.has_table(cls.__table__):
-            Helper.db.table(cls.__table__).truncate()
+        if Helper().schema.has_table(cls.__table__):
+            Helper().db.table(cls.__table__).truncate()
 
     '''
         self.swagger_types = {
@@ -479,7 +477,7 @@ class PlanSQL(Model):
 
     @classmethod
     def create_table(cls):
-        with Helper.schema.create(cls.__table__) as table:
+        with Helper().schema.create(cls.__table__) as table:
             table.increments('id')
             ''' STRINGS '''
             table.string('id_name').unique()
@@ -496,7 +494,7 @@ class PlanSQL(Model):
 
     @classmethod
     def table_exists(cls):
-        return Helper.schema.has_table(cls.__table__)
+        return Helper().schema.has_table(cls.__table__)
 
 
 class PlanAdapter:
@@ -677,16 +675,16 @@ class ServiceTypeSQL(Model):
 
     def __init__(self):
         super(ServiceTypeSQL, self).__init__()
-        Model.set_connection_resolver(Helper.db)
+        Model.set_connection_resolver(Helper().db)
 
     @classmethod
     def delete_all(cls):
-        if Helper.schema.has_table(cls.__table__):
-            Helper.db.table(cls.__table__).truncate()
+        if Helper().schema.has_table(cls.__table__):
+            Helper().db.table(cls.__table__).truncate()
 
     @classmethod
     def create_table(cls):
-        with Helper.schema.create('service_types') as table:
+        with Helper().schema.create('service_types') as table:
             table.increments('id')
             ''' STRINGS '''
             table.string('id_name').unique()
@@ -708,7 +706,7 @@ class ServiceTypeSQL(Model):
 
     @classmethod
     def table_exists(cls):
-        return Helper.schema.has_table(cls.__table__)
+        return Helper().schema.has_table(cls.__table__)
 
 
 class PlanServiceTypeSQL(Model):
@@ -716,7 +714,7 @@ class PlanServiceTypeSQL(Model):
 
     @classmethod
     def create_table(cls):
-        with Helper.schema.create('plans_service_types') as table:
+        with Helper().schema.create('plans_service_types') as table:
             table.increments('id')
             ''' STRINGS '''
             table.integer('service_type_id').unsigned()
@@ -727,12 +725,12 @@ class PlanServiceTypeSQL(Model):
 
     @classmethod
     def table_exists(cls):
-        return Helper.schema.has_table(cls.__table__)
+        return Helper().schema.has_table(cls.__table__)
 
     @classmethod
     def delete_all(cls):
-        if Helper.schema.has_table(cls.__table__):
-            Helper.schema.drop_if_exists(cls.__table__)
+        if Helper().schema.has_table(cls.__table__):
+            Helper().schema.drop_if_exists(cls.__table__)
 
 
 class PlanServiceTypeAdapter:
@@ -951,24 +949,26 @@ class ServiceMetadataAdapter(ServiceMetadata):
 
 
 class Helper:
-    host = os.environ.get('DATABASE_HOST', '0.0.0.0')
-    user = os.environ.get('DATABASE_USER', 'root')
-    password = os.environ.get('DATABASE_PASSWORD', '')
-    database = os.environ.get('DATABASE_NAME', 'mysql')
-    port = int(os.environ.get('MYSQL_3306_TCP', 3306))
-    config = {
-        'mysql': {
-            'driver': 'mysql',
-            'prefix': '',
-            'host': host,
-            'database': database,
-            'user': user,
-            'password': password,
-            'port': port
+    def __init__(self) -> None:
+        super().__init__()
+        self.host = os.environ.get('DATABASE_HOST', '127.0.0.1')
+        self.user = os.environ.get('DATABASE_USER', 'root')
+        self.password = os.environ.get('DATABASE_PASSWORD', '')
+        self.database = os.environ.get('DATABASE_NAME', 'mysql')
+        self.port = int(os.environ.get('MYSQL_3306_TCP', 3306))
+        config = {
+            'mysql': {
+                'driver': 'mysql',
+                'prefix': '',
+                'host': self.host,
+                'database': self.database,
+                'user': self.user,
+                'password': self.password,
+                'port': self.port
+            }
         }
-    }
-    db = DatabaseManager(config)
-    schema = Schema(db)
+        self.db = DatabaseManager(config)
+        self.schema = Schema(self.db)
 
     @staticmethod
     def to_blob(model) -> str:
