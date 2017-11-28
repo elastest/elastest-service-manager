@@ -9,15 +9,13 @@ node('docker'){
 
             stage "Setup test environment"
                 sh 'rm -rf /home/ubuntu/workspace/elastest-service-manager/esm/.tox'
-                sh 'export MONGO_ID=$(docker run -d -p 27017:27017 mongo)'
-                MONGO_ID = sh(script: 'docker run -d -p 27017:27017 mongo', returnStdout: true).trim()
-                sh "echo MongoDB IP: " MONGO_IP
-                sh "export MONGO_IP=$(docker inspect --format \"{{ .NetworkSettings.IPAddress }}\" ${MONGO_ID})}"
 
             stage "Unit tests"
                 echo ("Starting unit tests...")
-                sh "echo 'MongoDB IP:' $MONGO_IP"
-                sh 'tox'
+                docker.image('mongo:latest').withRun('-p 27017:27017') { c ->
+                    sh 'tox'
+                }
+
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
 
             stage "Build image - Package"
