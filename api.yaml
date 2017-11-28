@@ -539,6 +539,7 @@ parameters:
 definitions:
   Catalog:
     description: list of service types
+    type: object
     required:
       - services
     properties:
@@ -548,6 +549,7 @@ definitions:
           $ref: '#/definitions/ServiceType'
   ServiceType:
     description: Schema of an offered service
+    type: object
     required:
       - id
       - name
@@ -629,6 +631,7 @@ definitions:
           Contains the data necessary to activate the Dashboard SSO feature for this service.
   Plan:
     description: A plan for the service
+    type: object
     required:
       - id
       - name
@@ -674,6 +677,7 @@ definitions:
           If not specified, the default is derived from the service.
   DashboardClient:
     description: 'Contains the data necessary to activate the Dashboard SSO feature for this service'
+    type: object    
     properties:
       id:
         type: string
@@ -691,6 +695,7 @@ definitions:
           Validated by the OAuth token server when the dashboard requests a token.
   ServiceRequest:
     description: Request for a Service instance
+    type: object
     required:
       - service_id
       - plan_id
@@ -744,6 +749,7 @@ definitions:
       The URL of a web-based management user interface for the service instance; we refer to
       this as a service dashboard. The URL should contain enough information for the dashboard to
       identify the resource being accessed.
+    type: object
     required:
       - dashboard_url
     properties:
@@ -769,6 +775,7 @@ definitions:
     description: 'Expected empty response could be {}'
   UpdateRequest:
     description: New/Updated Plan to be added to a service.
+    type: object
     required:
       - service_id
     properties:
@@ -804,6 +811,7 @@ definitions:
   PreviousValues:
     description: >
       Information about the service instance prior to the update.
+    type: object
     properties:
       plan_id:
         type: string
@@ -831,6 +839,7 @@ definitions:
   BindingRequest:
     description: >
       Information to bind the service to an application.
+    type: object
     required:
      - service_id
      - plan_id
@@ -865,6 +874,7 @@ definitions:
       the context in which the service will be used. In some cases the platform might
       not be able to provide this information at the time of the binding request,
       therefore the bind_resource and its fields are OPTIONAL.
+    type: object
     properties:
       app_guid:
         type: string
@@ -876,6 +886,7 @@ definitions:
           URL of the application to be intermediated. For route services bindings.
   BindingResponse:
     description: Success binding response.
+    type: object
     properties:
       credentials:
         type: object
@@ -907,6 +918,7 @@ definitions:
     description: >
       metadata related to the service. The attributes are defined by the
       best practices [here](https://docs.cloudfoundry.org/services/catalog-metadata.html#services-metadata-fields)
+    type: object
     properties:
       displayName:
         type: string
@@ -932,6 +944,7 @@ definitions:
   PlanMetadata:
     description: >
       This is the plan metadata as required by the CloudFoundry broker best practices
+    type: object
     properties:
       bullets:
         type: string
@@ -954,6 +967,7 @@ definitions:
         description: additional attributes
   LastOperation:
     description: status of polling last operation (async only)
+    type: object
     required:
       - state
     properties:
@@ -981,6 +995,7 @@ definitions:
   UpdateOperationResponse:
     description: >
       Response after issuing an update to a service instance
+    type: object
     properties:
       operation:
         description: >
@@ -992,6 +1007,7 @@ definitions:
   Manifest:
     description: >
       The manifest of a software component and the plan and service it is to be associated with.
+    type: object
     required:
       - id
       - plan_id
@@ -1023,6 +1039,7 @@ definitions:
 
   ServiceInstance:
     description: service instance
+    type: object
     properties:
       service_type:
         description: the type of the service
