@@ -39,7 +39,8 @@ from esm.models.service_instance import ServiceInstance
 
 
 
-'''    *******************
+'''    
+    *******************
     *******************
     **** TESTED CODE **
     *******************
@@ -262,6 +263,19 @@ class ManifestSQL(Model):
         super(ManifestSQL, self).__init__()
         Model.set_connection_resolver(Helper.db)
 
+    ''' 
+        UPDATE WITH:
+             self.swagger_types = {
+                'id_name': str,
+                'plan_id': str,
+                'service_id': str,
+                'manifest_type': str,
+                'manifest_content': str,
+                'endpoints': object
+            }
+
+    '''
+
     @classmethod
     def create_table(cls):
         with Helper.schema.create(cls.__table__) as table:
@@ -292,20 +306,6 @@ class ManifestSQL(Model):
     def delete_all(cls):
         if Helper.schema.has_table(cls.__table__):
             Helper.schema.drop_if_exists(cls.__table__)
-
-
-''' 
-    UPDATE WITH:
-         self.swagger_types = {
-            'id_name': str,
-            'plan_id': str,
-            'service_id': str,
-            'manifest_type': str,
-            'manifest_content': str,
-            'endpoints': object
-        }
-
-'''
 
 
 class ManifestAdapter:
