@@ -12,6 +12,7 @@ node('docker'){
 
             stage "Unit tests"
                 echo ("Starting unit tests...")
+                sh 'docker rm -f 819d39bf5d39b6d21c3e563b3478b03ceb9a7657ebd58f41e0a90f8bd1c91e09'
                 docker.image('mongo:latest').withRun('-p 27017:27017') { c ->
                     sh "docker inspect ${c.id}"
                     sh "docker logs ${c.id}"
