@@ -15,7 +15,8 @@ node('docker'){
                 docker.image('mongo:latest').withRun('-p 27017:27017') { c ->
                     sh "docker inspect ${c.id}"
                     sh "docker logs ${c.id}"
-                    sh 'tox'
+                    c.stop()
+                    //sh 'tox'
                 }
 
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
