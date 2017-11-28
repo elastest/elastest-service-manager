@@ -9,12 +9,12 @@ node('docker'){
 
             stage "Setup test environment"
                 sh 'rm -rf /home/ubuntu/workspace/elastest-service-manager/esm/.tox'
-                sh 'export MONGO_ID=$(docker run -d -p 27017:27017  mongo)'
-                sh 'export MONGO_IP=$(docker inspect --format "{{ .NetworkSettings.IPAddress }}" $MONGO_ID)'
+                // sh 'export MONGO_ID=$(docker run -d -p 27017:27017  mongo)'
+                // sh 'export MONGO_IP=$(docker inspect --format "{{ .NetworkSettings.IPAddress }}" $MONGO_ID)'
 
             stage "Unit tests"
                 echo ("Starting unit tests...")
-                sh "echo 'MongoDB IP:' $MONGO_IP"
+                // sh "echo 'MongoDB IP:' $MONGO_IP"
                 sh 'tox'
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
 
