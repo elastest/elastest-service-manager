@@ -172,7 +172,7 @@ class TestMongoDBStore(TestInMemoryStore):
 
     def setUp(self):
         super().setUp()
-        mongo_host = os.getenv('ESM_MONGO_HOST', 'localhost')
+        mongo_host = os.getenv('ESM_MONGO_HOST', '0.0.0.0')
         mongo_port = os.getenv('MONGO_27017_TCP', 27017)  # port number is set by tox-docker convention
         self.store = MongoDBStore(host=mongo_host, port=int(mongo_port))
 
