@@ -43,11 +43,11 @@ node('docker'){
                    echo "Error: $e"
                 }
 
-                sh "docker run --name mysql -d --rm mysql:latest"
+                sh "docker run --name mysql_db -d --rm mysql:latest"
                 sh "sleep 10"
-                sh "docker network connect elastest_elastest mysql"
+                sh "docker network connect elastest_elastest mysql_db"
                 mysqlIP = sh (
-                    script: 'docker inspect --format=\\"{{.NetworkSettings.Networks.elastest_elastest.IPAddress}}\\" mysql',
+                    script: 'docker inspect --format=\\"{{.NetworkSettings.Networks.elastest_elastest.IPAddress}}\\" mysql_db',
                     returnStdout: true
                 ).trim()
                 echo "MySQL container IP=${mysqlIP}"
