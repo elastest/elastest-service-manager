@@ -314,9 +314,10 @@ class MongoDBStore(Store):
         if plan_id:
             if self.ESM_DB.manifests.count({'plan_id': plan_id}) == 1:
                 m = self.ESM_DB.manifests.find_one({'plan_id': plan_id})
+                m = Manifest.from_dict(m)
                 LOG.debug("replacing <br/> with newlines")
                 m.manifest_content = m.manifest_content.replace('</br>', '\n')
-                return [Manifest.from_dict(m)]
+                return [m]
             else:
                 LOG.warn('Requested manifest by plan ID not found: {id}'.format(id=plan_id))
                 return []
