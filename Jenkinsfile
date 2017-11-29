@@ -13,8 +13,14 @@ node('docker'){
                 sh "docker inspect mongo"
                 sh "docker network list"
                 sh "docker network connect elastest_elastest mongo"
-                mongoIP= sh (
+                mongoIP = sh (
                     script: 'docker inspect --format=\\"{{.NetworkSettings.Networks.elastest_elastest.Gateway}}\\" mongo',
+                    returnStdout: true
+                ).trim()
+                echo "Mongo container IP=${mongoIP}"
+
+                mongoIP = sh (
+                    script: 'docker inspect --format \\"{{ .NetworkSettings.IPAddress }}\\" mongo',
                     returnStdout: true
                 ).trim()
                 echo "Mongo container IP=${mongoIP}"
