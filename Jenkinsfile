@@ -30,7 +30,9 @@ node('docker'){
             stage ("Unit tests"){
                 echo ("Starting unit tests...")
                 echo "Mongo container IP=${mongoIP}"
-                sh "export ESM_MONGO_HOST=${mongoIP}; echo $ESM_MONGO_HOST; tox"
+                withEnv(["ESM_MONGO_HOST=${mongoIP}]) {
+                    sh "tox"
+                }
                 // step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
             }
 
