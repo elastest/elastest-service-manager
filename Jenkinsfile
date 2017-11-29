@@ -17,7 +17,7 @@ node('docker'){
                 ).trim()
                 echo "containerId = ${containerId}"
                 sh "docker network list"
-                sh "docker network connect elastest_elastest "+ containerId
+                sh "docker network connect bridge "+ containerId
 
             	echo '[END] connect2ElastestNetwork'
 
@@ -29,7 +29,7 @@ node('docker'){
 
                 sh "docker run --name mongo -d --rm mongo"
                 // sh "docker inspect mongo"
-                sh "docker network connect elastest_elastest mongo"
+                sh "docker network connect bridge mongo"
                 mongoIP = sh (
                     script: 'docker inspect --format=\\"{{.NetworkSettings.Networks.elastest_elastest.IPAddress}}\\" mongo',
                     returnStdout: true
