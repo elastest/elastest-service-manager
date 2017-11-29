@@ -69,14 +69,14 @@ node('docker'){
 
             stage "Build image - Package"
                 echo ("building...")
-                // def myimage = docker.build("elastest/esm:latest")
+                def myimage = docker.build("elastest/esm:0.5.0")
 
             stage "Publish"
                 echo ("Publishing as all tests succeeded...")
-                // withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'elastestci-dockerhub',
-                // usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-                //     sh 'docker login -u "$USERNAME" -p "$PASSWORD"'
-                //     myimage.push()
-                // }
+                withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'elastestci-dockerhub',
+                usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
+                    sh 'docker login -u "$USERNAME" -p "$PASSWORD"'
+                    myimage.push()
+                }
         }
 }
