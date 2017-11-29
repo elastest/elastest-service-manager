@@ -41,6 +41,9 @@ class TestDockerCompose(TestCase):
     def test_docker_info(self):
         self.docker.info(instance_id=INST_ID)
 
+    def test_docker_delete_cmd(self):
+        self.docker.delete(instance_id=INST_ID)
+
 
 @skipIf(os.getenv('DOCKER_TESTS', 'NO') != 'YES', "DOCKER_TESTS not set in environment variables")
 class TestDockerComposeWithoutSetup(TestCase):
