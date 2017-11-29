@@ -11,13 +11,15 @@ node('docker'){
                 sh 'rm -rf /home/ubuntu/workspace/elastest-service-manager/esm/.tox'
                 echo '[INI] connect2ElastestNetwork'
 
-                    def containerId= sh (
-                        script: 'cat /proc/self/cgroup | grep "docker" | sed s/\\\\//\\\\n/g | tail -1',
-                        returnStdout: true
-                    ).trim()
-                    echo "containerId = ${containerId}"
-                    sh "docker network connect elastest_elastest "+ containerId
-                echo '[END] connect2ElastestNetwork'
+                def containerId= sh (
+                    script: 'cat /proc/self/cgroup | grep "docker" | sed s/\\\\//\\\\n/g | tail -1',
+                    returnStdout: true
+                ).trim()
+                echo "containerId = ${containerId}"
+                sh "docker network list"
+                sh "docker network connect elastest_elastest "+ containerId
+
+            	echo '[END] connect2ElastestNetwork'
 
                 try {
                    sh "docker rm -f mongo"
@@ -27,7 +29,6 @@ node('docker'){
 
                 sh "docker run --name mongo -d --rm mongo"
                 // sh "docker inspect mongo"
-                // sh "docker network list"
                 sh "docker network connect elastest_elastest mongo"
                 mongoIP = sh (
                     script: 'docker inspect --format=\\"{{.NetworkSettings.Networks.elastest_elastest.IPAddress}}\\" mongo',
