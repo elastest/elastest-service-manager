@@ -31,7 +31,9 @@ node('docker'){
                 echo ("Starting unit tests...")
                 echo "Mongo container IP=${mongoIP}"
                 withEnv(["ESM_MONGO_HOST=${mongoIP}"]){
-                    sh "tox"
+                    sh "echo $PATH"
+                    sh "echo $ESM_MONGO_HOST"
+                    // sh "tox"
                 }
                 // step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
             }
