@@ -9,6 +9,13 @@ node('docker'){
 
             stage "Setup test environment"
                 sh 'rm -rf /home/ubuntu/workspace/elastest-service-manager/esm/.tox'
+
+                try {
+                   sh "docker rm -f mongo"
+                } catch(e) {
+                   echo "Error: $e"
+                }
+
                 sh "docker run --name mongo -d --rm mongo"
                 sh "docker inspect mongo"
                 sh "docker network list"
