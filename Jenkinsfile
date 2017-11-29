@@ -7,7 +7,7 @@ node('docker'){
 
             git 'https://github.com/elastest/elastest-service-manager'
 
-            stage "Setup test environment"
+            stage ("Setup test environment"){
                 sh 'rm -rf /home/ubuntu/workspace/elastest-service-manager/esm/.tox'
 
                 try {
@@ -25,11 +25,14 @@ node('docker'){
                     returnStdout: true
                 ).trim()
                 echo "Mongo container IP=${mongoIP}"
+            }
 
-            stage "Unit tests"
+            stage ("Unit tests"){
                 echo ("Starting unit tests...")
-                sh 'export ESM_MONGO_HOST=${mongoIP}; echo $ESM_MONGO_HOST; tox'
+                echo "Mongo container IP=${mongoIP}"
+                sh "export ESM_MONGO_HOST=${mongoIP}; echo $ESM_MONGO_HOST; tox"
                 // step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
+            }
 
             stage "Build image - Package"
                 echo ("building...")
