@@ -14,8 +14,8 @@ node('docker'){
                 echo ("Starting unit tests...")
                 docker.image('mongo:latest').withRun('-p 27017:27017') { c ->
                     // sh "docker inspect ${c.id}"
-                    sh "lsof -i"
                     // sh "docker logs ${c.id}"
+                    sh "sudo lsof -i"
                     // c.stop()
                     // sh 'tox'
                 }
