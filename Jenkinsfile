@@ -44,6 +44,7 @@ node('docker'){
                 }
 
                 sh "docker run --name mysql -d --rm mysql:latest"
+                sh "sleep 10"
                 sh "docker network connect elastest_elastest mysql"
                 mysqlIP = sh (
                     script: 'docker inspect --format=\\"{{.NetworkSettings.Networks.elastest_elastest.IPAddress}}\\" mysql',
