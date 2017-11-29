@@ -43,11 +43,11 @@ node('docker'){
                    echo "Error: $e"
                 }
 
-                sh "docker run --name mysql_db -d --rm mysql:latest"
-                sh "sleep 10"
-                sh "docker network connect elastest_elastest mysql_db"
+                sh "docker run --name mysql -d -e MYSQL_ALLOW_EMPTY_PASSWORD=yes --rm mysql:latest"
+                sh "sleep 10"  // added as mysql takes a little longer than mongo to start
+                sh "docker network connect elastest_elastest mysql"
                 mysqlIP = sh (
-                    script: 'docker inspect --format=\\"{{.NetworkSettings.Networks.elastest_elastest.IPAddress}}\\" mysql_db',
+                    script: 'docker inspect --format=\\"{{.NetworkSettings.Networks.elastest_elastest.IPAddress}}\\" mysql',
                     returnStdout: true
                 ).trim()
                 echo "MySQL container IP=${mysqlIP}"
