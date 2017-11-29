@@ -373,22 +373,35 @@ class MongoDBStore(Store):
     def add_service_instance(self, service_instance: ServiceInstance) -> tuple:
         result = self.ESM_DB.instances.count({'context.id': service_instance.context['id']})
         if result == 1:
+
             LOG.info('A duplicate service instance was attempted to be stored. '
                      'Updating the existing service instance {id}.'
                      'Content supplied:\n{content}'.format(id=service_instance.context['id'],
                                                            content=service_instance.to_str()))
             # Update the service instance
+
             raw_svc_inst = self.ESM_DB.instances.find_one({'context.id': service_instance.context['id']})
             record_id = raw_svc_inst['_id']
+            self._sanitise_attrs(service_instance)
             result = self.ESM_DB.instances.update_one({'_id': record_id}, {"$set": service_instance.to_dict()},
                                                       upsert=False)
             if not result.acknowledged:
                 return 'there was an issue updating the service instance to the DB', 500
         else:
+            self._sanitise_attrs(service_instance)
             result = self.ESM_DB.instances.insert_one(service_instance.to_dict())
             if not result.acknowledged:
                 return 'there was an issue saving the service instance to the DB', 500
         return tuple()
+
+    def _sanitise_attrs(self, service_instance):
+        b = dict()
+        for k, v in service_instance.context.items():
+            if k.find('.') > -1:
+                b[k.replace('.', '_')] = v
+            else:
+                b[k] = v
+        service_instance.context = b
 
     def delete_service_instance(self, service_instance_id: str=None) -> None:
         if service_instance_id:
