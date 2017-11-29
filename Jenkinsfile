@@ -29,7 +29,7 @@ node('docker'){
 
             stage ("Unit tests"){
                 echo ("Starting unit tests...")
-                mongoIP = mongoIP.substring(1, loginToken.length()-1)
+                mongoIP = mongoIP.substring(1, mongoIP.length()-1)
                 echo "Mongo container IP=${mongoIP}"
                 withEnv(["ESM_MONGO_HOST=${mongoIP}"]){
                     sh "echo $ESM_MONGO_HOST"
