@@ -9,6 +9,8 @@ node('docker'){
 
             stage ("Setup test environment"){
                 sh 'rm -rf /home/ubuntu/workspace/elastest-service-manager/esm/.tox'
+                sh "docker rm -f $(docker ps -a -q)"
+
                 try {
                    sh "docker network create elastest_elastest"
                 } catch(e) {
@@ -23,12 +25,6 @@ node('docker'){
                 sh "docker network list"
                 sh "docker network connect elastest_elastest "+ containerId
 
-                try {
-                   sh "docker rm -f mongo"
-                } catch(e) {
-                   echo "Error: $e"
-                }
-
                 sh "docker run --name mongo -d --rm mongo:latest"
                 sh "docker network connect elastest_elastest mongo"
                 mongoIP = sh (
@@ -37,12 +33,6 @@ node('docker'){
                 ).trim()
                 mongoIP = mongoIP.substring(1, mongoIP.length()-1)
                 echo "Mongo container IP=${mongoIP}"
-
-                try {
-                   sh "docker rm -f mysql"
-                } catch(e) {
-                   echo "Error: $e"
-                }
 
                 sh "docker run --name mysql -d -e MYSQL_ALLOW_EMPTY_PASSWORD=yes --rm mysql:latest"
                 sh "sleep 10"  // added as mysql takes a little longer than mongo to start
