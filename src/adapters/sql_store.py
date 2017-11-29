@@ -951,7 +951,7 @@ class ServiceMetadataAdapter(ServiceMetadata):
 class Helper:
     def __init__(self) -> None:
         super().__init__()
-        self.host = os.environ.get('DATABASE_HOST', '127.0.0.1')
+        self.host = os.environ.get('ET_EDM_MYSQL_HOST', '127.0.0.1')
         self.user = os.environ.get('DATABASE_USER', 'root')
         self.password = os.environ.get('DATABASE_PASSWORD', '')
         self.database = os.environ.get('DATABASE_NAME', 'mysql')

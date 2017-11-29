@@ -56,10 +56,10 @@ node('docker'){
             stage ("Unit tests"){
                 echo ("Starting unit tests...")
                 echo "Mongo container IP=${mongoIP}"
-                withEnv(["ESM_MONGO_HOST=${mongoIP}", "ESM_MYSQL_HOST=${mysqlIP}"]){
+                withEnv(["ESM_MONGO_HOST=${mongoIP}", "ET_EDM_MYSQL_HOST=${mysqlIP}"]){
                     echo "Mongo container IP=${mongoIP}"
                     echo "MySQL container IP=${mysqlIP}"
-                    sh "ESM_MONGO_HOST=${mongoIP} tox"
+                    sh "tox"
                 }
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
             }
