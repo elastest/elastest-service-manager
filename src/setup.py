@@ -19,7 +19,7 @@ import inspect
 from setuptools import setup, find_packages
 
 NAME = "esm"
-VERSION = "0.1.0"
+VERSION = "0.5.0"
 
 # To install the library, run the following
 #
@@ -31,16 +31,23 @@ VERSION = "0.1.0"
 
 # XXX update if requirements.txt content is changed
 REQUIRES = [
-    'connexion == 1.0.129',
-    'python_dateutil == 2.6.0',
-    'setuptools >= 21.0.0',
+    'connexion',
+    'python_dateutil',
+    'setuptools',
     'pymongo',
     'docker-compose',
     'docker',
     'pykube',
-    'daiquiri',
     'healthcheck',
-    'tornado'
+    'tornado',
+    'pykafka',
+    'epm-client',
+    'orator',
+    'pymysql',
+]
+
+DEP_LINKS=[
+    "git+https://github.com/mpauls/epm-client-python.git"
 ]
 
 setup(
@@ -51,6 +58,7 @@ setup(
     url="https://github.com/elastest/bugtracker",
     keywords=["Swagger", "ElasTest Service Manager API"],
     install_requires=REQUIRES,
+    dependency_links = DEP_LINKS,
     packages=find_packages(),
     package_data={'': ['esm/swagger/swagger.yaml']},
     include_package_data=True,
