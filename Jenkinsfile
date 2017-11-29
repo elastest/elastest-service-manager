@@ -17,7 +17,7 @@ node('docker'){
                 ).trim()
                 echo "containerId = ${containerId}"
                 sh "docker network list"
-                sh "docker network connect bridge "+ containerId
+                // sh "docker network connect bridge "+ containerId
 
             	echo '[END] connect2ElastestNetwork'
 
