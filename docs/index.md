@@ -70,7 +70,9 @@ docker-compose up
 * By default this compose file will create a persistent mongodb service. If you do not want this then remove the `MONGO_DB` env. var. from the compose file. 
 * By default the port that the ESM will listen to is `8080`. If  you want it to listen under a different port then adjust the `ESM_PORT` env. var. in the compose file.
 
-## Basic Usage
+## User Usage
+
+Once you have an ESM instance running you can interact with it using `curl`, [Postman](https://www.getpostman.com) or generate a client from the swagger specification.
 
 ### Using the ESM API
 
