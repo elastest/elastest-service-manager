@@ -17,27 +17,18 @@ node('docker'){
                 }
 
                 sh "docker run --name mongo -d --rm mongo"
-                sh "docker inspect mongo"
-                sh "docker network list"
+                // sh "docker inspect mongo"
+                // sh "docker network list"
                 sh "docker network connect elastest_elastest mongo"
                 mongoIP = sh (
-                    script: 'docker inspect --format=\\"{{.NetworkSettings.Networks.elastest_elastest.Gateway}}\\" mongo',
-                    returnStdout: true
-                ).trim()
-                echo "Mongo container IP=${mongoIP}"
-
-                mongoIP = sh (
-                    script: 'docker inspect --format \\"{{ .NetworkSettings.IPAddress }}\\" mongo',
+                    script: 'docker inspect --format=\\"{{.NetworkSettings.Networks.elastest_elastest.IPAddress}}\\" mongo',
                     returnStdout: true
                 ).trim()
                 echo "Mongo container IP=${mongoIP}"
 
             stage "Unit tests"
                 echo ("Starting unit tests...")
-
-                // sh "docker inspect ${c.id}"
-                // sh "docker logs ${c.id}"
-                // sh 'tox'
+                sh 'export ESM_MONGO_HOST=${mongoIP}; echo $ESM_MONGO_HOST; tox'
                 // step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
 
             stage "Build image - Package"
