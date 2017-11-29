@@ -13,8 +13,7 @@ install:
   - "pip install codecov"  # only for use on travis
 
 env:
-  - MONGODB_TESTS=YES
-  - DOCKER_TESTS=YES
+  - MONGODB_TESTS=YES MYSQL_TESTS=YES DOCKER_TESTS=YES
 
 before_script:
   - sleep 15
@@ -28,10 +27,11 @@ script:
 services:
   - docker
   - mongodb
+  - mysql
 
 after_success:
   - codecov
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-    docker push dizz/elastest-service-manager;
+    docker push dizz/esm;
     fi
