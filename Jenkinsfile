@@ -9,6 +9,12 @@ node('docker'){
 
             stage ("Setup test environment"){
                 sh 'rm -rf /home/ubuntu/workspace/elastest-service-manager/esm/.tox'
+                try {
+                   sh "docker network create elastest_elastest"
+                } catch(e) {
+                   echo "Error: $e"
+                }
+
                 echo '[INI] connect2ElastestNetwork'
 
                 def containerId= sh (
