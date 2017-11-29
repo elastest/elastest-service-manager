@@ -9,7 +9,7 @@ node('docker'){
 
             stage ("Setup test environment"){
                 sh 'rm -rf /home/ubuntu/workspace/elastest-service-manager/esm/.tox'
-                sh "docker rm -f $(docker ps -a -q)"
+                sh "docker rm -f \\$(docker ps -a -q)"
 
                 try {
                    sh "docker network create elastest_elastest"
