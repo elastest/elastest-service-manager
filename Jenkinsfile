@@ -14,12 +14,12 @@ node('docker'){
                 echo ("Starting unit tests...")
                 docker.image('mongo:latest').withRun('-p 27017:27017') { c ->
                     sh "docker inspect ${c.id}"
-                    sh "docker logs ${c.id}"
-                    c.stop()
-                    //sh 'tox'
+                    // sh "docker logs ${c.id}"
+                    // c.stop()
+                    // sh 'tox'
                 }
 
-                step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
+                // step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
 
             stage "Build image - Package"
                 echo ("building...")
