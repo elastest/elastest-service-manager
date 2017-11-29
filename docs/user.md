@@ -1,5 +1,5 @@
-## User Documentation
-### To Run Locally on Docker
+# User Documentation
+## To Run Locally on Docker
 
 ```shell
 docker run -p 8080:8080 -p 5000:5000 elastest/esm:latest
@@ -7,7 +7,7 @@ docker run -p 8080:8080 -p 5000:5000 elastest/esm:latest
 
 You can now access the ESM service via port `8080` and health checks on port `5000`.
 
-#### Viewing the API via Swagger
+### Viewing the API via Swagger
 
 Navigate to the following URL in your browser
 
@@ -21,7 +21,7 @@ The OSBA Swagger definition can be accessed here:
 http://localhost:8080/swagger.json
 ```
 
-### Deploy on Docker-Compose
+## Deploy on Docker-Compose
 
 There is are two docker compose files:
  * `./deploy/docker-compose.yml`: this will create the ESM along with its DB and a full ELK stack to monitor the ESM.
@@ -38,12 +38,12 @@ docker-compose up
 * By default this compose file will create a persistent mongodb service. If you do not want this then remove the `MONGO_DB` env. var. from the compose file. 
 * By default the port that the ESM will listen to is `8080`. If  you want it to listen under a different port then adjust the `ESM_PORT` env. var. in the compose file.
 
-### Using the ESM API
+## Using the ESM API
 Once you have an ESM instance running you can interact with it using `curl`, [Postman](https://www.getpostman.com) or generate a client from the swagger specification.
 
 To use the API please see the [open service broker API specification](https://www.openservicebrokerapi.org/) or use the UI version from within your browser.
 
-#### Register a Service
+### Register a Service
 
 ```shell
 curl -X PUT \
@@ -74,7 +74,7 @@ curl -X PUT \
 }'
 ```
 
-#### Get the Catalog
+### Get the Catalog
 
 ```shell
 curl -v -X GET http://127.0.0.1:8080/v2/catalog -H 'X_Broker_Api_Version: 2.12'
@@ -122,7 +122,7 @@ curl -v -X GET http://127.0.0.1:8080/v2/catalog -H 'X_Broker_Api_Version: 2.12'
   ```
 </details>
 
-#### Register a Manifest for a Service's Plan
+### Register a Manifest for a Service's Plan
 
 ```shell
   curl -X PUT \
@@ -173,7 +173,7 @@ curl -v -X GET http://127.0.0.1:8080/v2/catalog -H 'X_Broker_Api_Version: 2.12'
     }'
 ```
 
-#### Get the Manifests
+### Get the Manifests
 
 ```shell
 curl -v GET http://127.0.0.1:8080/v2/et/manifest -H 'X_Broker_Api_Version: 2.12'
@@ -215,7 +215,7 @@ curl -v GET http://127.0.0.1:8080/v2/et/manifest -H 'X_Broker_Api_Version: 2.12'
 </details>
 
 
-#### Provision (create) a service instance
+### Provision (create) a service instance
 
 ```shell
 curl -v -d @payload.json -X PUT -H "X-Broker-API-Version: 2.12" -H "Content-Type: application/json" http://localhost:8080/v2/service_instances/123-123-123\?accept_incomplete\=true
@@ -272,7 +272,7 @@ where `payload.json` is:
 
 
 
-#### Get the Service Instances
+### Get the Service Instances
 
 ```shell
 curl -v GET http://127.0.0.1:8080/v2/et/service_instances -H 'X_Broker_Api_Version: 2.12'
@@ -350,7 +350,7 @@ curl -v GET http://127.0.0.1:8080/v2/et/service_instances -H 'X_Broker_Api_Versi
 </details>
 
 
-#### Get the Service Instance Information
+### Get the Service Instance Information
 
 ```shell
 curl -v -X GET http://127.0.0.1:8080/v2/service_instances/123-123-123 -H 'X_Broker_Api_Version: 2.12'
@@ -427,7 +427,7 @@ curl -v -X GET http://127.0.0.1:8080/v2/service_instances/123-123-123 -H 'X_Brok
 </details>
 
 
-#### Deprovision (delete) a service instance
+### Deprovision (delete) a service instance
 
 ```shell
 curl -v -X DELETE -H "X-Broker-API-Version: 2.12" -H "Content-Type: application/json" http://localhost:8080/v2/service_instances/123-123-123\?service_id\="a_service_type"\&plan_id\="plan-id-for-free"
@@ -464,11 +464,11 @@ curl -v -X DELETE -H "X-Broker-API-Version: 2.12" -H "Content-Type: application/
 
 
 
-#### Bind and Unbind
+### Bind and Unbind
 
 Currently not supported.
 
-### Using the Health API
+## Using the Health API
 
 There are two endpoints that are available to check the health of the ESM
 
@@ -477,14 +477,14 @@ There are two endpoints that are available to check the health of the ESM
 
 Both endpoints only support GET. Below is the output of issuing the HTTP GET to each endpoint.
 
-#### /health Endpoint
+### /health Endpoint
 
 ```shell
 $ curl http://localhost:5000/health
 {"hostname": "swizz", "status": "success", "timestamp": 1501062260.8501298, "results": [{"checker": "health_check", "output": "addition works", "passed": true, "timestamp": 1501062260.8501172, "expires": 1501062287.8501172}]}
 ```
 
-#### /environment Endpoint
+### /environment Endpoint
 
 ```
 curl http://localhost:5000/environment
