@@ -38,7 +38,7 @@ node('docker'){
                 echo "Mongo container IP=${mongoIP}"
 
                 try {
-                   sh "docker rm -f mysql:latest"
+                   sh "docker rm -f mysql"
                 } catch(e) {
                    echo "Error: $e"
                 }
