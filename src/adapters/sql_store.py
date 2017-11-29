@@ -621,8 +621,18 @@ class PlanAdapter:
 
 class PlanMetadataAdapter(PlanMetadata):
     @classmethod
-    def from_blob(cls, blob) -> PlanMetadata:
-        return cls.from_dict(dict(json.loads(blob)))
+    def to_blob(cls, model: PlanMetadata) -> dict:
+        if model is None:
+            return json.dumps(None)
+        my_dict = {}
+        ''' STRINGS '''
+        my_dict['bullets'] = model._bullets
+        my_dict['display_name'] = model._display_name
+        # TODO ambiguity | content will be lost | treated as None/List
+        ''' OBJECTS '''
+        my_dict['costs'] = model._costs
+        my_dict['extras'] = model._extras
+        return json.dumps(my_dict)
 
     '''
            self.swagger_types = {
@@ -634,16 +644,11 @@ class PlanMetadataAdapter(PlanMetadata):
     '''
 
     @classmethod
-    def to_blob(cls, model: PlanMetadata) -> dict:
-        my_dict = {}
-        ''' STRINGS '''
-        my_dict['bullets'] = model._bullets
-        my_dict['display_name'] = model._display_name
-        # TODO ambiguity | content will be lost | treated as None/List
-        ''' OBJECTS '''
-        my_dict['costs'] = model._costs
-        my_dict['extras'] = model._extras
-        return json.dumps(my_dict)
+    def from_blob(cls, blob) -> PlanMetadata or None:
+        if json.loads(blob) is None:
+            return None
+        else:
+            return cls.from_dict(dict(json.loads(blob)))
 
 
 '''
@@ -689,7 +694,7 @@ class ServiceTypeSQL(Model):
             ''' STRINGS '''
             table.string('id_name').unique()
             table.string('name').unique()
-            table.string('short_name')
+            table.string('short_name').nullable()
             table.string('description').nullable()
             ''' BOOLEANS '''
             table.boolean('bindable').nullable()
@@ -905,6 +910,8 @@ class ServiceTypeAdapter:
 class DashboardClientAdapter(DashboardClient):
     @classmethod
     def to_blob(cls, model: DashboardClient) -> dict:
+        if model is None:
+            return json.dumps(None)
         my_dict = {}
         ''' STRINGS '''
         my_dict['id'] = model._id
@@ -913,17 +920,22 @@ class DashboardClientAdapter(DashboardClient):
         return json.dumps(my_dict)
 
     @classmethod
-    def from_blob(cls, blob) -> DashboardClient:
-        return cls.from_dict(dict(json.loads(blob)))
+    def from_blob(cls, blob) -> DashboardClient or None:
+        if json.loads(blob) is None:
+            return None
+        else:
+            return cls.from_dict(dict(json.loads(blob)))
 
 
 class ServiceMetadataAdapter(ServiceMetadata):
     @classmethod
     def to_blob(cls, model: ServiceMetadata) -> dict:
+        if model is None:
+            return json.dumps(None)
         my_dict = {}
         ''' STRINGS '''
         my_dict['display_name'] = model._display_name
-        my_dict['image_url'] = model._image_url
+        # my_dict['image_url'] = model._image_url
         my_dict['long_description'] = model._long_description
         my_dict['provider_display_name'] = model._provider_display_name
         my_dict['documentation_url'] = model._documentation_url
@@ -932,8 +944,11 @@ class ServiceMetadataAdapter(ServiceMetadata):
         return json.dumps(my_dict)
 
     @classmethod
-    def from_blob(cls, blob) -> ServiceMetadata:
-        return cls.from_dict(dict(json.loads(blob)))
+    def from_blob(cls, blob) -> ServiceMetadata or None:
+        if json.loads(blob) is None:
+            return None
+        else:
+            return cls.from_dict(dict(json.loads(blob)))
 
 
 '''
@@ -949,26 +964,24 @@ class ServiceMetadataAdapter(ServiceMetadata):
 
 
 class Helper:
-    def __init__(self) -> None:
-        super().__init__()
-        self.host = os.environ.get('ET_EDM_MYSQL_HOST', '127.0.0.1')
-        self.user = os.environ.get('DATABASE_USER', 'root')
-        self.password = os.environ.get('DATABASE_PASSWORD', '')
-        self.database = os.environ.get('DATABASE_NAME', 'mysql')
-        self.port = int(os.environ.get('MYSQL_3306_TCP', 3306))
-        config = {
-            'mysql': {
-                'driver': 'mysql',
-                'prefix': '',
-                'host': self.host,
-                'database': self.database,
-                'user': self.user,
-                'password': self.password,
-                'port': self.port
-            }
+    host = os.environ.get('ET_EDM_MYSQL_HOST', '127.0.0.1')
+    user = os.environ.get('DATABASE_USER', 'root')
+    password = os.environ.get('DATABASE_PASSWORD', '')
+    database = os.environ.get('DATABASE_NAME', 'mysql')
+    port = int(os.environ.get('MYSQL_3306_TCP', 3306))
+    config = {
+        'mysql': {
+            'driver': 'mysql',
+            'prefix': '',
+            'host': host,
+            'database': database,
+            'user': user,
+            'password': password,
+            'port': port
         }
-        self.db = DatabaseManager(config)
-        self.schema = Schema(self.db)
+    }
+    db = DatabaseManager(config)
+    schema = Schema(db)
 
     @staticmethod
     def to_blob(model) -> str:
