@@ -9,17 +9,16 @@ node('docker'){
 
             stage "Setup test environment"
                 sh 'rm -rf /home/ubuntu/workspace/elastest-service-manager/esm/.tox'
+                sh "docker run --name mongo -d --rm mongo"
+                sh "docker inspect mongo"
+                sh "docker network list"
 
             stage "Unit tests"
                 echo ("Starting unit tests...")
-                docker.image('mongo:latest').withRun('-p 27017:27017') { c ->
-                    // sh "docker inspect ${c.id}"
-                    // sh "docker logs ${c.id}"
-                    sh "sudo lsof -i"
-                    // c.stop()
-                    // sh 'tox'
-                }
 
+                // sh "docker inspect ${c.id}"
+                // sh "docker logs ${c.id}"
+                // sh 'tox'
                 // step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
 
             stage "Build image - Package"
