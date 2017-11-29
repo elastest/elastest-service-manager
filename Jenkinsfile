@@ -35,6 +35,7 @@ node('docker'){
                     script: 'docker inspect --format=\\"{{.NetworkSettings.Networks.elastest_elastest.IPAddress}}\\" mongo',
                     returnStdout: true
                 ).trim()
+                mongoIP = mongoIP.substring(1, mongoIP.length()-1)
                 echo "Mongo container IP=${mongoIP}"
 
                 try {
@@ -50,6 +51,7 @@ node('docker'){
                     script: 'docker inspect --format=\\"{{.NetworkSettings.Networks.elastest_elastest.IPAddress}}\\" mysql',
                     returnStdout: true
                 ).trim()
+                mysqlIP = mysqlIP.substring(1, mysqlIP.length()-1)
                 echo "MySQL container IP=${mysqlIP}"
             }
 
