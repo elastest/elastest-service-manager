@@ -9,6 +9,15 @@ node('docker'){
 
             stage ("Setup test environment"){
                 sh 'rm -rf /home/ubuntu/workspace/elastest-service-manager/esm/.tox'
+                echo '[INI] connect2ElastestNetwork'
+
+                    def containerId= sh (
+                        script: 'cat /proc/self/cgroup | grep "docker" | sed s/\\\\//\\\\n/g | tail -1',
+                        returnStdout: true
+                    ).trim()
+                    echo "containerId = ${containerId}"
+                    sh "docker network connect elastest_elastest "+ containerId
+                echo '[END] connect2ElastestNetwork'
 
                 try {
                    sh "docker rm -f mongo"
@@ -21,7 +30,7 @@ node('docker'){
                 // sh "docker network list"
                 sh "docker network connect elastest_elastest mongo"
                 mongoIP = sh (
-                    script: 'docker inspect --format=\\"{{.NetworkSettings.Networks.elastest_elastest.Gateway}}\\" mongo',
+                    script: 'docker inspect --format=\\"{{.NetworkSettings.Networks.elastest_elastest.IPAddress}}\\" mongo',
                     returnStdout: true
                 ).trim()
                 echo "Mongo container IP=${mongoIP}"
@@ -29,11 +38,10 @@ node('docker'){
 
             stage ("Unit tests"){
                 echo ("Starting unit tests...")
-                mongoIP = mongoIP.substring(1, mongoIP.length()-1)
                 echo "Mongo container IP=${mongoIP}"
                 withEnv(["ESM_MONGO_HOST=${mongoIP}"]){
-                    sh "echo $ESM_MONGO_HOST"
-                    sh "tox"
+                    echo "Mongo container IP=${mongoIP}"
+                    sh "ESM_MONGO_HOST=${mongoIP} tox"
                 }
                 // step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
             }
