@@ -70,22 +70,6 @@ docker-compose up
 * By default this compose file will create a persistent mongodb service. If you do not want this then remove the `MONGO_DB` env. var. from the compose file. 
 * By default the port that the ESM will listen to is `8080`. If  you want it to listen under a different port then adjust the `ESM_PORT` env. var. in the compose file.
 
-### Deploy on OpenShift
-
-This description will follow.
-
-<!--There are deployment manifests within `./deploy` that will deploy a service broker to OpenShift. There are two main modifications that you will have to do:
-
-1. Change the route `./deploy/sv_route.yaml`. See line 11.
-2. Change the configuration of the service broker. Configuration is done by modifying `./deploy/sb_dc.yaml` under the `env` stanza, lines 31-38. 
-3. Deploy: `oc create -f ./deploy`.
-4. Build: `oc start-build svcbroker`.
-5. Destroy: `oc delete -f ./deploy`. -->
-
-### Deploy on K8s
-
-This description will follow.
-
 ## Basic Usage
 
 ### Using the ESM API
