@@ -12,7 +12,6 @@ node('docker'){
 
             stage "Unit tests"
                 echo ("Starting unit tests...")
-                sh 'docker rm -f 819d39bf5d39b6d21c3e563b3478b03ceb9a7657ebd58f41e0a90f8bd1c91e09'
                 docker.image('mongo:latest').withRun('-p 27017:27017') { c ->
                     sh "docker inspect ${c.id}"
                     sh "docker logs ${c.id}"
@@ -24,14 +23,14 @@ node('docker'){
 
             stage "Build image - Package"
                 echo ("building...")
-                def myimage = docker.build("elastest/esm:latest")
+                // def myimage = docker.build("elastest/esm:latest")
 
             stage "Publish"
                 echo ("Publishing as all tests succeeded...")
-                withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'elastestci-dockerhub',
-                usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-                    sh 'docker login -u "$USERNAME" -p "$PASSWORD"'
-                    myimage.push()
-                }
+                // withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'elastestci-dockerhub',
+                // usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
+                //     sh 'docker login -u "$USERNAME" -p "$PASSWORD"'
+                //     myimage.push()
+                // }
         }
 }
