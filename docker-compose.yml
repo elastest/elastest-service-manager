@@ -4,7 +4,7 @@ services:
   esm:
     depends_on:
       - esm-mongo
-    image: elastest/esm:0.5.0-alpha1
+    image: elastest/esm:0.5.0
     container_name: esm
     hostname: esm
     volumes:
