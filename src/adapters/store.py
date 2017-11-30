@@ -104,6 +104,12 @@ class SQLStore(Store):
 
         if connection:
             # print('Successfully connected to Database \'{}\'...'.format(Helper.database))
+            connection = SQLStore.get_connection()
+            PlanAdapter.create_table()
+            ServiceTypeAdapter.create_table()
+            PlanServiceTypeAdapter.create_table()
+            ManifestAdapter.create_table()
+            ServiceInstanceAdapter.create_table()
             connection.close()
         else:
             raise Exception('Could not connect to the DB')
@@ -244,6 +250,67 @@ class SQLStore(Store):
         else:
             ServiceInstanceAdapter.delete_all()
             return 'Deleted all Instances', 200
+
+    @staticmethod
+    def delete_last_operation(self, instance_id: str = None) -> None:
+        if instance_id:
+            self.ESM_DB.last_operations.delete_one({'id': instance_id})
+        else:
+            self.ESM_DB.last_operations.delete_many({})
+
+    @staticmethod
+    def get_last_operation(instance_id: str = None) -> List[ServiceInstance]:
+        if instance_id:
+            if ServiceInstanceAdapter.exists_in_db(instance_id):
+                model_sql = ServiceInstanceAdapter.find_by_id_name(instance_id)
+                model = ServiceInstanceAdapter.model_sql_to_model(model_sql)
+                return [model.state]
+            else:
+                return []
+        else:
+            raise Exception('method not supported')
+            models = ServiceInstanceAdapter.get_all()
+            return models
+
+    @staticmethod
+    def add_last_operation(instance_id: str, last_operation: LastOperation) -> tuple:
+        if ServiceInstanceAdapter.exists_in_db(instance_id):
+            instance = ServiceInstanceAdapter.find_by_id_name(instance_id)
+            ''' Attempt to Create Table '''
+            PlanAdapter.create_table()
+            ServiceTypeAdapter.create_table()
+            ServiceTypeAdapter.create_table()
+            ServiceInstanceAdapter.create_table()
+            instance.state = last_operation
+            ServiceInstanceAdapter.save(instance)
+
+            id_name = ServiceInstanceAdapter.get_id(instance)
+            if ServiceInstanceAdapter.exists_in_db(id_name):
+                return 'Instance added successfully', 200
+            else:
+                return 'Could not save the Instance in the DB', 500
+        else:
+            raise Exception('Service Instance not found')
+
+    @staticmethod
+    def delete_last_operation(self, instance_id: str = None) -> tuple:
+        if ServiceInstanceAdapter.exists_in_db(instance_id):
+            instance = ServiceInstanceAdapter.find_by_id_name(instance_id)
+            ''' Attempt to Create Table '''
+            PlanAdapter.create_table()
+            ServiceTypeAdapter.create_table()
+            ServiceTypeAdapter.create_table()
+            ServiceInstanceAdapter.create_table()
+            instance.state = None
+            ServiceInstanceAdapter.save(instance)
+
+            id_name = ServiceInstanceAdapter.get_id(instance)
+            if ServiceInstanceAdapter.exists_in_db(id_name):
+                return 'Instance added successfully', 200
+            else:
+                return 'Could not save the Instance in the DB', 500
+        else:
+            raise Exception('Service Instance not found')
 
 
 class MongoDBStore(Store):
@@ -592,5 +659,6 @@ if len(mongo_host):
     STORE = MongoDBStore(mongo_host)
 elif os.getenv('ESM_SQL_HOST'):
     STORE = SQLStore()
+    STORE.set_up()
 else:
     STORE = InMemoryStore()
