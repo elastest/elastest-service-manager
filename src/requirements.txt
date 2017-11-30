@@ -1,4 +1,4 @@
-connexion==1.0.129
+connexion
 python_dateutil
 setuptools
 pymongo
