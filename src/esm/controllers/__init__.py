@@ -16,6 +16,7 @@
 import connexion
 
 
+# TODO make into WSGI middleware
 def _version_ok():
     version_requested = connexion.request.headers.get('X-Broker-Api-Version', None)
 

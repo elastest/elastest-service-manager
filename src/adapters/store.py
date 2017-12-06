@@ -70,6 +70,9 @@ class Store(object):
     def get_last_operation(self, instance_id: str=None) -> List[LastOperation]:
         raise NotImplementedError
 
+    def is_ok(self) -> bool:
+        raise NotImplementedError
+
 
 # TODO align method signatures
 class SQLStore(Store):
@@ -315,12 +318,19 @@ class SQLStore(Store):
         else:
             raise Exception('Service Instance not found')
 
+    def is_ok(self):
+        try:
+            self.get_connection().ping()
+        except:
+            return False
+        return True
+
 
 class MongoDBStore(Store):
 
     def __init__(self, host: str, port=27017) -> None:
-        _client = MongoClient(host, port)
-        self.ESM_DB = _client.esm
+        self.client = MongoClient(host, port)
+        self.ESM_DB = self.client.esm
         LOG.info('Using the MongoDBStore.')
         LOG.info('MongoDBStore is persistent.')
 
@@ -512,6 +522,10 @@ class MongoDBStore(Store):
         else:
             self.ESM_DB.last_operations.delete_many({})
 
+    def is_ok(self):
+        # basic but dependent (requires client) check
+        return self.client.server_info()['ok'] == 1.0
+
 
 class InMemoryStore(Store):
 
@@ -656,12 +670,21 @@ class InMemoryStore(Store):
                 id=instance_id, content=last_op_to_delete[0]))
             self.ESM_DB.last_operations.remove(last_op_to_delete[0])
 
+    def is_ok(self):
+        # no other logic needed - this store is inmemory
+        return True
+
 
 mongo_host = os.getenv('ESM_MONGO_HOST', '')
-if len(mongo_host):
+sql_host = os.getenv('ESM_SQL_HOST', '')
+
+if len(mongo_host) and len(sql_host):
+    raise RuntimeError('Both MongoDB and SQL datastore environment variables are set. Set and use only one.')
+
+if len(mongo_host):  # not an empty string
     STORE = MongoDBStore(mongo_host)
-elif os.getenv('ESM_SQL_HOST'):
+elif len(sql_host):  # not an empty string
     STORE = SQLStore()
     STORE.set_up()
-else:
+else:  # default
     STORE = InMemoryStore()

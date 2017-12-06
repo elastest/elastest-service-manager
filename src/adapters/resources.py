@@ -20,6 +20,7 @@ import yaml
 import tarfile
 import tempfile
 
+import docker
 # XXX these docker imports are internal and not supported to be used by external processes
 from compose.cli.main import TopLevelCommand
 from compose.cli.command import project_from_options
@@ -43,6 +44,9 @@ class Backend(object):
         pass
 
     def delete(self, instance_id: str, **kwargs) -> None:
+        pass
+
+    def is_ok(self, **kwargs) -> bool:
         pass
 
 
@@ -220,6 +224,16 @@ class DockerBackend(Backend):
             # Done to let travis pass
             LOG.warning('Could not delete the directory {dir}'.format(dir=mani_dir))
 
+    def is_ok(self, **kwargs):
+        client = docker.from_env()
+        # this container should be small - this is 452 bytes
+        # https://github.com/DieterReuter/dockerchallenge-smallest-image
+        container = client.containers.run("dieterreuter/hello", detach=True)
+        if not container:
+            return False
+        container.remove(force=True)
+        return True
+
 
 def reconcile_state(info):
     states = set([v for k, v in info.items() if k.endswith('state')])
@@ -384,6 +398,10 @@ class EPMBackend(Backend):
         # XXX better that this done in the caller of the method
         package.delete_package(id=self.sid_to_rgid[instance_id])
 
+    def is_ok(self, **kwargs):
+        # TODO
+        return True
+
 
 class KubernetesBackend(Backend):
     def __init__(self) -> None:
@@ -416,6 +434,9 @@ class KubernetesBackend(Backend):
         # content = ''
         # dep = yaml.load(content)
         # resp = self.k8s_beta.delete_collection_namespaced_deployment(body=dep, namespace="default")
+
+    def is_ok(self, **kwargs):
+        return True
 
 
 class DummyBackend(Backend):
@@ -466,6 +487,10 @@ class DummyBackend(Backend):
         super().delete(instance_id)
         LOG.info('DummyBackend driver: delete called')
 
+    def is_ok(self, **kwargs):
+        # all in-memory so no more logic needed
+        return True
+
 
 class ResourceManager(Backend):
 
@@ -503,6 +528,16 @@ class ResourceManager(Backend):
             raise RuntimeError('manifest_type parameter not specified in call to info()')
 
         be.delete(instance_id, **kwargs)
+
+    def is_ok(self, **kwargs):
+        if 'manifest_type' in kwargs:
+            manifest_type = kwargs.get('manifest_type', 'dummy')
+            be = self.backends.get(manifest_type, self.backends['dummy'])
+        else:
+            ok = True
+            for _, be in self.backends.items():
+                if be.is_ok() != ok:
+                    return False
 
 
 RM = ResourceManager()
