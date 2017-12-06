@@ -69,7 +69,7 @@ node('docker'){
 
             stage "Build image - Package"
                 echo ("building...")
-                def myimage = docker.build("elastest/esm:0.5.0")
+                def myimage = docker.build("elastest/esm:latest")
 
             stage "Publish"
                 echo ("Publishing as all tests succeeded...")
