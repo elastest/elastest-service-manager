@@ -14,8 +14,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os
-import inspect
 from setuptools import setup, find_packages
 
 NAME = "esm"
@@ -46,7 +44,7 @@ REQUIRES = [
     'pymysql',
 ]
 
-DEP_LINKS=[
+DEP_LINKS = [
     "git+https://github.com/mpauls/epm-client-python.git"
 ]
 
@@ -58,7 +56,7 @@ setup(
     url="https://github.com/elastest/bugtracker",
     keywords=["Swagger", "ElasTest Service Manager API"],
     install_requires=REQUIRES,
-    dependency_links = DEP_LINKS,
+    dependency_links=DEP_LINKS,
     packages=find_packages(),
     package_data={'': ['esm/swagger/swagger.yaml']},
     include_package_data=True,
