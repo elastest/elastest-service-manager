@@ -76,7 +76,7 @@ class LastOperationSQL(Model):
             table.increments('id')
             ''' FOREIGN KEY '''
             table.integer('instance_id').unsigned()
-            table.foreign('instance_id').references('id').on('service_instances')
+            table.foreign('instance_id').references('id').on('service_instance')
             ''' OBJECTS '''
             table.string('state').nullable()
             table.string('description').nullable()
@@ -96,6 +96,11 @@ class LastOperationSQL(Model):
 
 
 class LastOperationAdapter(LastOperation):
+    @staticmethod
+    def create_table():
+        if not LastOperationSQL.table_exists():
+            LastOperationSQL.create_table()
+
     @staticmethod
     def sample_model(name='instance1') -> LastOperation:
         model = LastOperation()
@@ -209,11 +214,11 @@ class LastOperationAdapter(LastOperation):
 class ServiceInstanceSQL(Model):
     __table__ = 'service_instance'
 
-    @belongs_to
+    @belongs_to('service_id', 'id')  # local key, parent key
     def service(self):
         return ServiceTypeSQL
 
-    @has_many
+    @has_many('instance_id')  # foreign key
     def operations(self):
         return LastOperationSQL
 
@@ -243,7 +248,7 @@ class ServiceInstanceSQL(Model):
             table.foreign('service_id').references('id').on('service_types')
             ''' OBJECTS '''
             table.string('state')
-            table.string('context').nullable()
+            table.medium_text('context').nullable()
             ''' DATES '''
             table.datetime('created_at')
             table.datetime('updated_at')
@@ -327,8 +332,8 @@ class ServiceInstanceAdapter:
         if model_sql:
             ''' OBJECTS '''
             service_sql = ServiceTypeAdapter.find_by_id_name(model.service_type.id)
-            model_sql.service_type_id = service_sql.id
-            model_sql.service_type_id_name = service_sql.id_name
+            model_sql.service_id = service_sql.id
+            model_sql.service_id_name = service_sql.id_name
             ''' OBJECT '''
             model_sql.state = LastOperationAdapter.to_blob(model.state)
             ''' OBJECT '''
@@ -351,6 +356,8 @@ class ServiceInstanceAdapter:
     def delete(id_name: str) -> None:
         model_sql = ServiceInstanceAdapter.find_by_id_name(id_name) or None
         if model_sql:
+            for operation in model_sql.operations:
+                operation.delete()
             model_sql.delete()
         else:
             raise Exception('model not found on DB to delete')
@@ -425,7 +432,7 @@ class ManifestSQL(Model):
             ''' STRINGS '''
             table.string('id_name').unique()
             table.string('manifest_type')
-            table.string('manifest_content')
+            table.medium_text('manifest_content')
             ''' FOREIGN KEY '''
             table.string('service_id_name')
             table.integer('service_id').unsigned()
@@ -631,7 +638,7 @@ class PlanSQL(Model):
             table.boolean('free').nullable()
             table.boolean('bindable').nullable()
             ''' OBJECTS '''
-            table.string('metadata').nullable()
+            table.medium_text('metadata').nullable()
             ''' DATES '''
             table.datetime('created_at')
             table.datetime('updated_at')
@@ -847,7 +854,7 @@ class ServiceTypeSQL(Model):
             table.string('tags').nullable()
             table.string('requires').nullable()
             ''' OBJECTS '''
-            table.string('metadata').nullable()
+            table.medium_text('metadata').nullable()
             table.string('dashboard_client').nullable()
             ''' DATES '''
             table.datetime('created_at')

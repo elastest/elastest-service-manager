@@ -106,13 +106,14 @@ class SQLStore(Store):
             connection = SQLStore.get_connection()
 
         if connection:
-            # print('Successfully connected to Database \'{}\'...'.format(Helper.database))
+            LOG.debug('Successfully connected to Database \'{}\'...'.format(Helper.database))
             connection = SQLStore.get_connection()
             PlanAdapter.create_table()
             ServiceTypeAdapter.create_table()
             PlanServiceTypeAdapter.create_table()
             ManifestAdapter.create_table()
             ServiceInstanceAdapter.create_table()
+            LastOperationAdapter.create_table()
             connection.close()
         else:
             raise Exception('Could not connect to the DB')
@@ -234,8 +235,9 @@ class SQLStore(Store):
         ''' Attempt to Create Table '''
         PlanAdapter.create_table()
         ServiceTypeAdapter.create_table()
-        ServiceTypeAdapter.create_table()
+        ManifestAdapter.create_table()
         ServiceInstanceAdapter.create_table()
+        LastOperationAdapter.create_table()
         ServiceInstanceAdapter.save(instance)
 
         id_name = ServiceInstanceAdapter.get_id(instance)
@@ -287,6 +289,7 @@ class SQLStore(Store):
             ServiceTypeAdapter.create_table()
             ServiceTypeAdapter.create_table()
             ServiceInstanceAdapter.create_table()
+            LastOperationAdapter.create_table()
             instance.state = last_operation
             ServiceInstanceAdapter.save(instance)
 
@@ -307,6 +310,7 @@ class SQLStore(Store):
             ServiceTypeAdapter.create_table()
             ServiceTypeAdapter.create_table()
             ServiceInstanceAdapter.create_table()
+            LastOperationAdapter.create_table()
             instance.state = None
             ServiceInstanceAdapter.save(instance)
 
