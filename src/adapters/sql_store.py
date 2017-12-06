@@ -49,6 +49,52 @@ from esm.models.service_instance import ServiceInstance
 '''
 
 
+class LastOperationSQL(Model):
+    __table__ = 'last_operation'
+
+    @belongs_to
+    def instance(self):
+        return ServiceInstanceSQL
+
+    def __init__(self):
+        super(LastOperationSQL, self).__init__()
+        Model.set_connection_resolver(Helper().db)
+
+    ''' 
+        UPDATE WITH:
+        self.swagger_types = {
+                'service_type': ServiceType, (this is a service_id)
+                'state': LastOperation, (this is a operation_id)
+                'context': object (no idea what kind of object...)
+            }
+
+    '''
+
+    @classmethod
+    def create_table(cls):
+        with Helper().schema.create(cls.__table__) as table:
+            table.increments('id')
+            ''' FOREIGN KEY '''
+            table.integer('instance_id').unsigned()
+            table.foreign('instance_id').references('id').on('service_instances')
+            ''' OBJECTS '''
+            table.string('state').nullable()
+            table.string('description').nullable()
+            ''' DATES '''
+            table.datetime('created_at')
+            table.datetime('updated_at')
+
+    @classmethod
+    def table_exists(cls):
+        return Helper().schema.has_table(cls.__table__)
+
+    @classmethod
+    def delete_all(cls):
+        if Helper().schema.has_table(cls.__table__):
+            # Helper().db.table(cls.__table__).truncate()
+            Helper().schema.drop_if_exists(cls.__table__)
+
+
 class LastOperationAdapter(LastOperation):
     @staticmethod
     def sample_model(name='instance1') -> LastOperation:
@@ -70,6 +116,95 @@ class LastOperationAdapter(LastOperation):
     def from_blob(cls, blob) -> LastOperation:
         return cls.from_dict(dict(json.loads(blob)))
 
+    # CAN NOT BE IMPLEMENTED - ServiceInstance.ID IS NOT STORED in LastOperation
+
+    @staticmethod
+    def model_to_model_sql(instance_id: str, model: LastOperation):
+        instance_sql = ServiceInstanceAdapter.find_by_id_name(instance_id)
+
+        model_sql = LastOperationSQL()
+        model_sql.instance_id = instance_sql.id
+        ''' STRING '''
+        model_sql.state = model.state
+        model_sql.description = model.description
+        return model_sql
+
+    # @classmethod
+    # def sample_model_sql(cls) -> LastOperationSQL:
+    #     model = cls.sample_model()
+    #     # DANGEROUS! in case it's being transformed without saving the data of Service et al.
+    #     return cls.model_to_model_sql(model)
+
+    @staticmethod
+    def model_sql_to_model(model_sql: LastOperationSQL) -> LastOperation:
+        model = LastOperation()
+        ''' STRING '''
+        model.state = model_sql.state
+        model.description = model_sql.description
+        return model
+
+    @staticmethod
+    def save(instance_id: str, model: LastOperation) -> LastOperationSQL:
+        model_sql = LastOperationSQL()
+        if model_sql:
+            ''' OBJECTS '''
+            model_sql = LastOperationAdapter.find_by_id_name(instance_id, model)
+            model_sql.state = model.state
+            model_sql.description = model.description
+            model_sql.save()
+        else:
+            model_sql = LastOperationAdapter.model_to_model_sql(instance_id, model)
+            model_sql.save()
+        return model_sql
+
+    @staticmethod
+    def delete_all() -> None:
+        LastOperationSQL.delete_all()
+
+    # OUT OF REQUIREMENTS
+    # @staticmethod
+    # def delete(id_name: str) -> None:
+    #     model_sql = LastOperationAdapter.find_by_id_name(id_name) or None
+    #     if model_sql:
+    #         model_sql.delete()
+    #     else:
+    #         raise Exception('model not found on DB to delete')
+
+    @staticmethod
+    def get_all() -> [LastOperation]:
+        model = LastOperationSQL()
+        models = [] or model.all()  # .serialize()
+        return [LastOperationAdapter.model_sql_to_model(model) for model in models]
+
+    @staticmethod
+    def find_by_id_name(instance_id: str, model: LastOperation) -> LastOperationSQL or None:
+        results = LastOperationSQL.where('instance_id', '=', '{}'.format(instance_id)).get()
+        for result in results:
+            if result.state == model.state and result.description == model.description:
+                return result
+        else:
+            return None
+
+    @staticmethod
+    def exists_in_db(instance_id: str, model: LastOperation) -> bool:
+        result = LastOperationAdapter.find_by_id_name(instance_id, model)
+        if result:
+            return True
+        else:
+            return False
+
+
+'''    
+    *******************
+    *******************
+    **** TESTED CODE **
+    *******************
+    **** INSTANCE *****
+    *******************
+    ******** ♥ ********
+    *******************
+'''
+
 
 class ServiceInstanceSQL(Model):
     __table__ = 'service_instance'
@@ -77,6 +212,10 @@ class ServiceInstanceSQL(Model):
     @belongs_to
     def service(self):
         return ServiceTypeSQL
+
+    @has_many
+    def operations(self):
+        return LastOperationSQL
 
     def __init__(self):
         super(ServiceInstanceSQL, self).__init__()
@@ -183,7 +322,7 @@ class ServiceInstanceAdapter:
     def save(model: ServiceInstance) -> ServiceInstanceSQL:
         id_name = ServiceInstanceAdapter.get_id(model)
         if not id_name:
-            raise Exception('ID for given instance not found!')
+            raise Exception('ID for given instance not found in Service Instance Context!')
         model_sql = ServiceInstanceAdapter.find_by_id_name(id_name) or None
         if model_sql:
             ''' OBJECTS '''
@@ -194,9 +333,14 @@ class ServiceInstanceAdapter:
             model_sql.state = LastOperationAdapter.to_blob(model.state)
             ''' OBJECT '''
             model_sql.context = Helper().to_blob(model.context)
+            model_sql.save()
         else:
             model_sql = ServiceInstanceAdapter.model_to_model_sql(model)
             model_sql.save()
+
+        operation_sql = LastOperationAdapter.model_to_model_sql(id_name, model.state)
+        operation_sql.save()
+
         return model_sql
 
     @staticmethod

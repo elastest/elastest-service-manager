@@ -150,6 +150,8 @@ class SQLStore(Store):
                 return 'Service ID not found', 500
         else:
             PlanServiceTypeAdapter.delete_all()
+            LastOperationAdapter.delete_all()
+
             ServiceInstanceAdapter.delete_all()
             ManifestAdapter.delete_all()
             ServiceTypeAdapter.delete_all()
@@ -248,6 +250,7 @@ class SQLStore(Store):
             else:
                 return 'Instance ID not found', 500
         else:
+            LastOperationAdapter.delete_all()
             ServiceInstanceAdapter.delete_all()
             return 'Deleted all Instances', 200
 
