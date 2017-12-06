@@ -23,10 +23,18 @@ from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 from tornado.wsgi import WSGIContainer
 
+from adapters.auth import NOPMiddleWare
 import adapters.log
+from adapters.store import STORE
+from adapters.resources import RM
+
 from esm.encoder import JSONEncoder
 
 LOG = adapters.log.get_logger(name=__name__)
+
+
+def add_mware(app):
+    return NOPMiddleWare(app)
 
 
 def add_check_api():
@@ -35,17 +43,15 @@ def add_check_api():
     envdump = EnvironmentDump(app, "/environment")
 
     def health_check():
+        db_engines_ok = STORE.is_ok()  # calls specific DB check
+        resource_engine_ok = RM.is_ok()  # calls specific RM check
+        this_ok = (1 + 1 == 2)  # basic local check
+        # maintenance = False
 
-        # TODO check that the datasource backend is working
-        # TODO check that the active resource backends are available
-        db_engines_ok = True
-        maintenance = False
-        if 1 + 1 == 2:
+        if this_ok and db_engines_ok and resource_engine_ok:
             return {'status', 'up'}
-        elif db_engines_ok:
-            return {'status', 'up'}
-        elif not maintenance:
-            return {'status', 'out_of_service'}
+        # elif not maintenance:
+        #     return {'status', 'out_of_service'}
         else:
             return {'status', 'down'}
 
@@ -56,13 +62,13 @@ def add_check_api():
     health.add_check(health_check)
     envdump.add_section("application", application_data)
 
-    return app
+    return add_mware(app)
 
 
 def create_api():
-    esm_app = connexion.App('esm_api', specification_dir='./esm/swagger/')
-    esm_app.app.json_encoder = JSONEncoder
-    esm_app.add_api(
+    app = connexion.App('esm_api', specification_dir='./esm/swagger/')
+    app.app.json_encoder = JSONEncoder
+    app.add_api(
         'swagger.yaml', strict_validation=True,
         arguments={'title': 'The Open Service Broker API defines the contract between the a requesting '
                             'client and the service broker. The broker is expected to implement several '
@@ -78,7 +84,7 @@ def create_api():
                    }
     )
     LOG.info('OSBA API and ElasTest extensions API created.')
-    return esm_app
+    return add_mware(app)
 
 
 def shutdown_handler(signum=None, frame=None):
@@ -90,15 +96,17 @@ if __name__ == '__main__':
     esm_app = create_api()
     check_app = add_check_api()
 
+    esm_ip = os.environ.get('ESM_IP', '0.0.0.0')
     esm_port = os.environ.get('ESM_PORT', 8080)
     esm_server = HTTPServer(WSGIContainer(esm_app))
-    esm_server.listen(address='0.0.0.0', port=esm_port)
-    LOG.info('ESM available at http://{IP}:{PORT}'.format(IP='0.0.0.0', PORT=esm_port))
+    esm_server.listen(address=esm_ip, port=esm_port)
+    LOG.info('ESM available at http://{IP}:{PORT}'.format(IP=esm_ip, PORT=esm_port))
 
+    esm_check_ip = os.environ.get('ESM_CHECK_IP', '0.0.0.0')
     check_port = os.environ.get('ESM_CHECK_PORT', 5000)
     check_server = HTTPServer(WSGIContainer(check_app))
-    check_server.listen(address='0.0.0.0', port=check_port)
-    LOG.info('ESM Health available at http://{IP}:{PORT}'.format(IP='0.0.0.0', PORT=check_port))
+    check_server.listen(address=esm_check_ip, port=check_port)
+    LOG.info('ESM Health available at http://{IP}:{PORT}'.format(IP=esm_check_ip, PORT=check_port))
 
     for sig in [signal.SIGTERM, signal.SIGINT, signal.SIGHUP, signal.SIGQUIT]:
         signal.signal(sig, shutdown_handler)
