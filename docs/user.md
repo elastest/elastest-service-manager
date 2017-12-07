@@ -53,7 +53,7 @@ curl -X PUT \
   -H 'x-broker-api-version: 2.12' \
   -d '{
   "description": "this is a test service",
-  "id": "a_service_type",
+  "id": "testsvc",
   "name": "test_svc",
   "bindable": false,
   "plan_updateable": false,
@@ -62,8 +62,26 @@ curl -X PUT \
       "bindable": false,
       "description": "plan for testing",
       "free": true,
-      "id": "plan-id-for-free",
-      "name": "testing plan"
+      "id": "testplan",
+      "name": "testing plan",
+      "metadata": {
+        "costs": {
+          "name": "On Demand 5 + Charges",
+          "type": "ONDEMAND",
+          "fix_cost": {
+            "deployment": 5
+          },
+          "var_rate": {
+            "disk": 1,
+            "memory": 10,
+            "cpus": 50
+          },
+          "components": {
+          },
+          "description": "On Demand 5 per deployment, 50 per core, 10 per GB ram and 1 per GB disk"
+        },
+        "bullets": "basic plan"
+      }
     }
   ],
   "requires": [],
@@ -71,13 +89,14 @@ curl -X PUT \
     "test",
     "tester"
   ]
-}'
+}
+'
 ```
 
 ### Get the Catalog
 
 ```shell
-curl -v -X GET http://127.0.0.1:8080/v2/catalog -H 'X_Broker_Api_Version: 2.12'
+curl -v -X GET http://localhost:8080/v2/catalog -H 'X_Broker_Api_Version: 2.12'
 ```
 <details>
   <summary>Shell Output</summary>
@@ -132,51 +151,19 @@ curl -v -X GET http://127.0.0.1:8080/v2/catalog -H 'X_Broker_Api_Version: 2.12'
   -H 'content-type: application/json' \
   -H 'postman-token: af2a8114-34cb-cf54-a863-4ad4672ad8c1' \
   -H 'x-broker-api-version: 2.12' \
-  -d '{   "id": "test-mani",   "manifest_content": "version: '\''2'\''
-    services:
-      spark-master:
-        image: elastest/ebs-spark-base:0.5.0
-        container_name: spark-master
-        ports:
-          - \"8080:8080\"
-        volumes:
-          - ./spark/alluxio_conf:/opt/alluxio/conf
-          - ./spark/spark_conf:/opt/spark/conf
-          - ./spark/hadoop_conf:/usr/local/hadoop/etc/hadoop
-        command: [\"/usr/bin/supervisord\", \"--configuration=/opt/conf/master.conf\"]
-        hostname: spark-master
-        networks:
-          - elastest
-
-      spark-worker:
-        image: elastest/ebs-spark-base:0.5.0
-        depends_on:
-          - spark-master
-        ports:
-          - \"8081\"
-        volumes:
-          - ./spark/alluxio_conf:/opt/alluxio/conf
-          - ./spark/spark_conf:/opt/spark/conf
-          - ./spark/hadoop_conf:/usr/local/hadoop/etc/hadoop
-        command: [\"/usr/bin/supervisord\", \"--configuration=/opt/conf/slave.conf\"]
-        hostname: spark-worker
-        networks:
-          - elastest
-
-    networks:
-      elastest:
-        external: true
-    ",   
-    "manifest_type": "dummy",   
-    "plan_id": "plan-id-for-free",   
-    "service_id": "a_service_type" 
-    }'
+  -d '{
+    "id": "test-mani",
+    "manifest_content": "version: '2'\n\nservices:\n  spark-master:\n    image: elastest/ebs-spark-base:0.5.0\n    container_name: spark-master\n    ports:\n      - \"8080:8080\"\n    volumes:\n      - ./spark/alluxio_conf:/opt/alluxio/conf\n      - ./spark/spark_conf:/opt/spark/conf\n      - ./spark/hadoop_conf:/usr/local/hadoop/etc/hadoop\n    command: [\"/usr/bin/supervisord\", \"--configuration=/opt/conf/master.conf\"]\n    hostname: spark-master\n    networks:\n      - elastest\n\n  spark-worker:\n    image: elastest/ebs-spark-base:0.5.0\n    depends_on:\n      - spark-master\n    ports:\n      - \"8081\"\n    volumes:\n      - ./spark/alluxio_conf:/opt/alluxio/conf\n      - ./spark/spark_conf:/opt/spark/conf\n      - ./spark/hadoop_conf:/usr/local/hadoop/etc/hadoop\n    command: [\"/usr/bin/supervisord\", \"--configuration=/opt/conf/slave.conf\"]\n    hostname: spark-worker\n    networks:\n      - elastest\n\nnetworks:\n  elastest:\n    external: true\n",
+    "manifest_type": "dummy",
+    "plan_id": "testplan",
+    "service_id": "testsvc"
+  }'
 ```
 
 ### Get the Manifests
 
 ```shell
-curl -v GET http://127.0.0.1:8080/v2/et/manifest -H 'X_Broker_Api_Version: 2.12'
+curl -v GET http://localhost:8080/v2/et/manifest -H 'X_Broker_Api_Version: 2.12'
 ```
 
 <details>
@@ -218,21 +205,17 @@ curl -v GET http://127.0.0.1:8080/v2/et/manifest -H 'X_Broker_Api_Version: 2.12'
 ### Provision (create) a service instance
 
 ```shell
-curl -v -d @payload.json -X PUT -H "X-Broker-API-Version: 2.12" -H "Content-Type: application/json" http://localhost:8080/v2/service_instances/123-123-123\?accept_incomplete\=true
+curl -v -d @payload.json -X PUT -H "X-Broker-API-Version: 2.12" -H "Content-Type: application/json" http://localhost:8080/v2/service_instances/test_service_instance?accept_incomplete=false
 ```
 
 where `payload.json` is:
 
 ```json
 {
-  "organization_guid": "my-org-id-very-rich-company",
-  "plan_id":           "plan-id-for-free",
-  "service_id":        "a_service_type",
-  "space_guid":        "space-guid-here",
-  "parameters":        {
-    "parameter1": 1,
-    "parameter2": "value"
-  }
+  "organization_guid": "org",
+  "plan_id": "testplan",
+  "service_id": "testsvc",
+  "space_guid": "space"
 }
 ```
 
@@ -275,7 +258,7 @@ where `payload.json` is:
 ### Get the Service Instances
 
 ```shell
-curl -v GET http://127.0.0.1:8080/v2/et/service_instances -H 'X_Broker_Api_Version: 2.12'
+curl -v GET http://localhost:8080/v2/et/service_instances -H 'X_Broker_Api_Version: 2.12'
 ```
 <details>
   <summary>Shell Output</summary>
@@ -353,7 +336,7 @@ curl -v GET http://127.0.0.1:8080/v2/et/service_instances -H 'X_Broker_Api_Versi
 ### Get the Service Instance Information
 
 ```shell
-curl -v -X GET http://127.0.0.1:8080/v2/service_instances/123-123-123 -H 'X_Broker_Api_Version: 2.12'
+curl -v -X GET http://localhost:8080/v2/et/service_instances/test_service_instance -H 'X_Broker_Api_Version: 2.12'
 ```
 
 <details>
@@ -430,7 +413,7 @@ curl -v -X GET http://127.0.0.1:8080/v2/service_instances/123-123-123 -H 'X_Brok
 ### Deprovision (delete) a service instance
 
 ```shell
-curl -v -X DELETE -H "X-Broker-API-Version: 2.12" -H "Content-Type: application/json" http://localhost:8080/v2/service_instances/123-123-123\?service_id\="a_service_type"\&plan_id\="plan-id-for-free"
+curl -v -X DELETE -H "X-Broker-API-Version: 2.12" -H "Content-Type: application/json" http://localhost:8080/v2/service_instances/test_service_instance?service_id=test&plan_id=testplan&accept_incomplete=false
 ```
 <details>
   <summary>Shell Output</summary>
