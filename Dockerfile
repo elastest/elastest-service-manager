@@ -15,7 +15,6 @@ RUN apk --update add python3 py3-pip openssl ca-certificates git \
 ENV ESM_PORT 8080
 ENV ESM_CHECK_PORT 5000
 
-EXPOSE 8080
-EXPOSE 5000
+EXPOSE 8080 5000
 
 CMD ["/usr/bin/python3", "/app/runesm.py"]
