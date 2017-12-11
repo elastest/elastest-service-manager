@@ -12,4 +12,4 @@ git+https://github.com/mpauls/epm-client-python.git
 orator
 pymysql
 keystonemiddleware
-memcache
+python-memcached
