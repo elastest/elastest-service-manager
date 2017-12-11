@@ -36,7 +36,7 @@ LOG = adapters.log.get_logger(name=__name__)
 # TODO better exception handling
 
 
-class Backend(object):
+class DeployerBackend(object):
     def create(self, instance_id: str, content: str, c_type: str, **kwargs) -> None:
         pass
 
@@ -50,7 +50,7 @@ class Backend(object):
         pass
 
 
-class DockerBackend(Backend):
+class DockerBackend(DeployerBackend):
     def __init__(self) -> None:
         super().__init__()
         LOG.info('Adding DockerBackend')
@@ -255,7 +255,7 @@ def reconcile_state(info):
         info['srv_inst.state.description'] = 'The service instance is being created.'
 
 
-class EPMBackend(Backend):
+class EPMBackend(DeployerBackend):
     def __init__(self) -> None:
         super().__init__()
         LOG.info('Adding EPMBackend')
@@ -403,7 +403,7 @@ class EPMBackend(Backend):
         return True
 
 
-class KubernetesBackend(Backend):
+class KubernetesBackend(DeployerBackend):
     def __init__(self) -> None:
         super().__init__()
         LOG.info('Adding KubernetesBackend')
@@ -439,7 +439,7 @@ class KubernetesBackend(Backend):
         return True
 
 
-class DummyBackend(Backend):
+class DummyBackend(DeployerBackend):
     def __init__(self) -> None:
         super().__init__()
         LOG.info('Adding DummyBackend')
@@ -492,7 +492,7 @@ class DummyBackend(Backend):
         return True
 
 
-class ResourceManager(Backend):
+class ResourceManager(DeployerBackend):
 
     def __init__(self) -> None:
         self.backends = {

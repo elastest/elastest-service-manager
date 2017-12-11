@@ -23,7 +23,6 @@ from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 from tornado.wsgi import WSGIContainer
 
-from adapters.auth import NOPMiddleWare
 import adapters.log
 from adapters.store import STORE
 from adapters.resources import RM
@@ -34,7 +33,32 @@ LOG = adapters.log.get_logger(name=__name__)
 
 
 def add_mware(app):
-    return NOPMiddleWare(app)
+    # See: https://docs.openstack.org/keystonemiddleware/latest/middlewarearchitecture.html
+    if os.environ.get('ET_AAA_ESM_KEYSTONE_BASE_URL', '') != '':
+        from keystonemiddleware import auth_token
+
+        base_url = os.environ.get('ET_AAA_ESM_KEYSTONE_BASE_URL', '')
+        admin_port = os.environ.get('ET_AAA_ESM_KEYSTONE_ADMIN_PORT', 35357)
+        user_port = os.environ.get('ET_AAA_ESM_KEYSTONE_USER_PORT', 5000)
+        username = os.environ.get('ET_AAA_ESM_KEYSTONE_USERNAME', '')
+        passwd = os.environ.get('ET_AAA_ESM_KEYSTONE_PASSWD', '')
+        tenant = os.environ.get('ET_AAA_ESM_KEYSTONE_TENANT', '')
+
+        if '' in [username, passwd, tenant]:
+            raise RuntimeError('Keystone admin username, password or tenant name is not set in the environment.')
+
+        conf = {
+            'service_token_roles_required': True,
+            'identity_uri': base_url + ':' + str(admin_port) + '/',
+            'auth_version': 'v3.0',
+            'www_authenticate_uri': base_url + ':' + str(user_port) + '/v3/',
+            'admin_user': username,
+            'admin_password': passwd,
+            'admin_tenant_name': tenant,
+        }
+        return auth_token.AuthProtocol(app, conf)
+    else:
+        return app
 
 
 def add_check_api():

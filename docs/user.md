@@ -633,3 +633,18 @@ curl http://localhost:5000/environment
   }
   ```
 </details>
+
+## Authentication
+
+The ESM supports a simple mode where no authentication is provided. If authentication is required then the use of [OpenStack Keystone](https://github.com/openstack/keystone) is supported. To enable this support, simply set the following environment variables:
+
+* `ET_AAA_ESM_KEYSTONE_BASE_URL`: **Required**. This is the base URL of where the keystone service is running e.g. `http://localhost'. 
+* `ET_AAA_ESM_KEYSTONE_USERNAME`: **Required**. This is the name of a user that has permissions to verify tokens created by the keystone service.
+* `ET_AAA_ESM_KEYSTONE_PASSWD`: **Required**. This is the password of the corresponding username.
+* `ET_AAA_ESM_KEYSTONE_TENANT`: **Required**. This is the tenant or project of the corresponding username.
+* `ET_AAA_ESM_KEYSTONE_ADMIN_PORT`: This is the port number where the admin keystone service runs. The default is `35357`.
+* `ET_AAA_ESM_KEYSTONE_USER_PORT`: This is the port number where the normal keystone service runs (used by regular users). The default is `5000`.
+
+### Running OpenStack Keystone
+
+If you want to run your own instance of keystone on docker [see the following repository](https://github.com/dizz/dock-os-keystone) for details.
