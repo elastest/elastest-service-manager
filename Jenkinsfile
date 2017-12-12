@@ -69,8 +69,7 @@ node('docker'){
 
             stage "Build image - Package"
                 echo ("building...")
-                sh 'docker build --build-arg GIT_COMMIT=$(git rev-parse HEAD) --build-arg COMMIT_DATE=$(git log -1 --format=%cd --date=format:%Y-%m-%dT%H:%M:%S) 
-                . -t elastest/esm:latest'
+                sh 'docker build --build-arg GIT_COMMIT=$(git rev-parse HEAD) --build-arg COMMIT_DATE=$(git log -1 --format=%cd --date=format:%Y-%m-%dT%H:%M:%S) . -t elastest/esm:latest'
                 def myimage = docker.image("elastest/esm:latest")
 
             stage "Publish"
