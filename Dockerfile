@@ -1,8 +1,13 @@
 FROM gliderlabs/alpine:latest
 
 LABEL maintainer="elastest-users@googlegroups.com"
-LABEL version="0.1.0"
 LABEL description="Builds the service manager docker image."
+ARG GIT_COMMIT=unspecified
+LABEL git_commit=$GIT_COMMIT
+ARG COMMIT_DATE=unspecified
+LABEL commit_date=$COMMIT_DATE
+ARG VERSION=unspecified
+LABEL version=$VERSION
 
 WORKDIR /app
 COPY ./src /app
