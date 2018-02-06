@@ -31,7 +31,6 @@ from esm.models.update_operation_response import UpdateOperationResponse
 from esm.models.update_request import UpdateRequest
 
 
-
 def create_service_instance(instance_id, service, accept_incomplete=None):
     """
     Provisions a service instance

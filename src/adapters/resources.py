@@ -49,6 +49,25 @@ class DeployerBackend(object):
     def is_ok(self, **kwargs) -> bool:
         pass
 
+    def _reconcile_state(self, info):
+        states = set([v for k, v in info.items() if k.endswith('state')])
+        # states from compose.container.Container: 'Paused', 'Restarting', 'Ghost', 'Up', 'Exit %s'
+        # states for OSBA: in progress, succeeded, and failed
+        for state in states:
+            if state.startswith('Exit'):
+                # there's been an error with docker
+                info['srv_inst.state.state'] = 'failed'
+                info['srv_inst.state.description'] = \
+                    'There was an error in creating the instance {error}'.format(error=state)
+        if len(states) == 1:  # if all states of the same value
+            if states.pop() == 'Up':  # if running: Up
+                info['srv_inst.state.state'] = 'succeeded'
+                info['srv_inst.state.description'] = 'The service instance has been created successfully'
+        else:
+            # still waiting for completion
+            info['srv_inst.state.state'] = 'in progress'
+            info['srv_inst.state.description'] = 'The service instance is being created.'
+
 
 class DockerBackend(DeployerBackend):
     def __init__(self) -> None:
@@ -159,7 +178,7 @@ class DockerBackend(DeployerBackend):
             ip = [value.get('IPAddress') for value in c.dictionary['NetworkSettings']['Networks'].values()]
             info[name + '_' + 'Ip'] = ip[0]
 
-        reconcile_state(info)
+        self._reconcile_state(info)
 
         LOG.debug('Stack\'s attrs:')
         LOG.debug(info)
@@ -233,26 +252,6 @@ class DockerBackend(DeployerBackend):
             return False
         container.remove(force=True)
         return True
-
-
-def reconcile_state(info):
-    states = set([v for k, v in info.items() if k.endswith('state')])
-    # states from compose.container.Container: 'Paused', 'Restarting', 'Ghost', 'Up', 'Exit %s'
-    # states for OSBA: in progress, succeeded, and failed
-    for state in states:
-        if state.startswith('Exit'):
-            # there's been an error with docker
-            info['srv_inst.state.state'] = 'failed'
-            info['srv_inst.state.description'] = \
-                'There was an error in creating the instance {error}'.format(error=state)
-    if len(states) == 1:  # if all states of the same value
-        if states.pop() == 'Up':  # if running: Up
-            info['srv_inst.state.state'] = 'succeeded'
-            info['srv_inst.state.description'] = 'The service instance has been created successfully'
-    else:
-        # still waiting for completion
-        info['srv_inst.state.state'] = 'in progress'
-        info['srv_inst.state.description'] = 'The service instance is being created.'
 
 
 class EPMBackend(DeployerBackend):
@@ -381,7 +380,7 @@ class EPMBackend(DeployerBackend):
                 pv = params.split('=')
                 info[name + '_environment_' + pv[0]] = pv[1]
 
-        reconcile_state(info)
+        self._reconcile_state(info)
         LOG.debug('Stack\'s attrs:')
         LOG.debug(info)
 
@@ -478,7 +477,7 @@ class DummyBackend(DeployerBackend):
                 'srv_inst.state.description': 'The service instance has been created successfully'
             }
 
-        reconcile_state(info)
+        self._reconcile_state(info)
 
         LOG.info('Dummy data:\n{dummy}'.format(dummy=info))
         return info
