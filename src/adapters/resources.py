@@ -79,6 +79,7 @@ class DockerBackend(DeployerBackend):
             "SERVICE": "",
             "--remove-orphans": False,
             "--no-recreate": True,
+            "--always-recreate-deps": False,
             "--force-recreate": False,
             "--build": False,
             '--no-build': False,
@@ -232,7 +233,10 @@ class DockerBackend(DeployerBackend):
 
         self.options["--force"] = True
         self.options["--rmi"] = "none"
-        LOG.info('destroying: {compo}'.format(compo=mani_dir + '/docker-compose.yml'))
+        timeout = os.environ.get('ESM_DOCKER_DELETE_TIMEOUT', 20)
+        self.options['--timeout'] = timeout
+        LOG.info('destroying: {compo} with timeout of: {timeout}'.format(compo=mani_dir + '/docker-compose.yml',
+                                                                         timeout=timeout))
         project = project_from_options(mani_dir, self.options)
         cmd = TopLevelCommand(project)
         cmd.down(self.options)
