@@ -123,7 +123,7 @@ class DockerBackend(DeployerBackend):
         # if none supplied, we use an empty dict
         # add optionally supplied parameters as environment variables
         parameters = kwargs.get('parameters', dict())
-        if len(parameters) > 0:
+        if parameters and len(parameters) > 0:
             # convert dict to a list
             m = yaml.load(content)
             if 'all' in parameters and len(parameters['all']) > 0:
