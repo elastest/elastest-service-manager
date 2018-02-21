@@ -68,17 +68,14 @@ class TestServiceInstancesController(BaseTestCase):
         with open(path + '/manifests/test_endpoints.json', 'r') as ep_file:
             ep = ep_file.read()
 
-        # if os.environ.get('DOCKER_TESTS', 'NO') == 'YES':
-        #     self.test_manifest = Manifest(
-        #         id='test-mani', plan_id=self.test_plan.id, service_id=self.test_service.id,
-        #         manifest_type='docker-compose', manifest_content=mani, endpoints=json.loads(ep)
-        #     )
+        # if os.getenv('DOCKER_TESTS', 'NO') == 'YES':
+        #     m_type = 'docker-compose'
         # else:
+        m_type = 'dummy'
         self.test_manifest = Manifest(
             id='test-mani', plan_id=self.test_plan.id, service_id=self.test_service.id,
-            manifest_type='dummy', manifest_content=mani, endpoints=json.loads(ep)
+            manifest_type=m_type, manifest_content=mani, endpoints=json.loads(ep)
         )
-
         self.store.add_manifest(self.test_manifest)
         print('Manifest registration content of:\n {content}'.format(content=json.dumps(self.test_manifest)))
 
@@ -142,10 +139,44 @@ class TestServiceInstancesController(BaseTestCase):
         """
 
         params = dict()
-        params['TEST'] = 'value'
-        params['TEST1'] = 'value1'
+        params['ET_ESM_API'] = 'http://esm:37005/'
+
+        # params['all'] = dict()
+        # params['svc1'] = dict()  # should raise a 4xx error as it doesnt exist in manifest
+        # params['elastest-eus'] = dict()
+        # params['all']['TEST-ALL'] = 'value1'
+        # params['svc1']['TEST1'] = 'value'  # should raise a 4xx error
+        # params['elastest-eus']['TEST2'] = 'value1'
+        # params['elastest-eus']['ET_ESM_API'] = 'http://esm:37005/'
+
         response = self._send_service_request(params=params)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+
+        import time
+        time.sleep(3)
+
+        # should do a get on the instance and verify that the params are set.
+        # get info from the instance
+        # get info from the instance
+        headers = [('X_Broker_Api_Version', '2.12')]
+        response = self.client.open('/v2/et/service_instances/{instance_id}'.format(instance_id=self.instance_id),
+                                    method='GET', headers=headers)
+
+        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+
+        def _check_key(key_name, info):
+            res = False
+            # num = 0
+            for x in info:
+                if key_name in x:
+                    res = True
+                    # num = num + 1
+            return res  # , num
+
+        self.assertTrue(_check_key('ET_ESM_API', response.json['context']))
+
+
+
 
     def test_deprovision_service_instance(self):
         """

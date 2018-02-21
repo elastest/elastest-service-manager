@@ -3,6 +3,8 @@ version: '2.1'
 services:
   spark-master:
     image: elastest/ebs-spark:latest
+    environment:
+      - BLAH=true
     container_name: spark-master
     ports:
       - "8080:8080"
