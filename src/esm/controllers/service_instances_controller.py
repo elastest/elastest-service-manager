@@ -13,16 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import os
-import secrets
-import string
 
 import connexion
 
+from adapters import auth
 from adapters.store import STORE
 from adapters.resources import RM
 from esm.controllers import _version_ok
 
-from esm.models.binding_request import BindingRequest
 from esm.models.binding_response import BindingResponse
 from esm.models.empty import Empty
 from esm.models.last_operation import LastOperation
@@ -286,49 +284,17 @@ def service_bind(instance_id, binding_id, binding):
     else:
         # if AAA is enabled and the service is bindable:
         #    create project, user and role bindings
-        # TODO move this code out into adapters
         if os.environ.get('ET_AAA_ESM_KEYSTONE_BASE_URL', '') != '':
+
+            # what to do with dict:binding?
 
             svc_inst = STORE.get_service_instance(instance_id)[0]
 
             if not svc_inst.service_type.bindable:
                 return 'The service instance does not support service binding', 400
 
-            # if connexion.request.is_json:
-            #     return "Supplied body content is not or is mal-formed JSON", 400
-            #
-            # binding = BindingRequest.from_dict(connexion.request.get_json())
-
-            # TODO Cache this client
-            keystone = __keystone_client()
-
-            # TODO check for pre-exising project
-            # TODO create a domain per user or per service type?
-            project = keystone.projects.create(name="tenant-" + instance_id,
-                                               description="this is the project for tenant-" + instance_id,
-                                               domain="default", enabled=True)
-
-            # create user
-            password = ''.join(
-                secrets.choice(string.ascii_letters + string.digits + string.punctuation) for i in range(20)
-            )
-            user = keystone.users.create(name='user-' + binding_id, default_project=project, password=password,
-                                         email='user@localhost',
-                                         description='User with access to project: ' + project.name, enabled=True)
-
-            # associate role with user and project
-            # TODO look up the correct role in keystone
-            keystone.roles.grant(role='9fe2ff9ee4384b1894a90878d3e92bab', user=user, project=project)
-
-
-            binding = BindingResponse(credentials={
-                'url': 'http://',  # TODO extract from elastestservice.json?
-                'tenant': project.name,
-                'tenant_id': project.id,
-                'user': user.name,
-                'user_id': user.id,
-                'password': user.password
-            })
+            creds = auth.create_credentials(binding_id, instance_id)
+            binding = BindingResponse(credentials=creds)
             svc_inst.context['binding'] = binding
 
             # update instance with binding info
@@ -338,25 +304,6 @@ def service_bind(instance_id, binding_id, binding):
 
         else:
             return 'Not provided as there is no AAA endpoint configured.', 501
-
-
-# TODO move this code out into adapters
-def __keystone_client():
-    import os
-    from keystoneauth1.identity import v3
-    from keystoneauth1 import session
-    from keystoneclient.v3 import client
-
-    base_url = os.environ.get('ET_AAA_ESM_KEYSTONE_BASE_URL', '')
-    admin_port = os.environ.get('ET_AAA_ESM_KEYSTONE_ADMIN_PORT', 35357)
-    username = os.environ.get('ET_AAA_ESM_KEYSTONE_USERNAME', '')
-    passwd = os.environ.get('ET_AAA_ESM_KEYSTONE_PASSWD', '')
-    tenant = os.environ.get('ET_AAA_ESM_KEYSTONE_TENANT', '')
-    # XXX note that the domain is assumed to be default
-    auth = v3.Password(auth_url=base_url + ':' + str(admin_port) + '/v3', username=username, password=passwd,
-                       project_name=tenant, user_domain_id="default", project_domain_id="default")
-    keystone = client.Client(session=session.Session(auth=auth))
-    return keystone
 
 
 def service_unbind(instance_id, binding_id, service_id, plan_id):
@@ -380,7 +327,25 @@ def service_unbind(instance_id, binding_id, service_id, plan_id):
     if not ok:
         return message, code
     else:
-        return 'Not implemented. Pending selection and integration of an ET identity service', 501
+        # if AAA is enabled and the service is bindable:
+        #    create project, user and role bindings
+        if os.environ.get('ET_AAA_ESM_KEYSTONE_BASE_URL', '') != '':
+            svc_inst = STORE.get_service_instance(instance_id)[0]
+            if not svc_inst.service_type.bindable:
+                return 'The service instance does not support service (un)binding', 400
+
+            auth.delete_credentials(svc_inst.context['binding'].credentials)
+
+            # remove binding info
+            del svc_inst.context['binding']
+
+            # update instance with binding info
+            STORE.add_service_instance(svc_inst)
+
+            return Empty(), 200
+
+        else:
+            return 'Not provided as there is no AAA endpoint configured.', 501
 
 
 def update_service_instance(instance_id, plan, accept_incomplete=None):
