@@ -14,11 +14,14 @@
 #    under the License.
 
 import unittest
+from unittest import skipIf
 from adapters.heartbeat import HeartBeatMonitor, HeartBeatMonitorException
 from unittest.mock import patch
 from adapters.sentinel import SentinelProducer, SentinelLogger
+import os
 
 
+@skipIf(os.getenv('SENTINEL_TESTS', 'NO') != 'YES', "SENTINEL_TESTS not set in environment variables")
 class TestCaseHeartBeatMonitor(unittest.TestCase):
     '''
             HeartBeatMonitor Sequence
