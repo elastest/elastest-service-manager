@@ -17,18 +17,20 @@
 from __future__ import absolute_import
 
 import inspect
+import os
+import unittest
+
+from flask import json
 
 import adapters.log
-import os
 from adapters.store import STORE
 from esm.models.manifest import Manifest
 from esm.models.plan import Plan
 from esm.models.service_type import ServiceType
 from esm.models.binding_request import BindingRequest
 from esm.models.service_request import ServiceRequest
-from flask import json
-
 from esm.models.update_request import UpdateRequest
+
 from . import BaseTestCase
 
 
@@ -43,6 +45,7 @@ class TestServiceInstancesController(BaseTestCase):
 
         self.store = STORE
         self.instance_id = 'this_is_a_test_instance'
+        self.binding_id = 'this_is_a_test_instance_binding'
 
         self.test_plan = Plan(
             id='testplan', name='testing plan', description='plan for testing',
@@ -52,7 +55,7 @@ class TestServiceInstancesController(BaseTestCase):
         self.test_service = ServiceType(
             id='test-svc', name='test_svc',
             description='this is a test service',
-            bindable=False,
+            bindable=True,
             tags=['test', 'tester'],
             metadata=None, requires=[],
             plan_updateable=False, plans=[self.test_plan],
@@ -175,9 +178,6 @@ class TestServiceInstancesController(BaseTestCase):
 
         self.assertTrue(_check_key('ET_ESM_API', response.json['context']))
 
-
-
-
     def test_deprovision_service_instance(self):
         """
         Test case for deprovision_service_instance
@@ -276,37 +276,57 @@ class TestServiceInstancesController(BaseTestCase):
                                     query_string=query_string, headers=headers)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
+    @unittest.skipIf(os.getenv('BINDING_TESTS', 'NO') == 'NO', "No AAA testing configured.")
     def test_service_bind(self):
         """
         Test case for service_bind
 
         Binds to a service
         """
-        binding = BindingRequest(service_id='svc', plan_id='plan')
+        response = self._send_service_request()
+        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+
+        # bind to the service
+        binding = BindingRequest(service_id=self.test_service.id, plan_id=self.test_plan.id)
         headers = [('X_Broker_Api_Version', '2.12')]
         response = self.client.open('/v2/service_instances/{instance_id}/service_bindings/{binding_id}'.format(
-            instance_id='svc_id', binding_id='binding_id_example'),
+            instance_id=self.instance_id, binding_id=self.binding_id),
                                     method='PUT',
                                     data=json.dumps(binding),
                                     content_type='application/json',
                                     headers=headers)
-        self.assertStatus(response, 501, "Response body is : " + response.data.decode('utf-8'))
+        self.assertStatus(response, 200, "Response body is : " + response.data.decode('utf-8'))
 
+    @unittest.skipIf(os.getenv('BINDING_TESTS', 'NO') == 'NO', "No AAA testing configured.")
     def test_service_unbind(self):
         """
         Test case for service_unbind
 
         Unbinds a service
         """
-        query_string = [('service_id', 'service_id_example'),
-                        ('plan_id', 'plan_id_example')]
+        response = self._send_service_request()
+        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+
+        # bind to the service
+        binding = BindingRequest(service_id=self.test_service.id, plan_id=self.test_plan.id)
         headers = [('X_Broker_Api_Version', '2.12')]
         response = self.client.open('/v2/service_instances/{instance_id}/service_bindings/{binding_id}'.format(
-            instance_id='svc_id', binding_id='binding_id_example'),
+            instance_id=self.instance_id, binding_id=self.binding_id),
+            method='PUT',
+            data=json.dumps(binding),
+            content_type='application/json',
+            headers=headers)
+        self.assertStatus(response, 200, "Response body is : " + response.data.decode('utf-8'))
+
+        query_string = [('service_id', self.test_service.id),
+                        ('plan_id', self.test_plan.id)]
+        headers = [('X_Broker_Api_Version', '2.12')]
+        response = self.client.open('/v2/service_instances/{instance_id}/service_bindings/{binding_id}'.format(
+            instance_id=self.instance_id, binding_id=self.binding_id),
                                     method='DELETE',
                                     query_string=query_string,
                                     headers=headers)
-        self.assertStatus(response, 501, "Response body is : " + response.data.decode('utf-8'))
+        self.assertStatus(response, 200, "Response body is : " + response.data.decode('utf-8'))
 
     def test_update_service_instance(self):
         """
