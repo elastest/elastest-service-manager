@@ -19,9 +19,10 @@
 from unittest import skipIf
 import unittest
 from adapters.sentinel import SentinelProducer, SentinelLogger
+import os
 
 
-# @skipIf(os.getenv('SENTINEL_TESTS', 'NO') != 'YES', "MYSQL_TESTS not set in environment variables")
+@skipIf(os.getenv('SENTINEL_TESTS', 'NO') != 'YES', "SENTINEL_TESTS not set in environment variables")
 class TestCaseSentinelIntegration(unittest.TestCase):
     def test_send_string_to_sentinel(self):
         payload = 'hello_test'
