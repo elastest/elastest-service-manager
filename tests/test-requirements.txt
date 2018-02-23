@@ -9,3 +9,6 @@ mypy
 tox-docker
 orator
 pymysql
+jsonpickle
+kafka
+requests
