@@ -13,3 +13,6 @@ orator
 pymysql
 keystonemiddleware
 python-memcached
+jsonpickle
+kafka
+requests
