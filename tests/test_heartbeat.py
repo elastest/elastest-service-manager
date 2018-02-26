@@ -15,13 +15,13 @@
 
 import unittest
 from unittest import skipIf
-from adapters.heartbeat import HeartBeatMonitor, HeartBeatMonitorException
+from esm.controllers.service_instances_controller import HeartbeatMonitor, HeartbeatMonitorException
 from unittest.mock import patch
 from adapters.sentinel import SentinelProducer, SentinelLogger
 import os
 
 
-@skipIf(os.getenv('SENTINEL_TESTS', 'NO') != 'YES', "SENTINEL_TESTS not set in environment variables")
+@skipIf(os.getenv('HEARTBEAT_TESTS', 'NO') != 'YES', "HEARTBEAT_TESTS not set in environment variables")
 class TestCaseHeartBeatMonitor(unittest.TestCase):
     '''
             HeartbeatMonitor Sequence
@@ -45,30 +45,30 @@ class TestCaseHeartBeatMonitor(unittest.TestCase):
     #     with self.assertRaises(HeartbeatMonitorException):
     #         HeartBeatMonitor('instance_id').obtain_endpoint()
 
-    @patch.object(HeartBeatMonitor, 'instance_exists')
-    @patch.object(HeartBeatMonitor, 'get_instance_items')
+    @patch.object(HeartbeatMonitor, 'instance_exists')
+    @patch.object(HeartbeatMonitor, 'get_instance_items')
     def test_ip_key_not_found(self, mock_instance_exists, mock_get_instance_items):
         mock_instance_exists.return_value = True
         mock_get_instance_items.return_value = {"foo": "bar"}
-        with self.assertRaises(HeartBeatMonitorException):
-            HeartBeatMonitor('instance_id').obtain_endpoint()
+        with self.assertRaises(HeartbeatMonitorException):
+            HeartbeatMonitor('instance_id').obtain_endpoint()
 
-    @patch.object(HeartBeatMonitor, 'instance_exists')
+    @patch.object(HeartbeatMonitor, 'instance_exists')
     def test_endpoint_never_alive(self, mock_instance_exists):
         mock_instance_exists.return_value = False
-        with self.assertRaises(HeartBeatMonitorException):
-            result = HeartBeatMonitor('instance_id').obtain_endpoint()
+        with self.assertRaises(HeartbeatMonitorException):
+            result = HeartbeatMonitor('instance_id').obtain_endpoint()
             self.assertIsNone(result)
 
-    @patch.object(HeartBeatMonitor, 'instance_exists')
-    @patch.object(HeartBeatMonitor, 'obtain_endpoint')
-    @patch.object(HeartBeatMonitor, 'endpoint_is_alive')
+    @patch.object(HeartbeatMonitor, 'instance_exists')
+    @patch.object(HeartbeatMonitor, 'obtain_endpoint')
+    @patch.object(HeartbeatMonitor, 'endpoint_is_alive')
     def test_endpoint_never_alive(self, mock_instance_exists, mock_obtain_endpoint, endpoint_is_alive):
         mock_instance_exists.return_value = False
         mock_obtain_endpoint.return_value = "fake-endpoint"
         endpoint_is_alive.return_value = False
-        with self.assertRaises(HeartBeatMonitorException):
-            HeartBeatMonitor('instance_id').validate_endpoint()
+        with self.assertRaises(HeartbeatMonitorException):
+            HeartbeatMonitor('instance_id').validate_endpoint()
 
     # @patch.object(HeartBeatMonitor, 'instance_exists')
     # @patch.object(HeartBeatMonitor, 'obtain_endpoint')

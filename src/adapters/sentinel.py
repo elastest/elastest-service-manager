@@ -59,10 +59,11 @@ class SentinelLogger:
         logger.setLevel(level)
 
         logger.info('Adding Sentinel logging handler')
-        handler = SentinelLogHandler(backup_file='backup.log')
-        handler.setLevel(level)
+        if os.environ.get('ET_AAA_ESM_SENTINEL_EP', '') != '':
+            handler = SentinelLogHandler(backup_file='backup.log')
+            handler.setLevel(level)
+            logger.addHandler(handler)
 
-        logger.addHandler(handler)
         return logger
 
 
@@ -125,7 +126,7 @@ class SentinelLogHandler(logging.Handler):
             return
         try:
             # TODO add filename, function, level
-            print('logging receveid', record.msg)
+            print('logging received', record.msg)
             msg_dict = {'msg': record.msg}
             msg_dict['level'] = logging.getLevelName(self.level)
             msg_dict['file'] = __file__
@@ -136,7 +137,7 @@ class SentinelLogHandler(logging.Handler):
 
         except AttributeError:
             self.write_backup("Kafka Error!")
-            self.write_backup(msg)
+            self.write_backup(record)
             pass
 
         except (KeyboardInterrupt, SystemExit):
