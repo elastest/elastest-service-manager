@@ -24,7 +24,7 @@ import os
 @skipIf(os.getenv('SENTINEL_TESTS', 'NO') != 'YES', "SENTINEL_TESTS not set in environment variables")
 class TestCaseHeartBeatMonitor(unittest.TestCase):
     '''
-            HeartBeatMonitor Sequence
+            HeartbeatMonitor Sequence
 
             :arg instance_id
             > obtain_endpoint (attempts)
@@ -42,7 +42,7 @@ class TestCaseHeartBeatMonitor(unittest.TestCase):
     # @patch.object(HeartBeatMonitor, 'instance_exists')
     # def test_instance_not_found(self, mock_instance_exists):
     #     mock_instance_exists.return_value = False
-    #     with self.assertRaises(HeartBeatMonitorException):
+    #     with self.assertRaises(HeartbeatMonitorException):
     #         HeartBeatMonitor('instance_id').obtain_endpoint()
 
     @patch.object(HeartBeatMonitor, 'instance_exists')
@@ -77,5 +77,5 @@ class TestCaseHeartBeatMonitor(unittest.TestCase):
     #     instance_exists.return_value = False
     #     obtain_endpoint.return_value = "http://mybrokenlink.com"
     #     endpoint_is_alive.return_value = False
-    #     with self.assertRaises(HeartBeatMonitorException):
+    #     with self.assertRaises(HeartbeatMonitorException):
     #         HeartBeatMonitor('instance_id').start()

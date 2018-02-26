@@ -38,5 +38,3 @@ class TestCaseSentinelIntegration(unittest.TestCase):
     def test_log_save_in_sentinel(self):
         logger = SentinelLogger.getLogger(__name__, 'WARN')
         logger.warning('HOI! THIS IS ME TO YOU.... HELLO!')
-
-

@@ -105,6 +105,27 @@ def create_service_instance(instance_id, service, accept_incomplete=None):
 
         STORE.add_service_instance(srv_inst)
 
+        # GET data for Heartbeat
+        endpoint = ''
+        time.sleep(2)
+        inst_info = RM.info(instance_id=srv_inst.context['id'], manifest_type=mani.manifest_type)
+        for k, v in inst_info.items():
+            if 'Ip' in k:
+                endpoint = v
+
+        # START Heartbeat
+        if endpoint != '':
+            # VERIFY HEALTH ENDPOINT SYNTAX
+            endpoint = 'http://{}:56567/health'.format(endpoint)
+            print('starting heartbeat with endpoint...', endpoint)
+            heartbeat_monitor = HeartbeatMonitor(srv_inst.context['id'], endpoint)
+            heartbeat_monitor.start()
+        else:
+            err = 'Endpoint for InstanceID \'{}\' could never be retrieved!'.format(srv_inst.context['id'])
+            print(err)
+            # heartbeat_monitor = HeartbeatMonitor(srv_inst.context['id'])
+            # heartbeat_monitor.logger.warn(err)
+
         if accept_incomplete:
             STORE.add_last_operation(instance_id=instance_id, last_operation=last_op)
 
@@ -373,3 +394,92 @@ def update_service_instance(instance_id, plan, accept_incomplete=None):
         else:
             return "Supplied body content is not or is mal-formed JSON", 400
         return 'Not implemented :-(', 501
+
+
+import re
+import time
+import requests
+import threading
+from adapters.sentinel import SentinelProducer, SentinelLogger
+
+
+class HeartbeatMonitorException(Exception):
+    def __init__(self, message, errors):
+        # Call the base class constructor with the parameters it needs
+        super(HeartbeatMonitorException, self).__init__(message)
+
+        # Now for your custom code...
+        self.errors = errors
+
+
+class HeartbeatMonitorUtils:
+    @staticmethod
+    def validate_endpoint(endpoint):
+        regex = re.compile(
+            r'^(?:http|ftp)s?://'  # http:// or https://
+            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
+            r'localhost|'  # localhost...
+            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
+            r'(?::\d+)?'  # optional port
+            r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+
+        # SentinelProducer.send_msg('obtain_endpoint gives {}'.format(self.obtain_endpoint()))
+        # SentinelProducer.send_msg('my_endpoint is {}'.format(self.endpoint))
+        result = regex.match(endpoint)
+        return result
+
+
+class HeartbeatMonitor(threading.Thread):
+    def __init__(self, instance_id, endpoint=''):
+        self.logger = SentinelLogger.getLogger(__name__, 'WARN')
+        self.instance_id = instance_id
+        self.endpoint = endpoint
+
+        # VALIDATE ENDPOINT
+        result = HeartbeatMonitorUtils.validate_endpoint(self.endpoint) or True
+        if result is None:
+            err = 'Invalid endpoint \'{}\' provided'.format(self.endpoint)
+            self.logger.warn(err)
+            raise HeartbeatMonitorException(err, errors={'instance_id': self.instance_id})
+
+        threading.Thread.__init__(self)
+
+    '''
+        HeartbeatMonitor Sequence
+
+        :arg instance_id
+        > obtain_endpoint (attempts)
+            > instance_exists
+            :exception Instance_NotFound
+            > get_instance_dict
+            :exception IPKey_NotFound
+        :exception EndpointNeverAlive
+
+        > validate_endpoint
+        :exception InvalidEndpoint
+
+    '''
+
+    def endpoint_is_alive(self):
+        response = requests.get(self.endpoint)
+        data = response.json()
+        return data['status'] == 'up'
+
+    def run(self):
+        print('HeartbeatMonitor created with...', self.instance_id)
+        # result = HeartbeatMonitorUtils.instance_exists(self.instance_id)
+        # err = 'testing instance_exists, result: \'{}\''.format(result)
+        # self.logger.warn(err)
+        # for i in range(1):
+        #     time.sleep(5)
+        #     print('running thread....')
+        try:
+            if not self.endpoint_is_alive():
+                print('endpoint not alive')
+            else:
+                print('sending health status!')
+        except:
+            err = 'Endpoint \'{}\' for InstanceID \'{}\' is dead!'.format(self.endpoint, self.instance_id)
+            print(err)
+            self.logger.warn(err)
+            raise HeartbeatMonitorException(err, errors={'instance_id': self.instance_id})

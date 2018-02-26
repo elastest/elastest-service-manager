@@ -90,7 +90,8 @@ def add_check_api():
 
 
 def create_api():
-    app = connexion.App('esm_api', specification_dir='./esm/swagger/')
+    filename = os.path.join(os.path.dirname(__file__), 'esm/swagger/')
+    app = connexion.App('esm_api', specification_dir=filename)
     app.app.json_encoder = JSONEncoder
     app.add_api(
         'swagger.yaml', strict_validation=True,
