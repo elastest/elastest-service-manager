@@ -440,7 +440,7 @@ class HeartbeatMonitor(threading.Thread):
         if result is None:
             err = 'Invalid endpoint \'{}\' provided'.format(self.endpoint)
             self.logger.warn(err)
-            raise HeartbeatMonitorException(err, errors={'instance_id': self.instance_id})
+            # raise HeartbeatMonitorException(err, errors={'instance_id': self.instance_id})
 
         threading.Thread.__init__(self)
 
@@ -482,4 +482,4 @@ class HeartbeatMonitor(threading.Thread):
             err = 'Endpoint \'{}\' for InstanceID \'{}\' is dead!'.format(self.endpoint, self.instance_id)
             print(err)
             self.logger.warn(err)
-            raise HeartbeatMonitorException(err, errors={'instance_id': self.instance_id})
+            # raise HeartbeatMonitorException(err, errors={'instance_id': self.instance_id})
