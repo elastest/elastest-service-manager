@@ -22,7 +22,6 @@ import unittest
 
 from flask import json
 
-import adapters.log
 from adapters.store import STORE
 from esm.models.manifest import Manifest
 from esm.models.plan import Plan
@@ -34,7 +33,9 @@ from esm.models.update_request import UpdateRequest
 from . import BaseTestCase
 
 
-LOG = adapters.log.get_logger(name=__name__)
+from adapters.log import SentinelLogger
+
+LOG = SentinelLogger.getLogger(__name__)
 
 
 class TestServiceInstancesController(BaseTestCase):

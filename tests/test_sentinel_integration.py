@@ -18,7 +18,7 @@
 
 from unittest import skipIf
 import unittest
-from adapters.sentinel import SentinelProducer, SentinelLogger
+from adapters.heartbeat import SentinelProducer, SentinelLogger
 import os
 
 

@@ -521,8 +521,8 @@ class ManifestAdapter:
         ''' FOREIGN KEY '''
         model.plan_id = model_sql.plan_id_name
         ''' OBJECTS '''
-        model.endpoints = Helper().from_blob(model.endpoints)
-        model.config = Helper().from_blob(model.config)
+        model.endpoints = Helper().from_blob(model_sql.endpoints)
+        model.config = Helper().from_blob(model_sql.config)
 
         return model
 
