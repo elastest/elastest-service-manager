@@ -21,7 +21,6 @@ import inspect
 
 from flask import json
 
-import adapters.log
 from adapters.store import STORE
 from esm.models.manifest import Manifest
 # from esm.models.catalog import Catalog
@@ -31,7 +30,9 @@ from esm.models.plan import Plan
 from esm.models.service_type import ServiceType
 from . import BaseTestCase
 
-LOG = adapters.log.get_logger(name=__name__)
+from adapters.log import SentinelLogger
+
+LOG = SentinelLogger.getLogger(__name__)
 
 
 class TestCatalogController(BaseTestCase):

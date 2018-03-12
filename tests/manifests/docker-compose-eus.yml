@@ -15,5 +15,5 @@ services:
       - /tmp:/shared-data
 
 networks: 
-  elastest_elastest: 
+  elastest:
     external: true

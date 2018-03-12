@@ -26,12 +26,12 @@ from compose.cli.main import TopLevelCommand
 from compose.cli.command import project_from_options
 
 # from kubernetes import client, config
-import adapters.log
 from epm_client.apis.package_api import PackageApi
 from epm_client.apis.resource_group_api import ResourceGroupApi
 
-LOG = adapters.log.get_logger(name=__name__)
+from adapters.log import SentinelLogger
 
+LOG = SentinelLogger.getLogger(__name__)
 
 # TODO better exception handling
 
