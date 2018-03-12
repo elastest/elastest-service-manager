@@ -23,13 +23,14 @@ from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 from tornado.wsgi import WSGIContainer
 
-import adapters.log
 from adapters.store import STORE
 from adapters.resources import RM
 
 from esm.encoder import JSONEncoder
 
-LOG = adapters.log.get_logger(name=__name__)
+from adapters.log import SentinelLogger
+
+LOG = SentinelLogger.getLogger(__name__)
 
 
 def add_mware(app):

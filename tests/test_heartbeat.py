@@ -15,9 +15,9 @@
 
 import unittest
 from unittest import skipIf
-from esm.controllers.service_instances_controller import HeartbeatMonitor, HeartbeatMonitorException
+from adapters.heartbeat import HeartbeatMonitor, HeartbeatMonitorException
 from unittest.mock import patch
-from adapters.sentinel import SentinelProducer, SentinelLogger
+from adapters.heartbeat import SentinelProducer, SentinelLogger
 import os
 
 
