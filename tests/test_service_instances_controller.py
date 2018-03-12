@@ -33,9 +33,9 @@ from esm.models.update_request import UpdateRequest
 from . import BaseTestCase
 
 
-from adapters.log import SentinelLogger
+from adapters.log import get_logger
 
-LOG = SentinelLogger.getLogger(__name__)
+LOG = get_logger(__name__)
 
 
 class TestServiceInstancesController(BaseTestCase):

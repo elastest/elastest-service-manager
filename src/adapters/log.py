@@ -32,21 +32,37 @@ import jsonpickle
 from time import sleep
 import logging
 
-config = configparser.RawConfigParser()
-config.read(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'sentinel-agent.conf'))
+# config = configparser.RawConfigParser()
+# config.read(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'sentinel-agent.conf'))
 
 
-def get_section():
-    return config.sections()
-
-
-def get_elements(section_name):
-    return config[section_name]
-
+# def get_section():
+#     return config.sections()
+#
+#
+# def get_elements(section_name):
+#     return config[section_name]
+#
+#
+# def get_element_value(section_name, element_name):
+#     print('reading...', config[section_name][element_name])
+#     return config[section_name][element_name]
 
 def get_element_value(section_name, element_name):
-    print('reading...', config[section_name][element_name])
-    return config[section_name][element_name]
+    element = 'ET_AAA_ESM_SENTINEL_' + element_name
+    print('reading...', element)
+    return os.getenv(element, 'NotFound')
+
+
+def get_logger(name, level='WARN'):
+    if os.environ.get('ET_AAA_ESM_SENTINEL_EP', '') != '':
+        return SentinelLogger.getLogger(name, level)
+    else:
+        logger = logging.getLogger(name)
+        logger.setLevel(level)
+        logger.warning(get_element_value('', 'topic'))
+        print('reading...', get_element_value('', 'topic'))
+    return logger
 
 
 class SentinelLogger:

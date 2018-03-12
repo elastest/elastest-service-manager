@@ -29,9 +29,9 @@ from compose.cli.command import project_from_options
 from epm_client.apis.package_api import PackageApi
 from epm_client.apis.resource_group_api import ResourceGroupApi
 
-from adapters.log import SentinelLogger
+from adapters.log import get_logger
 
-LOG = SentinelLogger.getLogger(__name__)
+LOG = get_logger(__name__)
 
 # TODO better exception handling
 

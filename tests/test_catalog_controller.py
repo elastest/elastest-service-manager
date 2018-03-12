@@ -30,9 +30,9 @@ from esm.models.plan import Plan
 from esm.models.service_type import ServiceType
 from . import BaseTestCase
 
-from adapters.log import SentinelLogger
+from adapters.log import get_logger
 
-LOG = SentinelLogger.getLogger(__name__)
+LOG = get_logger(__name__)
 
 
 class TestCatalogController(BaseTestCase):
@@ -160,7 +160,7 @@ class TestCatalogController(BaseTestCase):
 
         # test for nonexistant manifest
         headers = [('X_Broker_Api_Version', '2.12')]
-        response = self.client.open('/v2/et/manifest/{manifest_id}'.format(manifest_id='I_DO_NOT_EXIST'),
+        response = self.client.open('/v2/et/manifest/{manifest_id}'.format(manifest_id='this_is_a_test_instance'),
                                     method='GET',
                                     headers=headers)
         self.assert404(response, "Response body is : " + response.data.decode('utf-8'))

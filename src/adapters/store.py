@@ -28,9 +28,9 @@ from esm.models import ServiceType
 
 # TODO implement exception handling
 
-from adapters.log import SentinelLogger
+from adapters.log import get_logger
 
-LOG = SentinelLogger.getLogger(__name__)
+LOG = get_logger(__name__)
 
 
 class Store(object):

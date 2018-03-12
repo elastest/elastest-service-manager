@@ -68,7 +68,7 @@ class Manifest(Model):
         :return: The Manifest of this Manifest.  # noqa: E501
         :rtype: Manifest
         """
-        return util.deserialize_model(dikt, cls)
+        return deserialize_model(dikt, cls)
 
     @property
     def id(self) -> str:

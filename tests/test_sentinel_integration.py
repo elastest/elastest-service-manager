@@ -18,7 +18,7 @@
 
 from unittest import skipIf
 import unittest
-from adapters.heartbeat import SentinelProducer, SentinelLogger
+from adapters.log import get_logger, SentinelProducer
 import os
 
 
@@ -36,5 +36,5 @@ class TestCaseSentinelIntegration(unittest.TestCase):
         SentinelProducer.send_msg(payload)
 
     def test_log_save_in_sentinel(self):
-        logger = SentinelLogger.getLogger(__name__, 'WARN')
+        logger = get_logger(__name__, 'WARN')
         logger.warning('HOI! THIS IS ME TO YOU.... HELLO!')
