@@ -1036,6 +1036,9 @@ definitions:
       endpoints:
         description: A set of endpoints that the service instance exposes. This includes APIs and UIs.
         type: object
+      config:
+        description: configuration parameters to be supplied to a service instance. this is not service instance specific
+        type: object
 
   ServiceInstance:
     description: service instance
