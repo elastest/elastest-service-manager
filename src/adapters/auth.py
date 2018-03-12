@@ -7,11 +7,9 @@ from keystoneauth1 import session
 from keystoneclient.exceptions import Conflict, NotFound, ValidationError
 from keystoneclient.v3 import client
 
-import adapters.log
+from adapters.log import SentinelLogger
 
-
-LOG = adapters.log.get_logger(name=__name__)
-
+LOG = SentinelLogger.getLogger(__name__)
 
 def __keystone_client():
     base_url = os.environ.get('ET_AAA_ESM_KEYSTONE_BASE_URL', '')

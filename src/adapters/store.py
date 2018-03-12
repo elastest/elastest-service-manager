@@ -19,8 +19,6 @@ from typing import List
 from pymongo import MongoClient
 import pymysql
 
-import adapters.log
-
 from adapters.sql_store import *
 
 from esm.models import LastOperation
@@ -30,7 +28,9 @@ from esm.models import ServiceType
 
 # TODO implement exception handling
 
-LOG = adapters.log.get_logger(name=__name__)
+from adapters.log import SentinelLogger
+
+LOG = SentinelLogger.getLogger(__name__)
 
 
 class Store(object):

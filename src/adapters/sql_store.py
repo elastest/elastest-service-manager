@@ -432,6 +432,7 @@ class ManifestSQL(Model):
             ''' STRINGS '''
             table.string('id_name').unique()
             table.string('manifest_type')
+            table.medium_text('config')
             table.medium_text('manifest_content')
             ''' FOREIGN KEY '''
             table.string('service_id_name')
@@ -474,6 +475,8 @@ class ManifestAdapter:
         model.manifest_content = name + 'content'
         ''' OBJECTS '''
         model.endpoints = {'endpoint': 'endpoint'}  # using dict
+        model.config = {'config': 'config'}  # using dict
+
         return model
 
     @staticmethod
@@ -497,6 +500,8 @@ class ManifestAdapter:
         model_sql.plan_id = plan.id
         ''' OBJECTS '''
         model_sql.endpoints = Helper().to_blob(model.endpoints)
+        model_sql.config = Helper().to_blob(model.config)
+
         return model_sql
 
     @classmethod
@@ -516,7 +521,9 @@ class ManifestAdapter:
         ''' FOREIGN KEY '''
         model.plan_id = model_sql.plan_id_name
         ''' OBJECTS '''
-        model.endpoints = model_sql.endpoints
+        model.endpoints = Helper().from_blob(model_sql.endpoints)
+        model.config = Helper().from_blob(model_sql.config)
+
         return model
 
     @staticmethod
@@ -541,6 +548,7 @@ class ManifestAdapter:
             model_sql.plan_id = PlanAdapter.find_by_id_name(model.plan_id)
             ''' OBJECTS '''
             model_sql.endpoints = Helper().to_blob(model.endpoints)
+            model_sql.config = Helper().to_blob(model.config)
         else:
             model_sql = ManifestAdapter.model_to_model_sql(model)
             model_sql.save()

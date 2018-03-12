@@ -12,8 +12,8 @@ class Manifest(Model):
 
     Do not edit the class manually.
     """
+    def __init__(self, id: str=None, plan_id: str=None, service_id: str=None, manifest_type: str=None, manifest_content: str=None, endpoints: object=None, config: object=None):
 
-    def __init__(self, id: str=None, plan_id: str=None, service_id: str=None, manifest_type: str=None, manifest_content: str=None, endpoints: object=None, config: object=None):  # noqa: E501
         """Manifest - a model defined in Swagger
 
         :param id: The id of this Manifest.  # noqa: E501
@@ -225,18 +225,14 @@ class Manifest(Model):
         configuration parameters to be supplied to a service instance. this is not service instance specific  # noqa: E501
 
         :return: The config of this Manifest.
-        :rtype: object
         """
         return self._config
 
     @config.setter
     def config(self, config: object):
+
         """Sets the config of this Manifest.
 
         configuration parameters to be supplied to a service instance. this is not service instance specific  # noqa: E501
-
-        :param config: The config of this Manifest.
-        :type config: object
         """
-
         self._config = config

@@ -13,9 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import os
-
 import connexion
+import time
 
+from adapters.heartbeat import HeartbeatMonitor
 from adapters import auth
 from adapters.store import STORE
 from adapters.resources import RM
@@ -104,6 +105,27 @@ def create_service_instance(instance_id, service, accept_incomplete=None):
         )
 
         STORE.add_service_instance(srv_inst)
+
+        # GET data for Heartbeat
+        endpoint = ''
+        time.sleep(2)
+        inst_info = RM.info(instance_id=srv_inst.context['id'], manifest_type=mani.manifest_type)
+        for k, v in inst_info.items():
+            if 'Ip' in k:
+                endpoint = v
+
+        # START Heartbeat
+        if endpoint != '':
+            # VERIFY HEALTH ENDPOINT SYNTAX
+            endpoint = 'http://{}:56567/health'.format(endpoint)
+            print('starting heartbeat with endpoint...', endpoint)
+            heartbeat_monitor = HeartbeatMonitor(srv_inst.context['id'], endpoint)
+            heartbeat_monitor.start()
+        else:
+            err = 'Endpoint for InstanceID \'{}\' could never be retrieved!'.format(srv_inst.context['id'])
+            print(err)
+            # heartbeat_monitor = HeartbeatMonitor(srv_inst.context['id'])
+            # heartbeat_monitor.logger.warn(err)
 
         if accept_incomplete:
             STORE.add_last_operation(instance_id=instance_id, last_operation=last_op)
