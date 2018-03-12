@@ -28,9 +28,9 @@ from adapters.resources import RM
 
 from esm.encoder import JSONEncoder
 
-from adapters.log import SentinelLogger
+from adapters.log import get_logger
 
-LOG = SentinelLogger.getLogger(__name__)
+LOG = get_logger(__name__)
 
 
 def add_mware(app):

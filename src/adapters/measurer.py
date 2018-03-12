@@ -19,7 +19,7 @@ import re
 import time
 import requests
 import threading
-from adapters.log import SentinelProducer, SentinelLogger
+from adapters.log import get_logger, SentinelLogger
 
 '''    
     *******************
@@ -32,16 +32,19 @@ from adapters.log import SentinelProducer, SentinelLogger
     *******************
 '''
 
-class HeartbeatMonitorException(Exception):
+LOG = get_logger(__name__)
+
+
+class MeasurerException(Exception):
     def __init__(self, message, errors):
         # Call the base class constructor with the parameters it needs
-        super(HeartbeatMonitorException, self).__init__(message)
+        super(MeasurerException, self).__init__(message)
 
         # Now for your custom code...
         self.errors = errors
 
 
-class HeartbeatMonitorUtils:
+class MeasurerUtils:
     @staticmethod
     def validate_endpoint(endpoint):
         regex = re.compile(
@@ -57,24 +60,58 @@ class HeartbeatMonitorUtils:
         result = regex.match(endpoint)
         return result
 
+    @staticmethod
+    def get_endpoint(cache):
+        instance_id = cache['instance_id']
+        mani = cache['mani']
+        endpoint = ''
+        RM = cache['RM']
+        MAX_RETRIES = 5
+        # Attempt to find Endpoint...
+        for i in range(MAX_RETRIES):
+            time.sleep(2)
+            inst_info = RM.info(instance_id=instance_id, manifest_type=mani.manifest_type)
+            for k, v in inst_info.items():
+                if 'Ip' in k:
+                    endpoint = v
 
-class HeartbeatMonitor(threading.Thread):
-    def __init__(self, instance_id, endpoint=''):
+            # START Measurer
+            if endpoint != '':
+                # VERIFY HEALTH ENDPOINT SYNTAX
+                endpoint = 'http://{}:56567/health'.format(endpoint)
+                print('starting heartbeat with endpoint...', endpoint)
+                break
+            err = 'Endpoint for InstanceID \'{}\' could not be retrieved!'.format(instance_id)
+            print(err)
+            LOG.warning(err)
+        return endpoint
+
+
+class Measurer(threading.Thread):
+    def __init__(self, cache):
         self.logger = SentinelLogger.getLogger(__name__, 'WARN')
-        self.instance_id = instance_id
-        self.endpoint = endpoint
+        self.instance_id = cache['instance_id']
+        self.endpoint = MeasurerUtils.get_endpoint(cache)
+        self._stop_event = threading.Event()
+
 
         # VALIDATE ENDPOINT
-        result = HeartbeatMonitorUtils.validate_endpoint(self.endpoint) or True
+        result = MeasurerUtils.validate_endpoint(self.endpoint) or True
         if result is None:
             err = 'Invalid endpoint \'{}\' provided'.format(self.endpoint)
             self.logger.warn(err)
-            # raise HeartbeatMonitorException(err, errors={'instance_id': self.instance_id})
+            # raise MeasurerException(err, errors={'instance_id': self.instance_id})
 
         threading.Thread.__init__(self)
 
+    def stop(self):
+        self._stop_event.set()
+
+    def stopped(self):
+        return self._stop_event.is_set()
+
     '''
-        HeartbeatMonitor Sequence
+        Measurer Sequence
 
         :arg instance_id
         > obtain_endpoint (attempts)
@@ -95,20 +132,20 @@ class HeartbeatMonitor(threading.Thread):
         return data['status'] == 'up'
 
     def run(self):
-        print('HeartbeatMonitor created with...', self.instance_id)
-        # result = HeartbeatMonitorUtils.instance_exists(self.instance_id)
+        print('Measurer created with...', self.instance_id)
+        # result = MeasurerUtils.instance_exists(self.instance_id)
         # err = 'testing instance_exists, result: \'{}\''.format(result)
         # self.logger.warn(err)
-        # for i in range(1):
-        #     time.sleep(5)
-        #     print('running thread....')
-        try:
-            if not self.endpoint_is_alive():
-                print('endpoint not alive')
-            else:
-                print('sending health status!')
-        except:
-            err = 'Endpoint \'{}\' for InstanceID \'{}\' is dead!'.format(self.endpoint, self.instance_id)
-            print(err)
-            self.logger.warn(err)
-            # raise HeartbeatMonitorException(err, errors={'instance_id': self.instance_id})
+        for i in range(5):
+            time.sleep(5)
+            print('running thread....')
+            try:
+                if not self.endpoint_is_alive():
+                    print('endpoint not alive')
+                else:
+                    print('sending health status!')
+            except:
+                err = 'Endpoint \'{}\' for InstanceID \'{}\' is dead!'.format(self.endpoint, self.instance_id)
+                print(err)
+                self.logger.warn(err)
+                # raise MeasurerException(err, errors={'instance_id': self.instance_id})
