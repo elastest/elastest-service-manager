@@ -83,15 +83,20 @@ class TestServiceInstancesController(BaseTestCase):
         self.store.add_manifest(self.test_manifest)
         print('Manifest registration content of:\n {content}'.format(content=json.dumps(self.test_manifest)))
 
-    def tearDown(self):
-        self.store.delete_service()
-        self.store.delete_manifest()
-        self.store.delete_service_instance()
-        self.store.delete_last_operation()
+        self.response = self._send_service_request()
+        self._assert200(self.response)
 
-    def test_request_no_version_header(self):
-        response = self._send_service_request(headers=[])
-        self.assert400(response, "Response body is : " + response.data.decode('utf-8'))
+    def _assert200(self, response):
+        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+
+    def tearDown(self):
+        # self.store.delete_service()
+        # self.store.delete_manifest()
+        # self.store.delete_service_instance()
+        # self.store.delete_last_operation()
+        response = self._delete_service_instance()
+        self._assert200(response)
+
 
     def _send_service_request(self, headers=[('X_Broker_Api_Version', '2.12')], params={}):
         service = ServiceRequest(service_id=self.test_service.id, plan_id=self.test_plan.id,
@@ -106,22 +111,37 @@ class TestServiceInstancesController(BaseTestCase):
                                     headers=headers)
         return response
 
+    def _delete_service_instance(self):
+        query_string = [('service_id', 'srv'),
+                        ('plan_id', 'plan'),
+                        ('accept_incomplete', True)]
+        headers = [('X_Broker_Api_Version', '2.12')]
+
+        response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id=self.instance_id),
+                                    method='DELETE',
+                                    query_string=query_string,
+                                    headers=headers)
+        return response
+
+    def test_request_no_version_header(self):
+        response = self._send_service_request(headers=[])
+        self.assert400(response, "Response body is : " + response.data.decode('utf-8'))
+
     def test_create_service_instance(self):
         """
         Test case for create_service_instance
 
         Provisions a service instance
         """
-        response = self._send_service_request()
-        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+        self._assert200(self.response)
 
     def test_create_instance_with_same_id(self):
         # send the same request twice
-        self._send_service_request()
         response = self._send_service_request()
         self.assertEqual(response.status_code, 409)
 
     def test_create_instance_with_nonexistant_plan(self):
+        self._delete_service_instance()
         service = ServiceRequest(service_id=self.test_service.id, plan_id='WRONG_ONE',
                                  organization_guid='org', space_guid='space')
         query_string = [('accept_incomplete', False)]
@@ -134,6 +154,7 @@ class TestServiceInstancesController(BaseTestCase):
                                     query_string=query_string,
                                     headers=headers)
         self.assert404(response, "Response body is : " + response.data.decode('utf-8'))
+        self._send_service_request()
 
     def test_create_service_instance_with_params(self):
         """
@@ -141,6 +162,7 @@ class TestServiceInstancesController(BaseTestCase):
 
         Provisions a service instance
         """
+        self._delete_service_instance()
 
         params = dict()
         params['ET_ESM_API'] = 'http://esm:37005/'
@@ -154,7 +176,7 @@ class TestServiceInstancesController(BaseTestCase):
         # params['elastest-eus']['ET_ESM_API'] = 'http://esm:37005/'
 
         response = self._send_service_request(params=params)
-        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+        self._assert200(response)
 
         import time
         time.sleep(3)
@@ -165,8 +187,8 @@ class TestServiceInstancesController(BaseTestCase):
         headers = [('X_Broker_Api_Version', '2.12')]
         response = self.client.open('/v2/et/service_instances/{instance_id}'.format(instance_id=self.instance_id),
                                     method='GET', headers=headers)
+        self._assert200(response)
 
-        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
         def _check_key(key_name, info):
             res = False
@@ -179,6 +201,8 @@ class TestServiceInstancesController(BaseTestCase):
 
         self.assertTrue(_check_key('ET_ESM_API', response.json['context']))
 
+
+
     def test_deprovision_service_instance(self):
         """
         Test case for deprovision_service_instance
@@ -186,26 +210,9 @@ class TestServiceInstancesController(BaseTestCase):
         Deprovisions a service instance.
         """
 
-        response = self._send_service_request()
+        response = self._delete_service_instance()
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
-
-        query_string = [('service_id', 'srv'),
-                        ('plan_id', 'plan'),
-                        ('accept_incomplete', True)]
-        headers = [('X_Broker_Api_Version', '2.12')]
-
-        # test attempted deletion of non-existant instance
-        # response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id='I_DO_NOT_EXIST'),
-        #                             method='DELETE',
-        #                             query_string=query_string,
-        #                             headers=headers)
-        # self.assert404(response, "Response body is : " + response.data.decode('utf-8'))
-
-        response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id=self.instance_id),
-                                    method='DELETE',
-                                    query_string=query_string,
-                                    headers=headers)
-        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+        self._send_service_request()
 
     def test_all_instance_info(self):
         """
@@ -213,10 +220,6 @@ class TestServiceInstancesController(BaseTestCase):
 
         Returns information about the service instance.
         """
-
-        # create the instance we want to get info from
-        response = self._send_service_request()
-        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
         # get info from the instance
         headers = [('X_Broker_Api_Version', '2.12')]
@@ -236,10 +239,6 @@ class TestServiceInstancesController(BaseTestCase):
         Returns information about the service instance.
         """
 
-        # create the instance we want to get info from
-        response = self._send_service_request()
-        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
-
         # get info from the instance
         headers = [('X_Broker_Api_Version', '2.12')]
         response = self.client.open('/v2/et/service_instances/{instance_id}'.format(instance_id=self.instance_id),
@@ -256,17 +255,13 @@ class TestServiceInstancesController(BaseTestCase):
                                     method='GET', headers=headers)
         self.assert404(response, "Response body is : " + response.data.decode('utf-8'))
 
+
     def test_last_operation_status(self):
         """
         Test case for last_operation_status
 
         Gets the current state of the last operation upon the specified resource.
         """
-
-        # create the instance we want to get info from
-        response = self._send_service_request()
-        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
-
         query_string = [('service_id', 'service_id_example'),
                         ('plan_id', 'plan_id_example'),
                         ('operation', 'operation_example')]
@@ -284,8 +279,7 @@ class TestServiceInstancesController(BaseTestCase):
 
         Binds to a service
         """
-        response = self._send_service_request()
-        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+        self.assert200(self.response, "Response body is : " + self.response.data.decode('utf-8'))
 
         # bind to the service
         binding = BindingRequest(service_id=self.test_service.id, plan_id=self.test_plan.id)
@@ -305,8 +299,8 @@ class TestServiceInstancesController(BaseTestCase):
 
         Unbinds a service
         """
-        response = self._send_service_request()
-        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+
+        self.assert_service_instance_exists()
 
         # bind to the service
         binding = BindingRequest(service_id=self.test_service.id, plan_id=self.test_plan.id)
@@ -319,14 +313,7 @@ class TestServiceInstancesController(BaseTestCase):
             headers=headers)
         self.assertStatus(response, 200, "Response body is : " + response.data.decode('utf-8'))
 
-        query_string = [('service_id', self.test_service.id),
-                        ('plan_id', self.test_plan.id)]
-        headers = [('X_Broker_Api_Version', '2.12')]
-        response = self.client.open('/v2/service_instances/{instance_id}/service_bindings/{binding_id}'.format(
-            instance_id=self.instance_id, binding_id=self.binding_id),
-                                    method='DELETE',
-                                    query_string=query_string,
-                                    headers=headers)
+        response = self._delete_service_instance()
         self.assertStatus(response, 200, "Response body is : " + response.data.decode('utf-8'))
 
     def test_update_service_instance(self):
@@ -346,6 +333,15 @@ class TestServiceInstancesController(BaseTestCase):
                                     headers=headers)
         self.assertStatus(response, 501, "Response body is : " + response.data.decode('utf-8'))
 
+
+# TODO new test
+
+    # test attempted deletion of non-existant instance
+    # response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id='I_DO_NOT_EXIST'),
+    #                             method='DELETE',
+    #                             query_string=query_string,
+    #                             headers=headers)
+    # self.assert404(response, "Response body is : " + response.data.decode('utf-8'))
 
 if __name__ == '__main__':
     import unittest

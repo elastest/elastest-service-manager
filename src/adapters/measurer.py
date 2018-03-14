@@ -17,7 +17,7 @@
 import time
 import requests
 import threading
-
+import os
 from adapters.log import get_logger
 from esm.util import Singleton
 
@@ -29,7 +29,6 @@ class MeasurerFactory:
     def __init__(self):
         self.measurers = {}
 
-    # TODO we should only add and remove from the measurers hash, not activate the thread here.
     def start_heartbeat_measurer(self, cache):
         measurer = Measurer(cache)
         measurer.start()
@@ -61,7 +60,7 @@ class Measurer(threading.Thread):
         self.instance_id = cache['instance_id']
         self._stop_event = threading.Event()
         self.endpoint = None
-        self.max_retries = 5  # TODO make configurable
+        self.max_retries = os.getenv('ET_AAA_ESM_SENTINEL_MAX_RETRIES', '5')
 
     def __get_endpoint(self):
         endpoint = None  # endpoint = 'http://localhost:56567/health'  # .format(endpoint)
@@ -70,8 +69,8 @@ class Measurer(threading.Thread):
         for k, v in inst_info.items():
             if 'Ip' in k:
                 endpoint = v
-                # TODO fix hardcoded port number
-                endpoint = 'http://{}:56567/health'.format(endpoint)
+                port = os.getenv('ET_AAA_ESM_SENTINEL_HEALTH_CHECK_PORT', '80')
+                endpoint = 'http://{}:{}/health'.format(endpoint, port)
         return endpoint
 
     def __poll_endpoint(self):
@@ -86,9 +85,8 @@ class Measurer(threading.Thread):
         return endpoint
 
     def __endpoint_is_healthy(self):
-        # TODO returns multiple types (string and boolean) - settle on one!
         if self.endpoint is not None:
-            response = requests.get(self.endpoint)
+            response = requests.get(self.endpoint, timeout=5)
             data = response.json()
             return data['status'] == 'up'
 
@@ -101,7 +99,6 @@ class Measurer(threading.Thread):
             if not self.__endpoint_is_healthy():
                 LOG.warning('Instance endpoint is not alive')
             else:
-                # TODO send to where? EMP(Sentinel) I presume
                 LOG.info('sending health status!')
         except:
             LOG.warning('Endpoint \'{}\' for InstanceID \'{}\' is not contactable!'
@@ -112,7 +109,6 @@ class Measurer(threading.Thread):
         LOG.warning('Measurer created with...{}'.format(self.instance_id))
         self.endpoint = self.__poll_endpoint()
 
-        # TODO not necessary ATM
         # VALIDATE ENDPOINT
         # valid = MeasurerUtils.validate_endpoint(self.endpoint) or True
         # valid = True
@@ -128,13 +124,13 @@ class Measurer(threading.Thread):
         return self._stop_event.is_set()
 
 
-# class MeasurerException(Exception):
-#     def __init__(self, message, errors):
-#         # Call the base class constructor with the parameters it needs
-#         super(MeasurerException, self).__init__(message)
-#
-#         # Now for your custom code...
-#         self.errors = errors
+class MeasurerException(Exception):
+    def __init__(self, message, errors):
+        # Call the base class constructor with the parameters it needs
+        super(MeasurerException, self).__init__(message)
+
+        # Now for your custom code...
+        self.errors = errors
 
 
 # import re
