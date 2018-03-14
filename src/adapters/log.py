@@ -26,29 +26,14 @@ import os
     *******************
 '''
 
-import configparser
 from kafka import KafkaProducer
 import jsonpickle
 from time import sleep
 import logging
 
-# config = configparser.RawConfigParser()
-# config.read(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'sentinel-agent.conf'))
-
-
-# def get_section():
-#     return config.sections()
-#
-#
-# def get_elements(section_name):
-#     return config[section_name]
-#
-#
-# def get_element_value(section_name, element_name):
-#     print('reading...', config[section_name][element_name])
-#     return config[section_name][element_name]
-
+# TODO remove this from the code in favour of os.environ.get(...)
 def get_element_value(section_name, element_name):
+    # TPDP element_name should be upper case!
     element = 'ET_AAA_ESM_SENTINEL_' + element_name
     print('reading...', element)
     return os.getenv(element, 'NotFound')
@@ -56,12 +41,13 @@ def get_element_value(section_name, element_name):
 
 def get_logger(name, level='WARN'):
     if os.environ.get('ET_AAA_ESM_SENTINEL_EP', '') != '':
-        return SentinelLogger.getLogger(name, level)
-    else:
-        logger = logging.getLogger(name)
-        logger.setLevel(level)
+        logger = SentinelLogger.getLogger(name, level)
         logger.warning(get_element_value('', 'topic'))
         print('reading...', get_element_value('', 'topic'))
+    else:
+        logger = logging.getLogger(name)
+
+    logger.setLevel(level)
     return logger
 
 
@@ -106,7 +92,7 @@ class SentinelProducer:
         kafka_producer.send(get_element_value("sentinel", "topic"),
                             key=get_element_value("sentinel", "seriesName"),
                             value=msg)
-        sleep(0.05)
+        sleep(0.05)  # TODO why this value? Is the sleep required?
         kafka_producer.close()
 
 

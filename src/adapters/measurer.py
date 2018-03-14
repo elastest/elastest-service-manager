@@ -12,97 +12,16 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-# GENERICS
 
 
-import re
 import time
 import requests
 import threading
-from adapters.log import get_logger, SentinelLogger
 
-'''    
-    *******************
-    *******************
-    **** TESTED CODE **
-    *******************
-    * HearbeatMonitor *
-    *******************
-    ******** ♥ ********
-    *******************
-'''
+from adapters.log import get_logger
+from esm.util import Singleton
 
 LOG = get_logger(__name__)
-
-
-class MeasurerException(Exception):
-    def __init__(self, message, errors):
-        # Call the base class constructor with the parameters it needs
-        super(MeasurerException, self).__init__(message)
-
-        # Now for your custom code...
-        self.errors = errors
-
-
-class MeasurerUtils:
-    @staticmethod
-    def validate_endpoint(endpoint):
-        regex = re.compile(
-            r'^(?:http|ftp)s?://'  # http:// or https://
-            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
-            r'localhost|'  # localhost...
-            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
-            r'(?::\d+)?'  # optional port
-            r'(?:/?|[/?]\S+)$', re.IGNORECASE)
-
-        # SentinelProducer.send_msg('obtain_endpoint gives {}'.format(self.obtain_endpoint()))
-        # SentinelProducer.send_msg('my_endpoint is {}'.format(self.endpoint))
-        result = regex.match(endpoint)
-
-        if result is None:
-            err = 'Invalid endpoint \'{}\' provided'.format(endpoint)
-            LOG.warning(err)
-
-        return result
-
-
-class Singleton:
-    """
-    A non-thread-safe helper class to ease implementing singletons.
-    This should be used as a decorator -- not a metaclass -- to the
-    class that should be a singleton.
-
-    The decorated class can define one `__init__` function that
-    takes only the `self` argument. Also, the decorated class cannot be
-    inherited from. Other than that, there are no restrictions that apply
-    to the decorated class.
-
-    To get the singleton instance, use the `instance` method. Trying
-    to use `__call__` will result in a `TypeError` being raised.
-
-    """
-
-    def __init__(self, decorated):
-        self._decorated = decorated
-
-    def instance(self):
-        """
-        Returns the singleton instance. Upon its first call, it creates a
-        new instance of the decorated class and calls its `__init__` method.
-        On all subsequent calls, the already created instance is returned.
-
-        """
-        try:
-            return self._instance
-        except AttributeError:
-            self._instance = self._decorated()
-            return self._instance
-
-    def __call__(self):
-        raise TypeError('Singletons must be accessed through `instance()`.')
-
-    def __instancecheck__(self, inst):
-        return isinstance(inst, self._decorated)
 
 
 @Singleton
@@ -110,6 +29,7 @@ class MeasurerFactory:
     def __init__(self):
         self.measurers = {}
 
+    # TODO we should only add and remove from the measurers hash, not activate the thread here.
     def start_heartbeat_measurer(self, cache):
         measurer = Measurer(cache)
         measurer.start()
@@ -120,42 +40,7 @@ class MeasurerFactory:
 
 
 class Measurer(threading.Thread):
-    def __init__(self, cache):
-        self.cache = cache
-        self.instance_id = cache['instance_id']
-        self._stop_event = threading.Event()
-
-        self.endpoint = None
-        threading.Thread.__init__(self)
-
-    def get_endpoint(self):
-        endpoint = None
-        inst_info = self.cache['RM'].info(instance_id=self.cache['instance_id'], manifest_type=self.cache['mani'].manifest_type)
-
-        for k, v in inst_info.items():
-            if 'Ip' in k:
-                endpoint = v
-                endpoint = 'http://{}:56567/health'.format(endpoint)
-        return endpoint
-
-    def poll_endpoint(self):
-        # Attempt to find Endpoint...
-        endpoint = self.get_endpoint()
-        MAX_RETRIES = 5
-        while not endpoint and MAX_RETRIES:
-            time.sleep(2)
-            err = 'Endpoint for InstanceID \'{}\' could not be retrieved!'.format(self.cache['instance_id'])
-            LOG.warning(err)
-            MAX_RETRIES = MAX_RETRIES - 1
-        return endpoint
-
-    def stop(self):
-        self._stop_event.set()
-
-    def stopped(self):
-        return self._stop_event.is_set()
-
-    '''
+    """
         Measurer Sequence
 
         :arg instance_id
@@ -168,11 +53,41 @@ class Measurer(threading.Thread):
 
         > validate_endpoint
         :exception InvalidEndpoint
+    """
 
-    '''
+    def __init__(self, cache):
+        super(Measurer, self).__init__()
+        self.cache = cache
+        self.instance_id = cache['instance_id']
+        self._stop_event = threading.Event()
+        self.endpoint = None
+        self.max_retries = 5  # TODO make configurable
 
-    def endpoint_is_alive(self):
-        if self.endpoint != None:
+    def __get_endpoint(self):
+        endpoint = None  # endpoint = 'http://localhost:56567/health'  # .format(endpoint)
+        inst_info = self.cache['RM'].info(instance_id=self.cache['instance_id'], manifest_type=self.cache['mani'].manifest_type)
+
+        for k, v in inst_info.items():
+            if 'Ip' in k:
+                endpoint = v
+                # TODO fix hardcoded port number
+                endpoint = 'http://{}:56567/health'.format(endpoint)
+        return endpoint
+
+    def __poll_endpoint(self):
+        # Attempt to find Endpoint...
+        endpoint = self.__get_endpoint()
+
+        while not endpoint and self.max_retries:
+            LOG.warning('Endpoint for InstanceID \'{}\' could not be retrieved!'.format(self.cache['instance_id']))
+            time.sleep(2)
+            endpoint = self.__get_endpoint()
+            self.max_retries = self.max_retries - 1
+        return endpoint
+
+    def __endpoint_is_healthy(self):
+        # TODO returns multiple types (string and boolean) - settle on one!
+        if self.endpoint is not None:
             response = requests.get(self.endpoint)
             data = response.json()
             return data['status'] == 'up'
@@ -180,30 +95,66 @@ class Measurer(threading.Thread):
         else:
             return False
 
-    def measure_alive(self):
-        print('checking alive...')
+    def __measure_health(self):
+        LOG.info('Checking instance...')
         try:
-            if not self.endpoint_is_alive():
-                print('endpoint not alive')
+            if not self.__endpoint_is_healthy():
+                LOG.warning('Instance endpoint is not alive')
             else:
-                print('sending health status!')
+                # TODO send to where? EMP(Sentinel) I presume
+                LOG.info('sending health status!')
         except:
-            err = 'Endpoint \'{}\' for InstanceID \'{}\' is dead!'.format(self.endpoint, self.instance_id)
-            LOG.warning(err)
+            LOG.warning('Endpoint \'{}\' for InstanceID \'{}\' is not contactable!'
+                        .format(self.endpoint, self.instance_id))
 
     def run(self):
+        super().run()
         LOG.warning('Measurer created with...{}'.format(self.instance_id))
-        self.endpoint = self.poll_endpoint()
-        self.stop()
-        stopped = self.stopped()
+        self.endpoint = self.__poll_endpoint()
 
+        # TODO not necessary ATM
         # VALIDATE ENDPOINT
-        valid = MeasurerUtils.validate_endpoint(self.endpoint) or True
-        while valid and not self.stopped():
+        # valid = MeasurerUtils.validate_endpoint(self.endpoint) or True
+        # valid = True
+        while not self.is_stopped():
             time.sleep(2)
-            LOG.warning('stopped status...,{}'.format(self.stopped()))
-            stopped = 'stopped status...{}'.format(self.stopped())
-            print(stopped)
-            # MEASURE HEARTBEAT
-            self.measure_alive()
+            LOG.warning('stopped status...,{}'.format(self.is_stopped()))
+            self.__measure_health()  # measure service's health
 
+    def stop(self):
+        self._stop_event.set()
+
+    def is_stopped(self):
+        return self._stop_event.is_set()
+
+
+# class MeasurerException(Exception):
+#     def __init__(self, message, errors):
+#         # Call the base class constructor with the parameters it needs
+#         super(MeasurerException, self).__init__(message)
+#
+#         # Now for your custom code...
+#         self.errors = errors
+
+
+# import re
+# class MeasurerUtils:
+#     @staticmethod
+#     def validate_endpoint(endpoint):
+#         regex = re.compile(
+#             r'^(?:http|ftp)s?://'  # http:// or https://
+#             r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
+#             r'localhost|'  # localhost...
+#             r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
+#             r'(?::\d+)?'  # optional port
+#             r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+#
+#         # SentinelProducer.send_msg('obtain_endpoint gives {}'.format(self.obtain_endpoint()))
+#         # SentinelProducer.send_msg('my_endpoint is {}'.format(self.endpoint))
+#         result = regex.match(endpoint)
+#
+#         if result is None:
+#             err = 'Invalid endpoint \'{}\' provided'.format(endpoint)
+#             LOG.warning(err)
+#
+#         return result
