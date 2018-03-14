@@ -43,31 +43,34 @@ class TestCaseMeasurer(unittest.TestCase):
     #     mock_instance_exists.return_value = False
     #     with self.assertRaises(MeasurerException):
     #         HeartBeatMonitor('instance_id').obtain_endpoint()
+    #
+    # @patch.object(Measurer, 'instance_exists')
+    # @patch.object(Measurer, 'get_instance_items')
+    # def test_ip_key_not_found(self, mock_instance_exists, mock_get_instance_items):
+    #     mock_instance_exists.return_value = True
+    #     mock_get_instance_items.return_value = {"foo": "bar"}
+    #     with self.assertRaises(MeasurerException):
+    #         Measurer('instance_id').obtain_endpoint()
 
-    @patch.object(Measurer, 'instance_exists')
-    @patch.object(Measurer, 'get_instance_items')
-    def test_ip_key_not_found(self, mock_instance_exists, mock_get_instance_items):
-        mock_instance_exists.return_value = True
-        mock_get_instance_items.return_value = {"foo": "bar"}
-        with self.assertRaises(MeasurerException):
-            Measurer('instance_id').obtain_endpoint()
+    # @patch.object(Measurer, 'instance_exists')
+    # def test_endpoint_never_alive(self, mock_instance_exists):
+    #     mock_instance_exists.return_value = False
+    #     with self.assertRaises(MeasurerException):
+    #         result = Measurer('instance_id').obtain_endpoint()
+    #         self.assertIsNone(result)
 
-    @patch.object(Measurer, 'instance_exists')
-    def test_endpoint_never_alive(self, mock_instance_exists):
-        mock_instance_exists.return_value = False
-        with self.assertRaises(MeasurerException):
-            result = Measurer('instance_id').obtain_endpoint()
-            self.assertIsNone(result)
-
-    @patch.object(Measurer, 'instance_exists')
-    @patch.object(Measurer, 'obtain_endpoint')
-    @patch.object(Measurer, 'endpoint_is_alive')
-    def test_endpoint_never_alive(self, mock_instance_exists, mock_obtain_endpoint, endpoint_is_alive):
-        mock_instance_exists.return_value = False
-        mock_obtain_endpoint.return_value = "fake-endpoint"
-        endpoint_is_alive.return_value = False
-        with self.assertRaises(MeasurerException):
-            Measurer('instance_id').validate_endpoint()
+    @patch.object(Measurer, 'get_endpoint')
+    def test_endpoint_never_alive(self, mock_get_endpoint):
+        mock_get_endpoint.return_value = "fake-endpoint"
+        cache = {
+            'instance_id': None,
+            'RM': None,
+            'mani': None
+        }
+        measurer = Measurer(cache)
+        # with self.assertRaises(MeasurerException):
+        endpoint = measurer.get_endpoint()
+        self.assertEqual(endpoint, "fake-endpoint")
 
     # @patch.object(HeartBeatMonitor, 'instance_exists')
     # @patch.object(HeartBeatMonitor, 'obtain_endpoint')
