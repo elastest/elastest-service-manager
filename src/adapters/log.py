@@ -31,19 +31,12 @@ import jsonpickle
 from time import sleep
 import logging
 
-# TODO remove this from the code in favour of os.environ.get(...)
-def get_element_value(section_name, element_name):
-    # TPDP element_name should be upper case!
-    element = 'ET_AAA_ESM_SENTINEL_' + element_name
-    print('reading...', element)
-    return os.getenv(element, 'NotFound')
-
 
 def get_logger(name, level='WARN'):
     if os.environ.get('ET_AAA_ESM_SENTINEL_EP', '') != '':
         logger = SentinelLogger.getLogger(name, level)
-        logger.warning(get_element_value('', 'topic'))
-        print('reading...', get_element_value('', 'topic'))
+        logger.warning(os.getenv('ET_AAA_ESM_SENTINEL_TOPIC', None))
+        print('reading...', os.getenv('ET_AAA_ESM_SENTINEL_TOPIC', None))
     else:
         logger = logging.getLogger(name)
 
@@ -76,7 +69,7 @@ class SentinelProducer:
     @staticmethod
     def send_msg(payload):
         msg_dict = {}
-        msg_dict["agent"] = get_element_value("sentinel", "agent")
+        msg_dict["agent"] = os.getenv('ET_AAA_ESM_SENTINEL_AGENT', None)
 
         if type(payload) == dict:
             msg_dict = {**msg_dict, **payload}
@@ -85,14 +78,15 @@ class SentinelProducer:
 
         print('sending...', msg_dict)
         msg = jsonpickle.encode(msg_dict)
-        kafka_producer = SentinelProducer.get_kafka_producer(get_element_value("kafka-endpoint", "endpoint"),
-                                                             get_element_value("kafka-endpoint", "keySerializer"),
-                                                             get_element_value("kafka-endpoint", "valueSerializer"))
+        kafka_producer = SentinelProducer.get_kafka_producer(os.getenv('ET_AAA_ESM_SENTINEL_KAFKA_ENDPOINT', None),
+                                                             os.getenv('ET_AAA_ESM_SENTINEL_KAFKA_KEY_SERIALIZER', None),
+                                                             os.getenv('ET_AAA_ESM_SENTINEL_KAFKA_VALUE_SERIALIZER', None))
 
-        kafka_producer.send(get_element_value("sentinel", "topic"),
-                            key=get_element_value("sentinel", "seriesName"),
+        kafka_producer.send(os.getenv('ET_AAA_ESM_SENTINEL_TOPIC', None),
+                            key=os.getenv('ET_AAA_ESM_SENTINEL_SERIES_NAME', None),
                             value=msg)
-        sleep(0.05)  # TODO why this value? Is the sleep required?
+        # time required for kafka to get the value
+        sleep(0.05)
         kafka_producer.close()
 
 
@@ -124,7 +118,6 @@ class SentinelLogHandler(logging.Handler):
         if record.name == 'kafka':
             return
         try:
-            # TODO add filename, function, level
             print('logging received', record.msg)
             msg_dict = {'msg': record.msg}
             msg_dict['level'] = logging.getLevelName(self.level)
