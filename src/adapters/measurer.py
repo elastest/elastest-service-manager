@@ -62,25 +62,28 @@ class Measurer(threading.Thread):
         self.endpoint = None
         self.max_retries = os.getenv('ET_AAA_ESM_SENTINEL_MAX_RETRIES', '5')
 
-    def __get_endpoint(self):
-        endpoint = None  # endpoint = 'http://localhost:56567/health'  # .format(endpoint)
-        inst_info = self.cache['RM'].info(instance_id=self.cache['instance_id'], manifest_type=self.cache['mani'].manifest_type)
+    def get_endpoint(self):
+        try:
+            endpoint = None  # endpoint = 'http://localhost:56567/health'  # .format(endpoint)
+            inst_info = self.cache['RM'].info(instance_id=self.cache['instance_id'], manifest_type=self.cache['mani'].manifest_type)
 
-        for k, v in inst_info.items():
-            if 'Ip' in k:
-                endpoint = v
-                port = os.getenv('ET_AAA_ESM_SENTINEL_HEALTH_CHECK_PORT', '80')
-                endpoint = 'http://{}:{}/health'.format(endpoint, port)
-        return endpoint
+            for k, v in inst_info.items():
+                if 'Ip' in k:
+                    endpoint = v
+                    port = os.getenv('ET_AAA_ESM_SENTINEL_HEALTH_CHECK_PORT', '80')
+                    endpoint = 'http://{}:{}/health'.format(endpoint, port)
+            return endpoint
+        except MeasurerException as e:
+            LOG.warning(e)
 
     def __poll_endpoint(self):
         # Attempt to find Endpoint...
-        endpoint = self.__get_endpoint()
+        endpoint = self.get_endpoint()
 
         while not endpoint and self.max_retries:
             LOG.warning('Endpoint for InstanceID \'{}\' could not be retrieved!'.format(self.cache['instance_id']))
             time.sleep(2)
-            endpoint = self.__get_endpoint()
+            endpoint = self.get_endpoint()
             self.max_retries = self.max_retries - 1
         return endpoint
 
