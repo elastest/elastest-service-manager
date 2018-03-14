@@ -124,7 +124,6 @@ class Measurer(threading.Thread):
         self.cache = cache
         self.instance_id = cache['instance_id']
         self._stop_event = threading.Event()
-        self.stop()
 
         self.endpoint = None
         threading.Thread.__init__(self)
@@ -195,6 +194,9 @@ class Measurer(threading.Thread):
     def run(self):
         LOG.warning('Measurer created with...{}'.format(self.instance_id))
         self.endpoint = self.poll_endpoint()
+        self.stop()
+        stopped = self.stopped()
+
         # VALIDATE ENDPOINT
         valid = MeasurerUtils.validate_endpoint(self.endpoint) or True
         while valid and not self.stopped():
