@@ -16,7 +16,7 @@ import os
 import connexion
 import time
 
-from adapters.measurer import Measurer
+from adapters.measurer import MeasurerFactory
 from adapters import auth
 from adapters.store import STORE
 from adapters.resources import RM
@@ -32,8 +32,9 @@ from esm.models.service_type import ServiceType
 from esm.models.update_operation_response import UpdateOperationResponse
 from esm.models.update_request import UpdateRequest
 
+from adapters.log import get_logger
 
-measurers = {}
+LOG = get_logger(__name__)
 
 
 def create_service_instance(instance_id, service, accept_incomplete=None):
@@ -108,20 +109,10 @@ def create_service_instance(instance_id, service, accept_incomplete=None):
         )
 
         STORE.add_service_instance(srv_inst)
-        # TODO preface: tested on tox but not on a real example
 
-        # TODO pending: test with real example, the tests are not running consistent instance_idS
-        # TODO explanation: instance is created with id : this_is_a_test_instance
-        # TODO explanation: deprovision is happening with: I_DO_NOT_EXIST key, which is nonsense.(ctrl+cmd+F)
-        # TODO pending: make consistent deprovision. not this "I_DO_NOT_EXIST" key.
-
-        # 1. passing RM,
-        # 2. finding endpoint (this used to break because of out of context request)
-        # 3. add thread to local pool (potential to break)
         instance_id = srv_inst.context['id']
-        measurer = Measurer({'instance_id': instance_id, 'RM': RM, 'mani': mani})
-        measurer.start()
-        measurers[instance_id] = measurer
+        factory = MeasurerFactory.instance()
+        factory.start_heartbeat_measurer({'instance_id': instance_id, 'RM': RM, 'mani': mani})
 
         if accept_incomplete:
             STORE.add_last_operation(instance_id=instance_id, last_operation=last_op)
@@ -155,13 +146,11 @@ def deprovision_service_instance(instance_id, service_id, plan_id, accept_incomp
         # XXX what about undo?
         # check that the instance exists first
         instance = STORE.get_service_instance(instance_id=instance_id)
-        # TODO check this works
-        # from adapters.log import get_logger
-        # logger = get_logger(__name__)
-        # logger.warning(measurers)
-        # raise BaseException(str(measurers) + instance_id)
-        if instance_id in measurers.keys():
-            measurers[instance_id].stop()
+
+        err = 'stopping....{}'.format(instance_id)
+        LOG.warning(err)
+        factory = MeasurerFactory.instance()
+        factory.stop_heartbeat_measurer(instance_id)
 
         if len(instance) == 1:
             mani_id = instance[0].context['manifest_id']

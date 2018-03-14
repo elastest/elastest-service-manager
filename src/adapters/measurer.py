@@ -58,51 +58,97 @@ class MeasurerUtils:
         # SentinelProducer.send_msg('obtain_endpoint gives {}'.format(self.obtain_endpoint()))
         # SentinelProducer.send_msg('my_endpoint is {}'.format(self.endpoint))
         result = regex.match(endpoint)
+
+        if result is None:
+            err = 'Invalid endpoint \'{}\' provided'.format(endpoint)
+            LOG.warning(err)
+
         return result
 
-    @staticmethod
-    def get_endpoint(cache):
-        instance_id = cache['instance_id']
-        mani = cache['mani']
-        endpoint = ''
-        RM = cache['RM']
-        MAX_RETRIES = 5
-        # Attempt to find Endpoint...
-        for i in range(MAX_RETRIES):
-            time.sleep(2)
-            inst_info = RM.info(instance_id=instance_id, manifest_type=mani.manifest_type)
-            for k, v in inst_info.items():
-                if 'Ip' in k:
-                    endpoint = v
 
-            # START Measurer
-            if endpoint != '':
-                # VERIFY HEALTH ENDPOINT SYNTAX
-                endpoint = 'http://{}:56567/health'.format(endpoint)
-                print('starting heartbeat with endpoint...', endpoint)
-                break
-            err = 'Endpoint for InstanceID \'{}\' could not be retrieved!'.format(instance_id)
-            print(err)
-            LOG.warning(err)
-        return endpoint
+class Singleton:
+    """
+    A non-thread-safe helper class to ease implementing singletons.
+    This should be used as a decorator -- not a metaclass -- to the
+    class that should be a singleton.
+
+    The decorated class can define one `__init__` function that
+    takes only the `self` argument. Also, the decorated class cannot be
+    inherited from. Other than that, there are no restrictions that apply
+    to the decorated class.
+
+    To get the singleton instance, use the `instance` method. Trying
+    to use `__call__` will result in a `TypeError` being raised.
+
+    """
+
+    def __init__(self, decorated):
+        self._decorated = decorated
+
+    def instance(self):
+        """
+        Returns the singleton instance. Upon its first call, it creates a
+        new instance of the decorated class and calls its `__init__` method.
+        On all subsequent calls, the already created instance is returned.
+
+        """
+        try:
+            return self._instance
+        except AttributeError:
+            self._instance = self._decorated()
+            return self._instance
+
+    def __call__(self):
+        raise TypeError('Singletons must be accessed through `instance()`.')
+
+    def __instancecheck__(self, inst):
+        return isinstance(inst, self._decorated)
+
+
+@Singleton
+class MeasurerFactory:
+    def __init__(self):
+        self.measurers = {}
+
+    def start_heartbeat_measurer(self, cache):
+        measurer = Measurer(cache)
+        measurer.start()
+        self.measurers[cache['instance_id']] = measurer
+
+    def stop_heartbeat_measurer(self, instance_id):
+        self.measurers[instance_id].stop()
 
 
 class Measurer(threading.Thread):
     def __init__(self, cache):
-        self.logger = SentinelLogger.getLogger(__name__, 'WARN')
+        self.cache = cache
         self.instance_id = cache['instance_id']
-        self.endpoint = MeasurerUtils.get_endpoint(cache)
         self._stop_event = threading.Event()
+        self.stop()
 
-
-        # VALIDATE ENDPOINT
-        result = MeasurerUtils.validate_endpoint(self.endpoint) or True
-        if result is None:
-            err = 'Invalid endpoint \'{}\' provided'.format(self.endpoint)
-            self.logger.warn(err)
-            # raise MeasurerException(err, errors={'instance_id': self.instance_id})
-
+        self.endpoint = None
         threading.Thread.__init__(self)
+
+    def get_endpoint(self):
+        endpoint = None
+        inst_info = self.cache['RM'].info(instance_id=self.cache['instance_id'], manifest_type=self.cache['mani'].manifest_type)
+
+        for k, v in inst_info.items():
+            if 'Ip' in k:
+                endpoint = v
+                endpoint = 'http://{}:56567/health'.format(endpoint)
+        return endpoint
+
+    def poll_endpoint(self):
+        # Attempt to find Endpoint...
+        endpoint = self.get_endpoint()
+        MAX_RETRIES = 5
+        while not endpoint and MAX_RETRIES:
+            time.sleep(2)
+            err = 'Endpoint for InstanceID \'{}\' could not be retrieved!'.format(self.cache['instance_id'])
+            LOG.warning(err)
+            MAX_RETRIES = MAX_RETRIES - 1
+        return endpoint
 
     def stop(self):
         self._stop_event.set()
@@ -127,25 +173,35 @@ class Measurer(threading.Thread):
     '''
 
     def endpoint_is_alive(self):
-        response = requests.get(self.endpoint)
-        data = response.json()
-        return data['status'] == 'up'
+        if self.endpoint != None:
+            response = requests.get(self.endpoint)
+            data = response.json()
+            return data['status'] == 'up'
+
+        else:
+            return False
+
+    def measure_alive(self):
+        print('checking alive...')
+        try:
+            if not self.endpoint_is_alive():
+                print('endpoint not alive')
+            else:
+                print('sending health status!')
+        except:
+            err = 'Endpoint \'{}\' for InstanceID \'{}\' is dead!'.format(self.endpoint, self.instance_id)
+            LOG.warning(err)
 
     def run(self):
-        print('Measurer created with...', self.instance_id)
-        # result = MeasurerUtils.instance_exists(self.instance_id)
-        # err = 'testing instance_exists, result: \'{}\''.format(result)
-        # self.logger.warn(err)
-        for i in range(5):
-            time.sleep(5)
-            print('running thread....')
-            try:
-                if not self.endpoint_is_alive():
-                    print('endpoint not alive')
-                else:
-                    print('sending health status!')
-            except:
-                err = 'Endpoint \'{}\' for InstanceID \'{}\' is dead!'.format(self.endpoint, self.instance_id)
-                print(err)
-                self.logger.warn(err)
-                # raise MeasurerException(err, errors={'instance_id': self.instance_id})
+        LOG.warning('Measurer created with...{}'.format(self.instance_id))
+        self.endpoint = self.poll_endpoint()
+        # VALIDATE ENDPOINT
+        valid = MeasurerUtils.validate_endpoint(self.endpoint) or True
+        while valid and not self.stopped():
+            time.sleep(2)
+            LOG.warning('stopped status...,{}'.format(self.stopped()))
+            stopped = 'stopped status...{}'.format(self.stopped())
+            print(stopped)
+            # MEASURE HEARTBEAT
+            self.measure_alive()
+
