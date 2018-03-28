@@ -89,7 +89,8 @@ class DockerBackend(DeployerBackend):
             # "--follow": False,
             # "--timestamps": False,
             # "--tail": "all",
-            "-d": True,
+            "-d": True,  # currently with docker-compose 1.20.1 this is ignored! resolved by supplying --detach
+            "--detach": True,
             "-q": False,  # quiet
             "--scale": [],  # don't need this but have to supply
         }
