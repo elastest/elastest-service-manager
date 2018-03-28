@@ -1039,7 +1039,6 @@ definitions:
       config:
         description: configuration parameters to be supplied to a service instance. this is not service instance specific
         type: object
-
   ServiceInstance:
     description: service instance
     type: object
