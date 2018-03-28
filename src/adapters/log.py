@@ -32,12 +32,13 @@ from time import sleep
 import logging
 
 
-def get_logger(name, level='WARN'):
+def get_logger(name, level=logging.DEBUG):
     if os.environ.get('ET_AAA_ESM_SENTINEL_EP', '') != '':
         logger = SentinelLogger.getLogger(name, level)
         logger.warning(os.getenv('ET_AAA_ESM_SENTINEL_TOPIC', None))
         print('reading...', os.getenv('ET_AAA_ESM_SENTINEL_TOPIC', None))
     else:
+        logging.basicConfig(level=level)
         logger = logging.getLogger(name)
 
     logger.setLevel(level)
