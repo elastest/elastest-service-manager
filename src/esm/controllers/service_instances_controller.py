@@ -171,7 +171,6 @@ def deprovision_service_instance(instance_id, service_id, plan_id, accept_incomp
             return Empty(), 404
 
 
-
 def _get_instance(srv_inst):
     # get the latest info
     mani_id = srv_inst.context['manifest_id']
