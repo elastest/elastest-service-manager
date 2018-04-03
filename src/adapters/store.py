@@ -686,8 +686,8 @@ class InMemoryStore(Store):
 mongo_host = os.getenv('ESM_MONGO_HOST', '')
 sql_host = os.getenv('ESM_SQL_HOST', os.environ.get('ET_EDM_MYSQL_HOST', ''))
 
-if len(mongo_host) and len(sql_host):
-    raise RuntimeError('Both MongoDB and SQL datastore environment variables are set. Set and use only one.')
+# if len(mongo_host) and len(sql_host):
+#     raise RuntimeError('Both MongoDB and SQL datastore environment variables are set. Set and use only one.')
 
 if len(mongo_host):  # not an empty string
     STORE = MongoDBStore(mongo_host)
