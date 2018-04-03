@@ -53,6 +53,11 @@ class DeployerBackend(object):
         states = set([v for k, v in info.items() if k.endswith('state')])
         # states from compose.container.Container: 'Paused', 'Restarting', 'Ghost', 'Up', 'Exit %s'
         # states for OSBA: in progress, succeeded, and failed
+
+        # default state: still waiting for completion
+        info['srv_inst.state.state'] = 'in progress'
+        info['srv_inst.state.description'] = 'The service instance is being created.'
+
         for state in states:
             if state.startswith('Exit'):
                 # there's been an error with docker
@@ -60,13 +65,9 @@ class DeployerBackend(object):
                 info['srv_inst.state.description'] = \
                     'There was an error in creating the instance {error}'.format(error=state)
         if len(states) == 1:  # if all states of the same value
-            if states.pop() == 'Up':  # if running: Up
+            if states.pop().startswith('Up'):  # if running: Up
                 info['srv_inst.state.state'] = 'succeeded'
                 info['srv_inst.state.description'] = 'The service instance has been created successfully'
-        else:
-            # still waiting for completion
-            info['srv_inst.state.state'] = 'in progress'
-            info['srv_inst.state.description'] = 'The service instance is being created.'
 
 
 class DockerBackend(DeployerBackend):

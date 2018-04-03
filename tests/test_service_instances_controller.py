@@ -36,6 +36,7 @@ from . import BaseTestCase
 from adapters.log import get_logger
 
 LOG = get_logger(__name__)
+MANIFEST = os.environ.get("TEST_MANIFEST_CONTENT", "/manifests/docker-compose.yml")
 
 
 class TestServiceInstancesController(BaseTestCase):
@@ -66,16 +67,17 @@ class TestServiceInstancesController(BaseTestCase):
         print('Service registration content of:\n {content}'.format(content=json.dumps(self.test_service)))
 
         path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-        with open(path + "/manifests/docker-compose.yml", "r") as mani_file:
+        with open(path + MANIFEST, "r") as mani_file:
             mani = mani_file.read()
 
         with open(path + '/manifests/test_endpoints.json', 'r') as ep_file:
             ep = ep_file.read()
 
-        # if os.getenv('DOCKER_TESTS', 'NO') == 'YES':
-        #     m_type = 'docker-compose'
-        # else:
-        m_type = 'dummy'
+        if os.getenv('DOCKER_TESTS', 'NO') == 'YES':
+            m_type = 'docker-compose'
+        else:
+            m_type = 'dummy'
+
         self.test_manifest = Manifest(
             id='test-mani', plan_id=self.test_plan.id, service_id=self.test_service.id,
             manifest_type=m_type, manifest_content=mani, endpoints=json.loads(ep)
@@ -200,8 +202,6 @@ class TestServiceInstancesController(BaseTestCase):
             return res  # , num
 
         self.assertTrue(_check_key('ET_ESM_API', response.json['context']))
-
-
 
     def test_deprovision_service_instance(self):
         """
