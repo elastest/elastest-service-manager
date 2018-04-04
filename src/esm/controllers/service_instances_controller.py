@@ -16,8 +16,8 @@ import os
 import connexion
 import time
 
-from adapters.measurer import MeasurerFactory
 from adapters import auth
+from adapters.measurer import MeasurerFactory
 from adapters.store import STORE
 from adapters.resources import RM
 from esm.controllers import _version_ok
@@ -28,7 +28,6 @@ from esm.models.last_operation import LastOperation
 from esm.models.service_instance import ServiceInstance
 from esm.models.service_request import ServiceRequest
 from esm.models.service_response import ServiceResponse
-from esm.models.service_type import ServiceType
 from esm.models.update_operation_response import UpdateOperationResponse
 from esm.models.update_request import UpdateRequest
 
@@ -111,8 +110,10 @@ def create_service_instance(instance_id, service, accept_incomplete=None):
         STORE.add_service_instance(srv_inst)
 
         instance_id = srv_inst.context['id']
-        factory = MeasurerFactory.instance()
-        factory.start_heartbeat_measurer({'instance_id': instance_id, 'RM': RM, 'mani': mani})
+
+        if os.environ.get('ESM_MEASURE_INSTANCES', 'NO') == 'YES':
+            factory = MeasurerFactory.instance()
+            factory.start_heartbeat_measurer({'instance_id': instance_id, 'RM': RM, 'mani': mani})
 
         if accept_incomplete:
             STORE.add_last_operation(instance_id=instance_id, last_operation=last_op)
@@ -149,8 +150,10 @@ def deprovision_service_instance(instance_id, service_id, plan_id, accept_incomp
 
         err = 'stopping....{}'.format(instance_id)
         LOG.warning(err)
-        factory = MeasurerFactory.instance()
-        factory.stop_heartbeat_measurer(instance_id)
+
+        if os.environ.get('ESM_MEASURE_INSTANCES', 'NO') == 'YES':
+            factory = MeasurerFactory.instance()
+            factory.stop_heartbeat_measurer(instance_id)
 
         if len(instance) == 1:
             mani_id = instance[0].context['manifest_id']
@@ -166,7 +169,6 @@ def deprovision_service_instance(instance_id, service_id, plan_id, accept_incomp
             return Empty(), 200
         else:
             return Empty(), 404
-
 
 
 def _get_instance(srv_inst):

@@ -22,6 +22,7 @@ import os
 from adapters.resources import DockerBackend
 
 INST_ID = 'test-id-123'
+MANIFEST = os.environ.get("TEST_MANIFEST_CONTENT", "/manifests/docker-compose.yml")
 
 
 @skipIf(os.getenv('DOCKER_TESTS', 'NO') != 'YES', "DOCKER_TESTS not set in environment variables")
@@ -30,7 +31,8 @@ class TestDockerCompose(TestCase):
         super().setUp()
         self.docker = DockerBackend()
         path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-        with open(path+"/manifests/docker-compose.yml", "r") as mani:
+
+        with open(path + MANIFEST, "r") as mani:
             content = mani.read()
             self.docker.create(instance_id=INST_ID, content=content, c_type="docker-compose")
 
@@ -58,13 +60,13 @@ class TestDockerComposeWithoutSetup(TestCase):
 
     def test_docker_create_cmd(self):
         path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-        with open(path + "/manifests/docker-compose.yml", "r") as mani:
+        with open(path + MANIFEST, "r") as mani:
             content = mani.read()
         self.docker.create(instance_id=INST_ID, content=content, c_type="docker-compose")
 
     def test_docker_create_cmd_with_params(self):
         path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-        with open(path + "/manifests/docker-compose.yml", "r") as mani:
+        with open(path + MANIFEST, "r") as mani:
             content = mani.read()
 
         params = dict()

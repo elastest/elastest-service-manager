@@ -1123,11 +1123,12 @@ class ServiceMetadataAdapter(ServiceMetadata):
 
 
 class Helper:
-    host = os.environ.get('ET_EDM_MYSQL_HOST', '127.0.0.1')
-    user = os.environ.get('DATABASE_USER', 'root')
-    password = os.environ.get('DATABASE_PASSWORD', '')
-    database = os.environ.get('DATABASE_NAME', 'mysql')
-    port = int(os.environ.get('MYSQL_3306_TCP', 3306))
+    host = os.getenv('ESM_SQL_HOST', os.environ.get('ET_EDM_MYSQL_HOST', '127.0.0.1'))
+    port = int(os.environ.get('ESM_SQL_PORT', os.environ.get('ET_EDM_MYSQL_PORT', 3306)))
+    user = os.environ.get('ESM_SQL_USER', 'root')
+    password = os.environ.get('ESM_SQL_PASSWORD', '')
+    database = os.environ.get('ESM_SQL_DBNAME', 'mysql')  # TODO make this something other than mysql!
+
     config = {
         'mysql': {
             'driver': 'mysql',
