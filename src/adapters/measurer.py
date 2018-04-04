@@ -145,26 +145,3 @@ class MeasurerException(Exception):
 
         # Now for your custom code...
         self.errors = errors
-
-
-# import re
-# class MeasurerUtils:
-#     @staticmethod
-#     def validate_endpoint(endpoint):
-#         regex = re.compile(
-#             r'^(?:http|ftp)s?://'  # http:// or https://
-#             r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
-#             r'localhost|'  # localhost...
-#             r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
-#             r'(?::\d+)?'  # optional port
-#             r'(?:/?|[/?]\S+)$', re.IGNORECASE)
-#
-#         # SentinelProducer.send_msg('obtain_endpoint gives {}'.format(self.obtain_endpoint()))
-#         # SentinelProducer.send_msg('my_endpoint is {}'.format(self.endpoint))
-#         result = regex.match(endpoint)
-#
-#         if result is None:
-#             err = 'Invalid endpoint \'{}\' provided'.format(endpoint)
-#             LOG.warning(err)
-#
-#         return result

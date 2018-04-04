@@ -77,6 +77,10 @@ class Store(object):
 # TODO align method signatures
 class SQLStore(Store):
 
+    def __init__(self) -> None:
+        LOG.info('Using the SQLStore.')
+        LOG.info('SQLStore is persistent.')
+
     @staticmethod
     def get_connection():
         try:
@@ -167,7 +171,7 @@ class SQLStore(Store):
         if manifest_id and plan_id:
             raise Exception('Query Manifests only by manifest_id OR plan_id')
 
-        if plan_id:
+        if plan_id:  # bug here
             manifests = ManifestSQL.where('plan_id', '=', '{}'.format(plan_id)).get().serialize()
             if manifests:
                 manifest_id = manifests[0]['id']
@@ -680,15 +684,15 @@ class InMemoryStore(Store):
 
 
 mongo_host = os.getenv('ESM_MONGO_HOST', '')
-sql_host = os.getenv('ESM_SQL_HOST', '')
+# sql_host = os.getenv('ESM_SQL_HOST', os.environ.get('ET_EDM_MYSQL_HOST', ''))  # TODO(franco) reenable
 
-if len(mongo_host) and len(sql_host):
-    raise RuntimeError('Both MongoDB and SQL datastore environment variables are set. Set and use only one.')
+# if len(mongo_host) and len(sql_host):
+#     raise RuntimeError('Both MongoDB and SQL datastore environment variables are set. Set and use only one.')
 
 if len(mongo_host):  # not an empty string
     STORE = MongoDBStore(mongo_host)
-elif len(sql_host):  # not an empty string
-    STORE = SQLStore()
-    STORE.set_up()
+# elif len(sql_host):  # not an empty string  # TODO(franco) reenable
+#     STORE = SQLStore()
+#     STORE.set_up()
 else:  # default
     STORE = InMemoryStore()
