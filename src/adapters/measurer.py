@@ -23,6 +23,17 @@ from esm.util import Singleton
 
 LOG = get_logger(__name__)
 
+'''
+    *******************
+    *******************
+    **** TESTED CODE **
+    *******************
+    **** MEASURER *****
+    *******************
+    ******** ♥ ********
+    *******************
+'''
+
 
 @Singleton
 class MeasurerFactory:
