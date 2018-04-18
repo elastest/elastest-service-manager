@@ -6,7 +6,7 @@ Copyright © 2017-2019 Zuercher Hochschule fuer Angewandte Wissenschaften. Licen
 
 [![License badge](https://img.shields.io/badge/license-Apache2-orange.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Documentation badge](https://img.shields.io/badge/docs-latest-brightgreen.svg)](http://elastest.io/docs/api/esm/)
-[![Build Status](https://travis-ci.org/elastest/elastest-service-manager.svg?branch=master)](https://travis-ci.org/elastest/elastest-service-manager)
+[![Build Status](https://ci.elastest.io/jenkins/buildStatus/icon?job=elastest-service-manager/esm)](https://ci.elastest.io/jenkins/view/Components%20build%20dashboard/job/elastest-service-manager/job/esm/)
 [![codecov](https://codecov.io/gh/elastest/elastest-service-manager/branch/master/graph/badge.svg)](https://codecov.io/gh/elastest/elastest-service-manager)
 
 This is the elastest service manager that is responsible for providing support service instances to test jobs. 
