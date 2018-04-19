@@ -7,9 +7,6 @@ node('docker'){
 
             git 'https://github.com/elastest/elastest-service-manager'
 
-            sh "pip install --upgrade -r src/requirements.txt"
-            sh "pip install --upgrade -r tests/requirements.txt"
-
             stage ("Setup test environment"){
                 sh 'rm -rf /home/ubuntu/workspace/elastest-service-manager/esm/.tox'
 
