@@ -23,6 +23,7 @@ from flask import json
 
 from adapters.store import STORE
 from esm.models.manifest import Manifest
+from esm.models import ServiceMetadata
 # from esm.models.catalog import Catalog
 # from esm.models.empty import Empty
 # from esm.models.error import Error
@@ -44,6 +45,15 @@ class TestCatalogController(BaseTestCase):
             id='testplan', name='testing plan', description='plan for testing',
             metadata=None, free=True, bindable=False
         )
+        self.svc_md = ServiceMetadata(
+            display_name='thing',
+            image_url='http://www.google.com',
+            long_description='yeayeayea',
+            provider_display_name='god',
+            documentation_url='http://elastest.io',
+            support_url='http://localhost',
+            extras=None
+        )
         self.test_service = ServiceType(
             id='test',
             name='test_svc',
@@ -51,7 +61,7 @@ class TestCatalogController(BaseTestCase):
             description='this is a test service',
             bindable=False,
             tags=['test', 'tester'],
-            metadata=None, requires=[],
+            metadata=self.svc_md, requires=[],
             plan_updateable=False, plans=[self.test_plan],
             dashboard_client=None)
 

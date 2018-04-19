@@ -21,20 +21,19 @@ The following features are currently supported:
  * OSBA: delete a service instance.
  * ElasTest Extension: get details on a service instance.
  * ElasTest Extension: register a service in the service catalog.
- * ElasTest Extension: register a service manifest (docker-compose, docker-swarm) associated with a service description.
+ * ElasTest Extension: register a service manifest (docker-compose, OpenShift/K8s[planned]) associated with a service description.
 
 ### API Features to be Implemented
 
 The following features will be supported in upcoming releases:
 
- * OSBA: binding a service instance
- * OSBA: binding a service instance
+ * OSBA: update a service instance
 
 ## User Documentation
-Please refer to the [user docs](user.md).
+Please refer to the [user docs](user-doc.md).
 
 ## Development Documentation
-Please refer to the [development docs](development.md).
+Please refer to the [development docs](dev-doc.md).
 
 ## Service Providers Usage
 
