@@ -17,7 +17,7 @@
 from setuptools import setup, find_packages
 
 NAME = "esm"
-VERSION = "0.5.0"
+VERSION = "0.8.0"
 
 # To install the library, run the following
 #
@@ -42,6 +42,11 @@ REQUIRES = [
     'epm-client',
     'orator',
     'pymysql',
+    'keystonemiddleware',
+    'python-memcached',
+    'jsonpickle',
+    'kafka',
+    'requests',
 ]
 
 DEP_LINKS = [
@@ -54,7 +59,7 @@ setup(
     description="ElasTest Service Manager API",
     author_email="elastest-users@googlegroups.com",
     url="https://github.com/elastest/bugtracker",
-    keywords=["Swagger", "ElasTest Service Manager API"],
+    keywords=["Swagger", "ElasTest Service Manager API", "OSBA", "Serivce", "Delivery"],
     install_requires=REQUIRES,
     dependency_links=DEP_LINKS,
     packages=find_packages(),
