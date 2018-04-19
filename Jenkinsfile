@@ -13,7 +13,7 @@ node('docker'){
 
             stage ("Unit tests"){
                 echo ("Starting unit and integration tests from the tester container...")
-                sh "docker-compose -f docker-compose-test.yml up --build --exit-code-from tester"
+                sh "docker-compose -f docker-compose-tester.yml up --build --exit-code-from tester"
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
             }
 
