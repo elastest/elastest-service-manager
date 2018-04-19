@@ -1,0 +1,55 @@
+version: '3'
+
+services:
+  tester:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile-tester
+    depends_on:
+      - mongo
+      - mysql
+    image: elastest/esm-tester:latest
+    container_name: tester
+    hostname: tester
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+      - ./:/output:rw
+    environment:
+      - DOCKER_TESTS=NO
+      - MONGODB_TESTS=YES
+      - MYSQL_TESTS=YES
+      - HEARTBEAT_TESTS=YES
+      - EPM_TESTS=NO
+      - BINDING_TESTS=NO
+      - SENTINEL_TESTS=NO
+      - ESM_MONGO_HOST=mongo
+      - ESM_SQL_HOST=mysql
+    networks:
+      - elastest_elastest
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    hostname: mongo
+    ports:
+      - "27017"
+    networks:
+      - elastest_elastest
+
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    hostname: mysql
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - "3306"
+    networks:
+      - elastest_elastest
+
+#volumes:
+#  mongo-data:
+#    driver: local
+networks:
+    elastest_elastest:
+      driver: bridge
