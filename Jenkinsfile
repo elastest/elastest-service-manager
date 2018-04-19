@@ -29,7 +29,6 @@ node('docker'){
                 } catch(e) {
                    echo "Error: $e"
                 }
-
                 sh "docker run --name mongo -d --rm mongo:latest"
                 sh "docker network connect elastest_elastest mongo"
                 mongoIP = sh (
@@ -44,7 +43,6 @@ node('docker'){
                 } catch(e) {
                    echo "Error: $e"
                 }
-
                 sh "docker run --name mysql -d -e MYSQL_ALLOW_EMPTY_PASSWORD=yes --rm mysql:latest"
                 sh "sleep 10"  // added as mysql takes a little longer than mongo to start
                 sh "docker network connect elastest_elastest mysql"
