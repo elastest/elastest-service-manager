@@ -8,6 +8,8 @@ services:
     depends_on:
       - mongo
       - mysql
+      - epm
+      - epm-dca
     image: elastest/esm-tester:latest
     container_name: tester
     hostname: tester
@@ -23,7 +25,8 @@ services:
       - BINDING_TESTS=NO
       - SENTINEL_TESTS=NO
       - ESM_MONGO_HOST=mongo
-      - ESM_SQL_HOST=mysql
+      - ET_EDM_MYSQL_HOST=mysql
+      - ET_EPM_API=http://epm:8180/
     networks:
       - elastest_elastest
 
@@ -47,9 +50,33 @@ services:
     networks:
       - elastest_elastest
 
-#volumes:
-#  mongo-data:
-#    driver: local
+  epm:
+    container_name: epm
+    image: elastest/epm
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock:rw
+    expose:
+        - 8180
+    ports:
+        - 8180:8180
+    networks:
+        - elastest_elastest
+
+  epm-dca:
+    container_name: epm-dca
+    image: elastest/epm-adapter-docker-compose
+    entrypoint: python run.py --register-adapter
+    depends_on:
+        - epm
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock:rw
+    expose:
+        - 50051
+    ports:
+        - 50051:50051
+    networks:
+        - elastest_elastest
+
 networks:
     elastest_elastest:
       driver: bridge
