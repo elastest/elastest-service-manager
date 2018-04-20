@@ -8,8 +8,9 @@ services:
     depends_on:
       - mongo
       - mysql
-      - epm
-      - epm-dca
+#      - epm
+#      - epm-dca
+      - aaa
     image: elastest/esm-tester:latest
     container_name: tester
     hostname: tester
@@ -19,14 +20,40 @@ services:
     environment:
       - DOCKER_TESTS=NO
       - MONGODB_TESTS=YES
-      - MYSQL_TESTS=YES
+      - MYSQL_TESTS=NO
       - HEARTBEAT_TESTS=YES
       - EPM_TESTS=NO
-      - BINDING_TESTS=NO
+      - BINDING_TESTS=YES
       - SENTINEL_TESTS=NO
       - ESM_MONGO_HOST=mongo
-      - ET_EDM_MYSQL_HOST=mysql
-      - ET_EPM_API=http://epm:8180/
+#      - ET_EDM_MYSQL_HOST=mysql
+#      - ESM_SQL_PASSWORD=shush
+#      - ET_EPM_API=http://epm:8180/
+      - ET_AAA_ESM_KEYSTONE_BASE_URL=http://aaa
+      - ET_AAA_ESM_KEYSTONE_USERNAME=admin
+      - ET_AAA_ESM_KEYSTONE_PASSWD=admin
+      - ET_AAA_ESM_KEYSTONE_TENANT=admin
+    networks:
+      - elastest_elastest
+
+  aaa:
+    depends_on:
+      - mysql
+    image: dizz/dock-os-keystone
+    hostname: aaa
+    container_name: aaa
+    links:
+      - mysql
+    ports:
+      - "35357:35357"
+      - "5000:5000"
+    environment:
+      MYSQL_HOST: mysql
+#      MYSQL_ROOT_PASSWORD: shush  # XXX there's an issue here: if set connections get reset
+      ADMIN_TOKEN: admintokin
+      ADMIN_TENANT_NAME: admin
+      ADMIN_USER_NAME: admin
+      ADMIN_PASSWORD: admin
     networks:
       - elastest_elastest
 
@@ -44,38 +71,40 @@ services:
     container_name: mysql
     hostname: mysql
     environment:
-      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      MYSQL_ROOT_PASSWORD: shush
     ports:
       - "3306"
     networks:
       - elastest_elastest
-
-  epm:
-    container_name: epm
-    image: elastest/epm
-    volumes:
-        - /var/run/docker.sock:/var/run/docker.sock:rw
-    expose:
-        - 8180
-    ports:
-        - 8180:8180
-    networks:
-        - elastest_elastest
-
-  epm-dca:
-    container_name: epm-dca
-    image: elastest/epm-adapter-docker-compose
-    entrypoint: python run.py --register-adapter
-    depends_on:
-        - epm
-    volumes:
-        - /var/run/docker.sock:/var/run/docker.sock:rw
-    expose:
-        - 50051
-    ports:
-        - 50051:50051
-    networks:
-        - elastest_elastest
+#
+# DISABLED until EPM is stable
+#
+#  epm:
+#    container_name: epm
+#    image: elastest/epm
+#    volumes:
+#        - /var/run/docker.sock:/var/run/docker.sock:rw
+#    expose:
+#        - 8180
+#    ports:
+#        - 8180:8180
+#    networks:
+#        - elastest_elastest
+#
+#  epm-dca:
+#    container_name: epm-dca
+#    image: elastest/epm-adapter-docker-compose
+#    entrypoint: python run.py --register-adapter
+#    depends_on:
+#        - epm
+#    volumes:
+#        - /var/run/docker.sock:/var/run/docker.sock:rw
+#    expose:
+#        - 50051
+#    ports:
+#        - 50051:50051
+#    networks:
+#        - elastest_elastest
 
 networks:
     elastest_elastest:

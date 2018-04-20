@@ -37,8 +37,9 @@ def create_credentials(binding_id, instance_id):
                                            description="this is the project for tenant-" + instance_id,
                                            domain="default", enabled=True)
         project_id = project.id
-    except Conflict:
+    except Conflict as c:
         LOG.error('Cannot create the project {name} as it exists already'.format(name="tenant-" + instance_id))
+        raise c
 
     # create user
     user_id = None
@@ -50,8 +51,9 @@ def create_credentials(binding_id, instance_id):
                                      email='user@localhost',
                                      description='User with access to project: tenant-' + instance_id, enabled=True)
         user_id = user.id
-    except Conflict:
+    except Conflict as c:
         LOG.error('Cannot create the user {name} as it exists already'.format(name='user-' + binding_id))
+        raise c
 
     # associate role with user and project
     role_name = os.environ.get('ET_AAA_ESM_ROLE_NAME', '_member_')
@@ -67,9 +69,10 @@ def create_credentials(binding_id, instance_id):
 
     try:
         keystone.roles.grant(role=role_id, user=user_id, project=project_id)  # idempotent
-    except ValidationError:
+    except ValidationError as ve:
         LOG.error('Project({p_id}), User({u_id}) or Role ({r_id}) ID is empty - this should not happen!'
                   .format(p_id=project_id, u_id=user_id, r_id=role_id))
+        raise ve
 
     return {
         'auth_url': keystone.auth.api.get_endpoint(),
@@ -87,5 +90,6 @@ def delete_credentials(binding_info):
         # note: the order is important here
         keystone.projects.delete(binding_info['tenant_id'])
         keystone.users.delete(binding_info['user_id'])
-    except NotFound:
+    except NotFound as nf:
         LOG.error('Cannot delete, resource not found')
+        raise nf

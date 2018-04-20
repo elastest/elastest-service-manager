@@ -255,7 +255,6 @@ class TestServiceInstancesController(BaseTestCase):
                                     method='GET', headers=headers)
         self.assert404(response, "Response body is : " + response.data.decode('utf-8'))
 
-
     def test_last_operation_status(self):
         """
         Test case for last_operation_status
@@ -272,35 +271,35 @@ class TestServiceInstancesController(BaseTestCase):
                                     query_string=query_string, headers=headers)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
+    # @unittest.skipIf(os.getenv('BINDING_TESTS', 'NO') == 'NO', "No AAA testing configured.")
+    # def test_service_bind(self):
+    #     """
+    #     Test case for service_bind
+    #
+    #     Binds to a service
+    #     """
+    #     self.assert200(self.response, "Response body is : " + self.response.data.decode('utf-8'))
+    #
+    #     # bind to the service
+    #     binding = BindingRequest(service_id=self.test_service.id, plan_id=self.test_plan.id)
+    #     headers = [('X_Broker_Api_Version', '2.12')]
+    #     response = self.client.open('/v2/service_instances/{instance_id}/service_bindings/{binding_id}'.format(
+    #         instance_id=self.instance_id, binding_id=self.binding_id),
+    #                                 method='PUT',
+    #                                 data=json.dumps(binding),
+    #                                 content_type='application/json',
+    #                                 headers=headers)
+    #     self.assertStatus(response, 200, "Response body is : " + response.data.decode('utf-8'))
+
     @unittest.skipIf(os.getenv('BINDING_TESTS', 'NO') == 'NO', "No AAA testing configured.")
-    def test_service_bind(self):
+    def test_service_bind_unbind(self):
         """
-        Test case for service_bind
-
-        Binds to a service
-        """
-        self.assert200(self.response, "Response body is : " + self.response.data.decode('utf-8'))
-
-        # bind to the service
-        binding = BindingRequest(service_id=self.test_service.id, plan_id=self.test_plan.id)
-        headers = [('X_Broker_Api_Version', '2.12')]
-        response = self.client.open('/v2/service_instances/{instance_id}/service_bindings/{binding_id}'.format(
-            instance_id=self.instance_id, binding_id=self.binding_id),
-                                    method='PUT',
-                                    data=json.dumps(binding),
-                                    content_type='application/json',
-                                    headers=headers)
-        self.assertStatus(response, 200, "Response body is : " + response.data.decode('utf-8'))
-
-    @unittest.skipIf(os.getenv('BINDING_TESTS', 'NO') == 'NO', "No AAA testing configured.")
-    def test_service_unbind(self):
-        """
-        Test case for service_unbind
+        Test case for service_bind, service_unbind
 
         Unbinds a service
         """
 
-        self.assert_service_instance_exists()
+        self.assert200(self.response, "Response body is : " + self.response.data.decode('utf-8'))
 
         # bind to the service
         binding = BindingRequest(service_id=self.test_service.id, plan_id=self.test_plan.id)
@@ -313,7 +312,18 @@ class TestServiceInstancesController(BaseTestCase):
             headers=headers)
         self.assertStatus(response, 200, "Response body is : " + response.data.decode('utf-8'))
 
-        response = self._delete_service_instance()
+        # bind to the service
+        binding = BindingRequest(service_id=self.test_service.id, plan_id=self.test_plan.id)
+        headers = [('X_Broker_Api_Version', '2.12')]
+        params = {'service_id': self.test_service.id, 'plan_id': self.test_plan.id}
+        response = self.client.open('/v2/service_instances/{instance_id}/service_bindings/{binding_id}?'
+                                    'service_id={sid}&plan_id={pid}'.format(
+                                        instance_id=self.instance_id, binding_id=self.binding_id,
+                                        sid=self.test_service.id, pid=self.test_plan.id),
+            method='DELETE',
+            content_type='application/json',
+            headers=headers
+        )
         self.assertStatus(response, 200, "Response body is : " + response.data.decode('utf-8'))
 
     def test_update_service_instance(self):
@@ -346,5 +356,3 @@ class TestServiceInstancesController(BaseTestCase):
 if __name__ == '__main__':
     import unittest
     unittest.main()
-    # import nose
-    # nose.main()
