@@ -313,9 +313,10 @@ def service_bind(instance_id, binding_id, binding):
 
             creds = auth.create_credentials(binding_id, instance_id)
             binding = BindingResponse(credentials=creds)
-            svc_inst.context['binding'] = binding
+            svc_inst.context['binding'] = binding.to_dict()
 
             # update instance with binding info
+            LOG.info('Updating the service instance info with binding details:\n' + svc_inst.to_str())
             STORE.add_service_instance(svc_inst)
 
             return binding, 200
@@ -352,7 +353,7 @@ def service_unbind(instance_id, binding_id, service_id, plan_id):
             if not svc_inst.service_type.bindable:
                 return 'The service instance does not support service (un)binding', 400
 
-            auth.delete_credentials(svc_inst.context['binding'].credentials)
+            auth.delete_credentials(svc_inst.context['binding']['credentials'])
 
             # remove binding info
             del svc_inst.context['binding']
