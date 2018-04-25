@@ -22,13 +22,13 @@ services:
       - MONGODB_TESTS=YES
       - MYSQL_TESTS=NO
       - HEARTBEAT_TESTS=YES
-      - EPM_TESTS=NO
+      - EPM_TESTS=YES
       - BINDING_TESTS=YES
       - SENTINEL_TESTS=NO
       - ESM_MONGO_HOST=mongo
 #      - ET_EDM_MYSQL_HOST=mysql
 #      - ESM_SQL_PASSWORD=shush
-#      - ET_EPM_API=http://epm:8180/
+      - ET_EPM_API=http://epm:8180/
       - ET_AAA_ESM_KEYSTONE_BASE_URL=http://aaa
       - ET_AAA_ESM_KEYSTONE_USERNAME=admin
       - ET_AAA_ESM_KEYSTONE_PASSWD=admin
@@ -79,32 +79,32 @@ services:
 #
 # DISABLED until EPM is stable
 #
-#  epm:
-#    container_name: epm
-#    image: elastest/epm
-#    volumes:
-#        - /var/run/docker.sock:/var/run/docker.sock:rw
-#    expose:
-#        - 8180
-#    ports:
-#        - 8180:8180
-#    networks:
-#        - elastest_elastest
-#
-#  epm-dca:
-#    container_name: epm-dca
-#    image: elastest/epm-adapter-docker-compose
-#    entrypoint: python run.py --register-adapter
-#    depends_on:
-#        - epm
-#    volumes:
-#        - /var/run/docker.sock:/var/run/docker.sock:rw
-#    expose:
-#        - 50051
-#    ports:
-#        - 50051:50051
-#    networks:
-#        - elastest_elastest
+  epm:
+    container_name: epm
+    image: elastest/epm
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock:rw
+    expose:
+        - 8180
+    ports:
+        - 8180:8180
+    networks:
+        - elastest_elastest
+
+  epm-dca:
+    container_name: epm-dca
+    image: elastest/epm-adapter-docker-compose
+    entrypoint: python run.py --register-adapter epm epm-dca
+    depends_on:
+        - epm
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock:rw
+    expose:
+        - 50051
+    ports:
+        - 50051:50051
+    networks:
+        - elastest_elastest
 
 networks:
     elastest_elastest:
