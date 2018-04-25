@@ -17,7 +17,7 @@
 from setuptools import setup, find_packages
 
 NAME = "esm"
-VERSION = "0.8.0"
+VERSION = "0.9.0"
 
 # To install the library, run the following
 #
