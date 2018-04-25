@@ -300,7 +300,7 @@ class EPMBackend(DeployerBackend):
         dirpath = tempfile.mkdtemp()
 
         with open(dirpath + 'metadata.yaml', 'w') as out:
-            out.write('name: ' + instance_id)
+            out.write('name: ' + instance_id + '\ntype: docker-compose')
 
         # update parameters if they're supplied
         with open(dirpath + 'docker-compose.yaml', 'w') as out:

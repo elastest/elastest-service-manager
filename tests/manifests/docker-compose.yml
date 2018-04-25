@@ -33,14 +33,14 @@ services:
   rest-api:
     image: elastest/ebs:latest
     environment:
-      - EBS_PORT=5000
+      - EBS_PORT=5001
       - EBS_SPARK_MASTER_URL=http://spark-master:8080/
         #    volumes:
         #      - ./rest-api:/app
     links:
       - spark-master
     ports:
-      - 5000:5000
+      - 5001:5001
     networks:
         - elastest_elastest
 
