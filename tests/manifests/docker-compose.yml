@@ -45,5 +45,5 @@ services:
         - elastest_elastest
 
 networks:
-  elastest_elastest:
-    external: true
+    elastest_elastest:
+      driver: bridge
