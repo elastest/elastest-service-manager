@@ -67,7 +67,7 @@ services:
       - elastest_elastest
 
   mysql:
-    image: mysql:latest
+    image: mysql:5.7
     container_name: mysql
     hostname: mysql
     environment:
