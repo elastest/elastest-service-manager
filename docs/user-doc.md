@@ -634,6 +634,10 @@ curl http://localhost:5000/environment
   ```
 </details>
 
+## Configuring ESM
+
+Please see the [set of configuration environment variables here](./config-env-vars.md)
+
 ## Authentication
 
 The ESM supports a simple mode where no authentication is provided. If authentication is required then the use of [OpenStack Keystone](https://github.com/openstack/keystone) is supported. To enable this support, simply set the following environment variables:

@@ -8,8 +8,8 @@ services:
     depends_on:
       - mongo
       - mysql
-#      - epm
-#      - epm-dca
+      - epm
+      - epm-dca
       - aaa
     image: elastest/esm-tester:latest
     container_name: tester
@@ -49,7 +49,7 @@ services:
       - "5000:5000"
     environment:
       MYSQL_HOST: mysql
-#      MYSQL_ROOT_PASSWORD: shush  # XXX there's an issue here: if set connections get reset
+      MYSQL_ROOT_PASSWORD: shush
       ADMIN_TOKEN: admintokin
       ADMIN_TENANT_NAME: admin
       ADMIN_USER_NAME: admin
@@ -76,9 +76,7 @@ services:
       - "3306"
     networks:
       - elastest_elastest
-#
-# DISABLED until EPM is stable
-#
+
   epm:
     container_name: epm
     image: elastest/epm

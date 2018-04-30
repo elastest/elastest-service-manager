@@ -124,6 +124,7 @@ Configure the following OS environment variables:
 * `ESM_PORT`: this is the port under which the service broker runs. By default it runs on `8080`.
 * `ESM_CHECK_PORT`: this is the port where health checks are served. By default it runs on `5000`.
 * `ESM_MONGO_HOST`: this is the host where a mongodb service is running. It is used to persist ESM state. If it's not set then an in-memory store is used.
+* For further configuration of the ESM, please see the [set of configuration environment variables here](./config-env-vars.md)
 
 Example config and run:
 
