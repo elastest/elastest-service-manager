@@ -17,10 +17,10 @@ import os
 import time
 from typing import List
 
-if os.getenv('ESM_MONGO_HOST', '') != '':
+if os.environ.get('ESM_MONGO_HOST', '') != '':
     from pymongo import MongoClient
 
-# if os.getenv('ESM_SQL_HOST', os.environ.get('ET_EDM_MYSQL_HOST', '')) != '':
+# if os.environ.get('ESM_SQL_HOST', os.environ.get('ET_EDM_MYSQL_HOST', '')) != '':
 #     import pymysql
 #     from adapters.sql_store import *
 
@@ -686,8 +686,8 @@ class InMemoryStore(Store):
         return True
 
 
-mongo_host = os.getenv('ESM_MONGO_HOST', '')
-# sql_host = os.getenv('ESM_SQL_HOST', os.environ.get('ET_EDM_MYSQL_HOST', ''))  # TODO(franco) reenable
+mongo_host = os.environ.get('ESM_MONGO_HOST', '')
+# sql_host = os.environ.get('ESM_SQL_HOST', os.environ.get('ET_EDM_MYSQL_HOST', ''))  # TODO(franco) reenable
 
 # if len(mongo_host) and len(sql_host):
 #     raise RuntimeError('Both MongoDB and SQL datastore environment variables are set. Set and use only one.')

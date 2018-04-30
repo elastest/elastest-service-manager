@@ -1123,7 +1123,7 @@ class ServiceMetadataAdapter(ServiceMetadata):
 
 
 class Helper:
-    host = os.getenv('ESM_SQL_HOST', os.environ.get('ET_EDM_MYSQL_HOST', '127.0.0.1'))
+    host = os.environ.get('ESM_SQL_HOST', os.environ.get('ET_EDM_MYSQL_HOST', '127.0.0.1'))
     port = int(os.environ.get('ESM_SQL_PORT', os.environ.get('ET_EDM_MYSQL_PORT', 3306)))
     user = os.environ.get('ESM_SQL_USER', 'root')
     password = os.environ.get('ESM_SQL_PASSWORD', '')

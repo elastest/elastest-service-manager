@@ -71,7 +71,7 @@ class Measurer(threading.Thread):
         self.instance_id = cache['instance_id']
         self._stop_event = threading.Event()
         self.endpoint = None
-        self.max_retries = os.getenv('ET_AAA_ESM_SENTINEL_MAX_RETRIES', '5')
+        self.max_retries = os.environ.get('ESM_SENTINEL_MAX_RETRIES', '5')
 
     def get_endpoint(self):
         try:
@@ -81,7 +81,7 @@ class Measurer(threading.Thread):
             for k, v in inst_info.items():
                 if 'Ip' in k:
                     endpoint = v
-                    port = os.getenv('ET_AAA_ESM_SENTINEL_HEALTH_CHECK_PORT', '80')
+                    port = os.environ.get('ESM_SENTINEL_HEALTH_CHECK_PORT', '80')
                     endpoint = 'http://{}:{}/health'.format(endpoint, port)
             return endpoint
         except MeasurerException as e:
