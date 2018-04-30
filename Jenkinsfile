@@ -7,22 +7,18 @@ node('docker'){
 
             git 'https://github.com/elastest/elastest-service-manager'
 
-            stage ("Setup test environment"){
-                echo "nothing to do, docker-compose does this for us!"
-            }
-
-            stage ("Unit tests"){
+            stage ("ESM Tests"){
                 echo ("Starting unit and integration tests from the tester container...")
                 sh "docker-compose -f docker-compose-tester.yml up --build --exit-code-from tester"
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
             }
 
-            stage "Build image - Package"
+            stage "Build ESM Image"
                 echo ("building...")
                 sh 'docker build -f Dockerfile-esm --build-arg GIT_COMMIT=$(git rev-parse HEAD) --build-arg COMMIT_DATE=$(git log -1 --format=%cd --date=format:%Y-%m-%dT%H:%M:%S) . -t elastest/esm:latest'
                 def myimage = docker.image("elastest/esm:latest")
 
-            stage "Publish"
+            stage "Publish ESM Image to DockerHub"
                 echo ("Publishing as all tests succeeded...")
                 withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'elastestci-dockerhub',
                 usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
