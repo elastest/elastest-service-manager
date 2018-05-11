@@ -12,30 +12,25 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-# GENERICS
-import os
 
-'''    
-    *******************
-    *******************
-    **** TESTED CODE **
-    *******************
-    ** SentinelLogger *
-    *******************
-    ******** ♥ ********
-    *******************
-'''
+import jsonpickle
+import logging
+import os
+from time import sleep
 
 from kafka import KafkaProducer
-import jsonpickle
-from time import sleep
-import logging
 
 
-def get_logger(name, level=logging.DEBUG):
-    if os.environ.get('ESM_SENTINEL_KAFKA_ENDPOINT', '') != '':
-        logger = SentinelLogger.getLogger(name, level)
-        logger.warning(os.environ.get('ESM_SENTINEL_TOPIC', None))
+def get_logger(name, level=logging.DEBUG, space=None, series=None, sentinel=False):
+    if os.environ.get('ESM_SENTINEL_KAFKA_ENDPOINT', '') != '' and sentinel:
+        logger = logging.getLogger(name)
+        logger.setLevel(level)
+
+        logger.info('Adding Sentinel logging handler')
+        handler = SentinelLogHandler(backup_file='backup.log', space=space, series=series)
+        handler.setLevel(level)
+        logger.addHandler(handler)
+
         print('reading...', os.environ.get('ESM_SENTINEL_TOPIC', None))
     else:
         logging.basicConfig(level=level)
@@ -43,52 +38,6 @@ def get_logger(name, level=logging.DEBUG):
 
     logger.setLevel(level)
     return logger
-
-
-class SentinelLogger:
-    @staticmethod
-    def getLogger(name, level='WARN'):
-        logger = logging.getLogger(name)
-        logger.setLevel(level)
-
-        logger.info('Adding Sentinel logging handler')
-        if os.environ.get('ESM_SENTINEL_KAFKA_ENDPOINT', '') != '':
-            handler = SentinelLogHandler(backup_file='backup.log')
-            handler.setLevel(level)
-            logger.addHandler(handler)
-
-        return logger
-
-
-class SentinelProducer:
-    @staticmethod
-    def get_kafka_producer(endpoint, key_serializer, value_serializer):
-        if key_serializer == "StringSerializer" and value_serializer == "StringSerializer":
-            return KafkaProducer(linger_ms=1, acks='all', retries=0, key_serializer=str.encode,
-                                 value_serializer=str.encode, bootstrap_servers=[endpoint])
-
-    @staticmethod
-    def send_msg(payload):
-        msg_dict = {}
-        msg_dict["agent"] = os.environ.get('ESM_SENTINEL_AGENT', None)
-
-        if type(payload) == dict:
-            msg_dict = {**msg_dict, **payload}
-        elif type(payload) == str:
-            msg_dict['msg'] = payload
-
-        print('sending...', msg_dict)
-        msg = jsonpickle.encode(msg_dict)
-        kafka_producer = SentinelProducer.get_kafka_producer(os.environ.get('ESM_SENTINEL_KAFKA_ENDPOINT', None),
-                                                             os.environ.get('ESM_SENTINEL_KAFKA_KEY_SERIALIZER', None),
-                                                             os.environ.get('ESM_SENTINEL_KAFKA_VALUE_SERIALIZER', None))
-
-        kafka_producer.send(os.environ.get('ESM_SENTINEL_TOPIC', None),
-                            key=os.environ.get('ESM_SENTINEL_SERIES_NAME', None),
-                            value=msg)
-        # time required for kafka to get the value
-        sleep(0.05)
-        kafka_producer.close()
 
 
 class SentinelLogHandler(logging.Handler):
@@ -99,8 +48,10 @@ class SentinelLogHandler(logging.Handler):
     def setLevel(self, level):
         super().setLevel(level)
 
-    def __init__(self, backup_file=None):
+    def __init__(self, backup_file=None, space=None, series=None):
         logging.Handler.__init__(self)
+        self.space = space
+        self.series = series
         # Backup log file for errors
         self.fail_fh = backup_file
         if self.fail_fh is not None:
@@ -126,7 +77,7 @@ class SentinelLogHandler(logging.Handler):
 
             # msg = self.format_msg(record)
             print('emitting, ', msg_dict)
-            SentinelProducer.send_msg(msg_dict)
+            self._send_msg(msg_dict)
 
         except AttributeError:
             self.write_backup("Kafka Error!")
@@ -141,12 +92,42 @@ class SentinelLogHandler(logging.Handler):
             self.write_backup(record)
             self.handleError(record)
 
-    def write_backup(self, msg):
+    def write_backup(self, record):
         if self.fail_fh:
-            self.fail_fh.write(msg + "\n")
+            self.fail_fh.write(str(record) + "\n")
 
     def close(self):
         if self.fail_fh:
             self.fail_fh.close()
-        # SentinelProducer.producer.close()
         logging.Handler.close(self)
+
+    def _get_kafka_producer(self, endpoint, key_serializer, value_serializer):
+        if key_serializer == "StringSerializer" and value_serializer == "StringSerializer":
+            return KafkaProducer(linger_ms=1, acks='all', retries=0, key_serializer=str.encode,
+                                 value_serializer=str.encode, bootstrap_servers=[endpoint])
+
+    def _send_msg(self, payload):
+        msg_dict = dict()
+        msg_dict["agent"] = os.environ.get('ESM_SENTINEL_AGENT', 'sentinel-internal-log-agent')
+
+        if type(payload) == dict:
+            msg_dict = {**msg_dict, **payload}
+        elif type(payload) == str:
+            msg_dict['msg'] = payload
+
+        print('sending...', msg_dict)
+        msg = jsonpickle.encode(msg_dict)
+        kafka_producer = self._get_kafka_producer(os.environ.get('ESM_SENTINEL_KAFKA_ENDPOINT', None),
+                                                             os.environ.get('ESM_SENTINEL_KAFKA_KEY_SERIALIZER',
+                                                                            'StringSerializer'),
+                                                             os.environ.get('ESM_SENTINEL_KAFKA_VALUE_SERIALIZER',
+                                                                            'StringSerializer'))
+        if self.space is not None and self.series is not None:
+            kafka_producer.send(self.space, key=self.series, value=msg)
+        else:
+            kafka_producer.send(os.environ.get('ESM_SENTINEL_TOPIC', None),  # space
+                                key=os.environ.get('ESM_SENTINEL_SERIES_NAME', None),  # series
+                                value=msg)
+        # time required for kafka to get the value
+        sleep(0.05)
+        kafka_producer.close()
