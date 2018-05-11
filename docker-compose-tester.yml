@@ -28,8 +28,8 @@ services:
       - MYSQL_TESTS=NO
       - HEARTBEAT_TESTS=YES
       - EPM_TESTS=YES
-      - BINDING_TESTS=YES
-      - SENTINEL_TESTS=YES
+      - BINDING_TESTS=NO
+      - SENTINEL_TESTS=NO
       # execution params, also required for testing
       - ESM_PORT=37005
       - ESM_DOCKER_DELETE_TIMEOUT=1  # low for quicker test runs
@@ -60,135 +60,135 @@ services:
     networks:
       - elastest_elastest
 
-## AAA Containers
-  aaa:
-    depends_on:
-      mysql:
-        condition: service_healthy
-    image: dizz/dock-os-keystone
-    hostname: aaa
-    container_name: aaa
-    links:
-      - mysql
-    ports:
-      - "35357:35357"
-      - "5000:5000"
-    environment:
-      MYSQL_HOST: mysql
-      MYSQL_ROOT_PASSWORD: shush
-      ADMIN_TOKEN: admintokin
-      ADMIN_TENANT_NAME: admin
-      ADMIN_USER_NAME: admin
-      ADMIN_PASSWORD: admin
-    networks:
-      - elastest_elastest
-
-  mysql:
-    image: mysql:5.7
-    container_name: mysql
-    hostname: mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: shush
-    ports:
-      - "3306"
-    healthcheck:  # required in order to signal correct startup to dependent services (see aaa)
-      test: "/usr/bin/mysql --user=root --password=shush --execute \"show databases;\""
-      interval: 10s
-      timeout: 10s
-      retries: 5
-    networks:
-      - elastest_elastest
-
-## EMP Containers
-  emp:
-    image: elastest/emp:latest
-    links:
-      - emp-influxdb
-      - emp-kafka
-    ports:
-      - 9100:9100
-    expose:
-      - 9000
-    environment:
-      - STREAM_ADMINUSER=root
-      - STREAM_ADMINPASS=pass1234
-      - STREAM_DBENDPOINT=emp-influxdb:8086
-      - STREAM_ACCESSURL=nightly.elastest.io:37000/influxui
-      - STREAM_DBTYPE=influxdb
-      - ZOOKEEPER_ENDPOINT=emp-kafka:2181
-      - KAFKA_ENDPOINT=emp-kafka:9092
-      - TOPIC_CHECK_INTERVAL=30000
-      - INFLUX_URL=http://emp-influxdb:8086
-      - INFLUX_URL_GRAFANA=http://emp-influxdb:8086
-      - GRAFANA_URL=http://emp-grafana:3000
-      - GRAFANA_ADMIN=admin
-      - GRAFANA_PASSWORD=1ccl@b2017
-      - INFLUX_USER=root
-      - INFLUX_PASSWORD=pass1234
-      - SENTINEL_DB_ENDPOINT=/data/sentinel.db
-      - ADMIN_TOKEN=somevalue
-      - DASHBOARD_TITLE=elastest
-      - DASHBOARD_ENDPOINT=nightly.elastest.io:37000/grafana
-      - PROXY_WORKAROUND_ENABLE=false
-      - PROXY_WORKAROUND_TYPE=nginx
-      - PROXY_WORKAROUND_LOCATION=/emp-admin
-      - ET_EDM_ALLUXIO_API=http://edm-alluxio-master:19999/
-      - ET_EDM_MYSQL_HOST=edm-mysql
-      - ET_EDM_MYSQL_PORT=3306
-      - ET_EDM_ELASTICSEARCH_API=http://edm-elasticsearch:9200/
-      - ET_EDM_API=http://edm:37003/
-      - ET_EPM_API=http://epm:37002/
-      - ET_ETM_API=http://etm:37006/
-      - ET_ESM_API=http://esm:37005/
-      - ET_EIM_API=http://eim:37004/
-      - ET_ETM_LSBEATS_HOST=etm-beats
-      - ET_ETM_LSBEATS_PORT=5044
-      - ET_ETM_LSHTTP_API=http://etm-logstash:5002/
-      - ET_ETM_RABBIT_HOST=etm-rabbitmq
-      - ET_ETM_RABBIT_PORT=5672
-      - ET_EMP_API=http://eim:37001/
-      - ET_EMP_INFLUXDB_API=http://emp-influxdb:8086/
-      - ET_EMP_INFLUXDB_HOST=emp-influxdb
-      - ET_EMP_INFLUXDB_GRAPHITE_PORT=2003
-    volumes:
-      - emp:/data
-    networks:
-      - elastest_elastest
-
-  emp-grafana:
-    image: grafana/grafana:4.6.1
-    ports:
-      - 3000:3000
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=1ccl@b2017
-    networks:
-      - elastest_elastest
-
-  emp-kafka:
-    image: spotify/kafka
-    ports:
-      - 2181:2181  # zookeeper
-      - 9092:9092  # kafka
-    environment:
-      - ADVERTISED_PORT=9092
-      - ADVERTISED_HOST=emp-kafka
-      - ADVERTISED_LISTENERS=emp-kafka
-      - LISTENERS=PLAINTEXT://localhost:9092
-    networks:
-      - elastest_elastest
-
-  emp-influxdb:
-    image: influxdb:1.2.4-alpine
-    ports:
-      - 8083:8083
-      - 8086:8086
-      - 2003:2003
-    environment:
-      - INFLUXDB_ADMIN_ENABLED=true
-      - INFLUXDB_GRAPHITE_ENABLED=true
-      - INFLUXDB_HTTP_AUTH_ENABLED=true
-    networks:
-      - elastest_elastest
+### AAA Containers
+#  aaa:
+#    depends_on:
+#      mysql:
+#        condition: service_healthy
+#    image: dizz/dock-os-keystone
+#    hostname: aaa
+#    container_name: aaa
+#    links:
+#      - mysql
+#    ports:
+#      - "35357:35357"
+#      - "5000:5000"
+#    environment:
+#      MYSQL_HOST: mysql
+#      MYSQL_ROOT_PASSWORD: shush
+#      ADMIN_TOKEN: admintokin
+#      ADMIN_TENANT_NAME: admin
+#      ADMIN_USER_NAME: admin
+#      ADMIN_PASSWORD: admin
+#    networks:
+#      - elastest_elastest
+#
+#  mysql:
+#    image: mysql:5.7
+#    container_name: mysql
+#    hostname: mysql
+#    environment:
+#      MYSQL_ROOT_PASSWORD: shush
+#    ports:
+#      - "3306"
+#    healthcheck:  # required in order to signal correct startup to dependent services (see aaa)
+#      test: "/usr/bin/mysql --user=root --password=shush --execute \"show databases;\""
+#      interval: 10s
+#      timeout: 10s
+#      retries: 5
+#    networks:
+#      - elastest_elastest
+#
+### EMP Containers
+#  emp:
+#    image: elastest/emp:latest
+#    links:
+#      - emp-influxdb
+#      - emp-kafka
+#    ports:
+#      - 9100:9100
+#    expose:
+#      - 9000
+#    environment:
+#      - STREAM_ADMINUSER=root
+#      - STREAM_ADMINPASS=pass1234
+#      - STREAM_DBENDPOINT=emp-influxdb:8086
+#      - STREAM_ACCESSURL=nightly.elastest.io:37000/influxui
+#      - STREAM_DBTYPE=influxdb
+#      - ZOOKEEPER_ENDPOINT=emp-kafka:2181
+#      - KAFKA_ENDPOINT=emp-kafka:9092
+#      - TOPIC_CHECK_INTERVAL=30000
+#      - INFLUX_URL=http://emp-influxdb:8086
+#      - INFLUX_URL_GRAFANA=http://emp-influxdb:8086
+#      - GRAFANA_URL=http://emp-grafana:3000
+#      - GRAFANA_ADMIN=admin
+#      - GRAFANA_PASSWORD=1ccl@b2017
+#      - INFLUX_USER=root
+#      - INFLUX_PASSWORD=pass1234
+#      - SENTINEL_DB_ENDPOINT=/data/sentinel.db
+#      - ADMIN_TOKEN=somevalue
+#      - DASHBOARD_TITLE=elastest
+#      - DASHBOARD_ENDPOINT=nightly.elastest.io:37000/grafana
+#      - PROXY_WORKAROUND_ENABLE=false
+#      - PROXY_WORKAROUND_TYPE=nginx
+#      - PROXY_WORKAROUND_LOCATION=/emp-admin
+#      - ET_EDM_ALLUXIO_API=http://edm-alluxio-master:19999/
+#      - ET_EDM_MYSQL_HOST=edm-mysql
+#      - ET_EDM_MYSQL_PORT=3306
+#      - ET_EDM_ELASTICSEARCH_API=http://edm-elasticsearch:9200/
+#      - ET_EDM_API=http://edm:37003/
+#      - ET_EPM_API=http://epm:37002/
+#      - ET_ETM_API=http://etm:37006/
+#      - ET_ESM_API=http://esm:37005/
+#      - ET_EIM_API=http://eim:37004/
+#      - ET_ETM_LSBEATS_HOST=etm-beats
+#      - ET_ETM_LSBEATS_PORT=5044
+#      - ET_ETM_LSHTTP_API=http://etm-logstash:5002/
+#      - ET_ETM_RABBIT_HOST=etm-rabbitmq
+#      - ET_ETM_RABBIT_PORT=5672
+#      - ET_EMP_API=http://eim:37001/
+#      - ET_EMP_INFLUXDB_API=http://emp-influxdb:8086/
+#      - ET_EMP_INFLUXDB_HOST=emp-influxdb
+#      - ET_EMP_INFLUXDB_GRAPHITE_PORT=2003
+#    volumes:
+#      - emp:/data
+#    networks:
+#      - elastest_elastest
+#
+#  emp-grafana:
+#    image: grafana/grafana:4.6.1
+#    ports:
+#      - 3000:3000
+#    environment:
+#      - GF_SECURITY_ADMIN_PASSWORD=1ccl@b2017
+#    networks:
+#      - elastest_elastest
+#
+#  emp-kafka:
+#    image: spotify/kafka
+#    ports:
+#      - 2181:2181  # zookeeper
+#      - 9092:9092  # kafka
+#    environment:
+#      - ADVERTISED_PORT=9092
+#      - ADVERTISED_HOST=emp-kafka
+#      - ADVERTISED_LISTENERS=emp-kafka
+#      - LISTENERS=PLAINTEXT://localhost:9092
+#    networks:
+#      - elastest_elastest
+#
+#  emp-influxdb:
+#    image: influxdb:1.2.4-alpine
+#    ports:
+#      - 8083:8083
+#      - 8086:8086
+#      - 2003:2003
+#    environment:
+#      - INFLUXDB_ADMIN_ENABLED=true
+#      - INFLUXDB_GRAPHITE_ENABLED=true
+#      - INFLUXDB_HTTP_AUTH_ENABLED=true
+#    networks:
+#      - elastest_elastest
 
 ## EPM Containers
   epm:
