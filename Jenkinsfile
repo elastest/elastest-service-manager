@@ -15,7 +15,7 @@ node('docker'){
 
             stage ("ESM Tests: Core, EMP"){
                 echo ("Starting unit and integration tests for core & EMP from the tester container...")
-                sh "docker-compose -f docker-compose-tester-epm.yml up --build --exit-code-from esm"
+                sh "docker-compose -f docker-compose-tester-emp.yml up --build --exit-code-from esm"
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
             }
 
