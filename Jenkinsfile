@@ -7,9 +7,15 @@ node('docker'){
 
             git 'https://github.com/elastest/elastest-service-manager'
 
-            stage ("ESM Tests"){
-                echo ("Starting unit and integration tests from the tester container...")
+            stage ("ESM Tests: Core, EPM, AAA"){
+                echo ("Starting unit and integration tests for core, EMP & AAA from the tester container...")
                 sh "docker-compose -f docker-compose-tester.yml up --build --exit-code-from esm"
+                step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
+            }
+
+            stage ("ESM Tests: Core, EMP"){
+                echo ("Starting unit and integration tests for core & EMP from the tester container...")
+                sh "docker-compose -f docker-compose-tester-epm.yml up --build --exit-code-from esm"
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
             }
 
