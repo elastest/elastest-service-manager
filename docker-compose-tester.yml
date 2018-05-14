@@ -11,7 +11,7 @@ services:
       - mongo
       - epm
       - epm-dca
-      - aaa
+#      - aaa
     image: elastest/esm:latest
     command: tox -c tox-tester.ini
     container_name: esm
@@ -24,7 +24,7 @@ services:
       - DOCKER_TESTS=YES
       - MONGODB_TESTS=YES
       - EPM_TESTS=YES
-      - BINDING_TESTS=YES
+      - BINDING_TESTS=NO
       - MYSQL_TESTS=NO
       - HEARTBEAT_TESTS=NO
       - SENTINEL_TESTS=NO
@@ -34,11 +34,11 @@ services:
       - ESM_DOCKER_DELETE_TIMEOUT=1  # low for quicker test runs
       - ESM_MONGO_HOST=mongo
       - ET_EPM_API=http://epm:8180/
-      - ET_AAA_ESM_KEYSTONE_BASE_URL=http://aaa
-      - ET_AAA_ESM_KEYSTONE_USERNAME=admin
-      - ET_AAA_ESM_KEYSTONE_PASSWD=admin
-      - ET_AAA_ESM_KEYSTONE_TENANT=admin
       - ESM_MEASURE_INSTANCES=NO
+#      - ET_AAA_ESM_KEYSTONE_BASE_URL=http://aaa
+#      - ET_AAA_ESM_KEYSTONE_USERNAME=admin
+#      - ET_AAA_ESM_KEYSTONE_PASSWD=admin
+#      - ET_AAA_ESM_KEYSTONE_TENANT=admin
 #      - ET_EDM_MYSQL_HOST=mysql
 #      - ESM_SQL_PASSWORD=shush
 #      - ET_EMP_API=http://emp:9100
@@ -58,44 +58,44 @@ services:
     networks:
       - elastest_elastest
 
-## AAA Containers
-  aaa:
-    depends_on:
-      mysql:
-        condition: service_healthy
-    image: dizz/dock-os-keystone
-    hostname: aaa
-    container_name: aaa
-    links:
-      - mysql
-    ports:
-      - "35357:35357"
-      - "5000:5000"
-    environment:
-      MYSQL_HOST: mysql
-      MYSQL_ROOT_PASSWORD: shush
-      ADMIN_TOKEN: admintokin
-      ADMIN_TENANT_NAME: admin
-      ADMIN_USER_NAME: admin
-      ADMIN_PASSWORD: admin
-    networks:
-      - elastest_elastest
-
-  mysql:
-    image: mysql:5.7
-    container_name: mysql
-    hostname: mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: shush
-    ports:
-      - "3306"
-    healthcheck:  # required in order to signal correct startup to dependent services (see aaa)
-      test: "/usr/bin/mysql --user=root --password=shush --execute \"show databases;\""
-      interval: 10s
-      timeout: 10s
-      retries: 5
-    networks:
-      - elastest_elastest
+### AAA Containers
+#  aaa:
+#    depends_on:
+#      mysql:
+#        condition: service_healthy
+#    image: dizz/dock-os-keystone
+#    hostname: aaa
+#    container_name: aaa
+#    links:
+#      - mysql
+#    ports:
+#      - "35357:35357"
+#      - "5000:5000"
+#    environment:
+#      MYSQL_HOST: mysql
+#      MYSQL_ROOT_PASSWORD: shush
+#      ADMIN_TOKEN: admintokin
+#      ADMIN_TENANT_NAME: admin
+#      ADMIN_USER_NAME: admin
+#      ADMIN_PASSWORD: admin
+#    networks:
+#      - elastest_elastest
+#
+#  mysql:
+#    image: mysql:5.7
+#    container_name: mysql
+#    hostname: mysql
+#    environment:
+#      MYSQL_ROOT_PASSWORD: shush
+#    ports:
+#      - "3306"
+#    healthcheck:  # required in order to signal correct startup to dependent services (see aaa)
+#      test: "/usr/bin/mysql --user=root --password=shush --execute \"show databases;\""
+#      interval: 10s
+#      timeout: 10s
+#      retries: 5
+#    networks:
+#      - elastest_elastest
 
 ## EPM Containers
   epm:
