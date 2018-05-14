@@ -11,8 +11,8 @@ services:
       - mongo
       - epm
       - epm-dca
-      - aaa
-      - emp
+#      - aaa
+#      - emp
     image: elastest/esm:latest
 #    command: /usr/bin/python3 /app/src/runesm.py # TODO need to parameterise this execution
     command: tox -c tox-tester.ini
