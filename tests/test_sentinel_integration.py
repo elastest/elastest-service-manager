@@ -30,7 +30,7 @@ class TestCaseSentinelIntegration(unittest.TestCase):
 
     def __init__(self, methodName='runTest'):
         super().__init__(methodName)
-        self.admintoken = 'somevalue'  # default from compose file, take from ESM env
+        self.admintoken = os.environ.get('ESM_SENTINEL_ADMIN_TOKEN','somevalue')
         self.username = ''
         self.password = ''
         self.space = ''
