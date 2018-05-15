@@ -7,21 +7,29 @@ node('docker'){
 
             git 'https://github.com/elastest/elastest-service-manager'
 
-            stage ("ESM Tests: Core, EPM, AAA"){
+            // we split the esm tests in functional areas to minimise resource usage
+            stage ("ESM Tests: Core, EPM"){
                 echo ("Starting unit and integration tests for core, EMP & AAA from the tester container...")
-                sh "docker-compose -f docker-compose-tester.yml up --build --exit-code-from esm"
+                sh "docker-compose -f tests/docker/docker-compose-tester-core.yml up --build --exit-code-from esm"
+                sh "docker-compose -f tests/docker/docker-compose-tester-core.yml down -v"
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
             }
 
             stage ("ESM Tests: Core, EMP"){
                 echo ("Starting unit and integration tests for core & EMP from the tester container...")
-                sh "docker-compose -f docker-compose-tester-emp.yml up --build --exit-code-from esm"
+                sh "docker-compose -f tests/docker/docker-compose-tester-emp.yml up --exit-code-from esm"
+                sh "docker-compose -f tests/docker/docker-compose-tester-emp.yml down -v"
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
             }
-
+            stage ("ESM Tests: Core, AAA"){
+                echo ("Starting unit and integration tests for core & AAA from the tester container...")
+                sh "docker-compose -f tests/docker/docker-compose-tester-aaa.yml up --exit-code-from esm"
+                sh "docker-compose -f tests/docker/docker-compose-tester-aaa.yml down -v"
+                step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
+            }
             stage "Build ESM Image"
                 echo ("building...")
-                sh 'docker build -f Dockerfile-esm --build-arg GIT_COMMIT=$(git rev-parse HEAD) --build-arg COMMIT_DATE=$(git log -1 --format=%cd --date=format:%Y-%m-%dT%H:%M:%S) . -t elastest/esm:latest'
+                sh 'docker build --build-arg GIT_COMMIT=$(git rev-parse HEAD) --build-arg COMMIT_DATE=$(git log -1 --format=%cd --date=format:%Y-%m-%dT%H:%M:%S) . -t elastest/esm:latest'
                 def myimage = docker.image("elastest/esm:latest")
 
             stage "Publish ESM Image to DockerHub"

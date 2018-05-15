@@ -5,13 +5,12 @@ services:
 ## ESM Containers
   esm:
     build:
-      context: ./
-      dockerfile: ./Dockerfile-all
+      context: ../../
+      dockerfile: ./tests/docker/Dockerfile-tests
     depends_on:
       - mongo
       - emp
     image: elastest/esm:latest
-    command: tox -c tox-tester.ini
     container_name: esm
     hostname: esm
     volumes:
@@ -19,7 +18,7 @@ services:
       - ./:/output:rw
     environment:
       # testing params
-      - DOCKER_TESTS=YES
+      - DOCKER_TESTS=NO
       - MONGODB_TESTS=YES
       - HEARTBEAT_TESTS=YES
       - SENTINEL_TESTS=YES
@@ -27,20 +26,14 @@ services:
       - EPM_TESTS=NO
       - BINDING_TESTS=NO
       # execution params, also required for testing
+      - ET_EMP_API=http://emp:9100
+      - ESM_SENTINEL_KAFKA_ENDPOINT=emp-kafka:9092
+      - ESM_SENTINEL_ADMIN_TOKEN=somevalue
       - ESM_PORT=37005
       - ESM_CHECK_PORT=5001
       - ESM_DOCKER_DELETE_TIMEOUT=1  # low for quicker test runs
       - ESM_MEASURE_INSTANCES=NO
       - ESM_MONGO_HOST=mongo
-      - ET_EMP_API=http://emp:9100
-      - ESM_SENTINEL_KAFKA_ENDPOINT=emp-kafka:9092
-#      - ET_EDM_MYSQL_HOST=mysql
-#      - ESM_SQL_PASSWORD=shush
-#      - ET_EPM_API=http://epm:8180/
-#      - ET_AAA_ESM_KEYSTONE_BASE_URL=http://aaa
-#      - ET_AAA_ESM_KEYSTONE_USERNAME=admin
-#      - ET_AAA_ESM_KEYSTONE_PASSWD=admin
-#      - ET_AAA_ESM_KEYSTONE_TENANT=admin
 
     networks:
       - elastest_elastest
