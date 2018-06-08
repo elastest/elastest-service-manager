@@ -24,6 +24,7 @@ services:
       - SENTINEL_TESTS=YES
       - MYSQL_TESTS=NO
       - EPM_TESTS=NO
+      - CODECOV_TOKEN=${CODECOV_TOKEN:-NONE}
       # execution params, also required for testing
       - ET_EMP_API=http://emp:9100
       - ESM_SENTINEL_KAFKA_ENDPOINT=emp-kafka:9092
