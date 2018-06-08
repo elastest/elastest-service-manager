@@ -11,31 +11,27 @@ sudo: required
 
 services:
   - docker
-#  - mongodb
-#  - mysql
 
 env:
   - DOCKER_TESTS=YES MONGODB_TESTS=YES EPM_TESTS=YES ET_EPM_API=http://localhost:8180/ ESM_DOCKER_DELETE_TIMEOUT=1 ESM_MONGO_HOST=localhost
 
 install:
-  - docker-compose --version
-  - "docker-compose -f tests/docker/docker-compose-local-deps.yml up -d"
-  - "pip install -r src/requirements.txt"
-  - "pip install -r tests/requirements.txt"
+  - docker-compose -f tests/docker/docker-compose-local-deps.yml up -d
+  - pip install -r src/requirements.txt
+  - pip install -r tests/requirements.txt
 
 before_script:
   - sleep 15
-#  - docker network create elastest
 
 script:
   - nosetests --with-xunit --with-coverage --cover-erase --cover-package=adapters --cover-package=esm --cover-min-percentage=70
-#  - docker build -t dizz/esm .
-#  - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+  - docker build -t dizz/esm .
+  - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 
 after_success:
-  - "docker-compose -f tests/docker/docker-compose-local-deps.yml down -v"
+  - docker-compose -f tests/docker/docker-compose-local-deps.yml down -v
   - codecov
-#  - if [ "$TRAVIS_BRANCH" == "master" ]; then
-#    docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-#    docker push dizz/esm;
-#    fi
+  - if [ "$TRAVIS_BRANCH" == "master" ]; then
+    docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
+    docker push dizz/esm;
+    fi
