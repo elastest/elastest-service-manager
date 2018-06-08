@@ -13,23 +13,25 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-# INSTANCE
-from adapters.sql_store import PlanAdapter, ServiceTypeAdapter, PlanServiceTypeAdapter, \
-    ServiceInstanceAdapter as Adapter, ServiceInstanceSQL, ServiceTypeSQL, LastOperationAdapter
-from adapters.store import SQLStore
-from esm.models.service_instance import ServiceInstance
 
-# GENERAL
 import unittest
 from unittest.mock import patch
 from unittest import skipIf
-from orator.exceptions.query import QueryException
 import os
+
+from adapters.sql_store import ServiceInstanceAdapter as Adapter
+
+if os.getenv('ESM_SQL_HOST', 'NO') == 'YES':
+    # INSTANCE
+    from adapters.sql_store import PlanAdapter, ServiceTypeAdapter, PlanServiceTypeAdapter, \
+        ServiceInstanceSQL, ServiceTypeSQL, LastOperationAdapter
+    from adapters.store import SQLStore
+    from esm.models.service_instance import ServiceInstance
+    # GENERAL
+    from orator.exceptions.query import QueryException
 
 
 # TODO: move to test_store_backends module
-
-
 @skipIf(os.getenv('MYSQL_TESTS', 'NO') != 'YES', "MYSQL_TESTS_TESTS not set in environment variables")
 class TestCaseServiceInstance(unittest.TestCase):
     def setUp(self):

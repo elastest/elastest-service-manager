@@ -1,0 +1,51 @@
+version: '2.1'
+
+services:
+
+## ESM Containers
+  esm:
+    build:
+      context: ../../
+      dockerfile: ./tests/docker/Dockerfile-tests
+    depends_on:
+      - mysql
+    image: elastest/esm:latest
+    container_name: esm
+    hostname: esm
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+      - ./:/output:rw
+    environment:
+      # testing params
+      - DOCKER_TESTS=NO
+      - MONGODB_TESTS=NO
+      - HEARTBEAT_TESTS=NO
+      - SENTINEL_TESTS=NO
+      - MYSQL_TESTS=YES
+      - EPM_TESTS=NO
+      - BINDING_TESTS=NO
+      # execution params, also required for testing
+      - ESM_PORT=37005
+      - ESM_CHECK_PORT=5001
+      - ESM_DOCKER_DELETE_TIMEOUT=1  # low for quicker test runs
+      - ESM_MEASURE_INSTANCES=NO
+      - ESM_SQL_HOST=mysql
+
+    networks:
+      - elastest_elastest
+
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    hostname: mysql
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=YES
+    ports:
+      - "3306"
+    networks:
+      - elastest_elastest
+
+
+networks:
+    elastest_elastest:
+      driver: bridge

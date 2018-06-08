@@ -181,7 +181,11 @@ def _get_instance(srv_inst):
     # could also use STORE.get_service_instance(srv_inst) but will not have all details
     inst_info = RM.info(instance_id=srv_inst.context['id'], manifest_type=mani[0].manifest_type)
 
-    if inst_info['srv_inst.state.state'] == 'failed':
+    print("********************************************")
+    print(inst_info.get('srv_inst.state.state', None))
+    print("********************************************")
+    # todo these keys break when the ESM does not find the /temp/ folder
+    if inst_info.get('srv_inst.state.state', None) == 'failed':
         # try epm.delete(instance_id=instance_id)?
         return 'There has been a failure in creating the service instance.', 500
 
