@@ -13,20 +13,23 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
 from esm.models.service_type import ServiceType
-
-from adapters.sql_store import ServiceTypeSQL
-from adapters.sql_store import PlanServiceTypeSQL
 from adapters.sql_store import ServiceTypeAdapter
-from adapters.sql_store import PlanServiceTypeAdapter
-from adapters.sql_store import PlanAdapter
-from adapters.store import SQLStore
-
-from unittest.mock import patch
 from unittest import skipIf
 import unittest
 import os
-from orator.exceptions.query import QueryException
+
+from unittest.mock import patch
+
+
+if os.getenv('ESM_SQL_HOST', 'NO') == 'YES':
+    from adapters.sql_store import ServiceTypeSQL
+    from adapters.sql_store import PlanServiceTypeSQL
+    from adapters.sql_store import PlanServiceTypeAdapter
+    from adapters.sql_store import PlanAdapter
+    from adapters.store import SQLStore
+    from orator.exceptions.query import QueryException
 
 # TODO: move to test_store_backends module
 

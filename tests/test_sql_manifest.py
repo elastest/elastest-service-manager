@@ -13,24 +13,26 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-# MANIFEST
-from esm.models.manifest import Manifest
-from adapters.sql_store import ManifestSQL
-from adapters.sql_store import ManifestAdapter
-# SERVICE
-from adapters.sql_store import ServiceTypeSQL
-from adapters.sql_store import PlanServiceTypeAdapter
-from adapters.sql_store import ServiceTypeAdapter
-# PLAN
-from adapters.sql_store import PlanAdapter
-# GENERICS
-from adapters.store import SQLStore
-from unittest.mock import patch
-from orator.exceptions.query import QueryException
-# TESTS
 from unittest import skipIf
 import unittest
 import os
+
+from unittest.mock import patch
+from adapters.sql_store import ManifestAdapter
+
+if os.getenv('ESM_SQL_HOST', 'NO') == 'YES':
+    # MANIFEST
+    from esm.models.manifest import Manifest
+    from adapters.sql_store import ManifestSQL
+    # SERVICE
+    from adapters.sql_store import ServiceTypeSQL
+    from adapters.sql_store import PlanServiceTypeAdapter
+    from adapters.sql_store import ServiceTypeAdapter
+    # PLAN
+    from adapters.sql_store import PlanAdapter
+    # GENERICS
+    from adapters.store import SQLStore
+    from orator.exceptions.query import QueryException
 
 
 # TODO: move to test_store_backends module

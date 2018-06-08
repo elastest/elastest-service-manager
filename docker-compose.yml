@@ -2,9 +2,12 @@ version: '3'
 
 services:
   esm:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
     depends_on:
       - esm-mongo
-    image: elastest/esm:0.5.0
+    image: elastest/esm:latest
     container_name: esm
     hostname: esm
     volumes:
@@ -30,6 +33,14 @@ services:
       - ET_EMP_INFLUXDB_API=http://emp-influxdb:8086/
       - ET_EMP_INFLUXDB_HOST=emp-influxdb
       - ET_EMP_INFLUXDB_GRAPHITE_PORT=2003
+      - ESM_MEASURE_INSTANCES=YES
+      - ESM_SENTINEL_TOPIC=user-1-elastest_tss
+      - ESM_SENTINEL_AGENT=sentinel-internal-log-agent
+      - ESM_SENTINEL_KAFKA_ENDPOINT=kafka.cloudlab.zhaw.ch:9092
+      - ESM_SENTINEL_KAFKA_KEY_SERIALIZER=StringSerializer
+      - ESM_SENTINEL_KAFKA_VALUE_SERIALIZER=StringSerializer
+      - ESM_SENTINEL_SERIES_NAME=service-health-check
+      - ESM_SENTINEL_HEALTH_CHECK_INTERVAL=60
     expose:
       - 37005
     ports:
@@ -47,6 +58,35 @@ services:
       - "27017"
     networks:
       - elastest
+  esm_ui:
+    depends_on:
+      - esm
+    image: ademord/esmweb:latest
+    environment:
+      - DEBUG=true
+      - SECRET_KEY=not secure only use for development
+      - ET_ESM_API=http://esm:8080
+    networks:
+      - elastest
+    ports:
+      - 8000:8000
+    expose:
+      - 8000    
+  emp-docker-agent:
+    image: elastest/emp-docker-agent:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - KAFKA_ENDPOINT=kafka.cloudlab.zhaw.ch:9092
+      - KAFKA_KEY_SERIALIZER=StringSerializer
+      - KAFKA_VALUE_SERIALIZER=StringSerializer
+      - SENTINEL_TOPIC=user-1-elastest_tss
+      - SENTINEL_SERIES=service-docker-stats
+      - DOCKER_SOCKET=unix://var/run/docker.sock
+      - PERIODICITY=5
+    networks:
+      - elastest
+
 volumes:
   mongo-data:
     driver: local

@@ -42,7 +42,7 @@ Below is the set of environment variables and their defaults that can be set to 
 
 **SQL**
 
-`ET_EDM_MYSQL_HOST` or `ESM_SQL_HOST` Default is `'127.0.0.1'`
+`ET_EDM_MYSQL_HOST` or `ESM_SQL_HOST` Default is `''`
 
 `ET_EDM_MYSQL_PORT` or `ESM_SQL_PORT` Default is `3306`
 
@@ -69,6 +69,8 @@ Below is the set of environment variables and their defaults that can be set to 
 `ESM_SENTINEL_MAX_RETRIES` Default is `'5'` times
 
 `ESM_SENTINEL_HEALTH_CHECK_PORT` Default is `'80'`
+
+`ESM_SENTINEL_HEALTH_CHECK_INTERVAL` Default is `2`
 
 **ESM Sentinel Related**
 
