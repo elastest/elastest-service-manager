@@ -21,7 +21,14 @@ import os
 from adapters.log import get_logger
 from esm.util import Singleton
 
-LOG = get_logger(__name__)
+
+
+
+LOG = get_logger(__name__,
+                 'WARN',
+                 space= os.environ.get('ESM_SENTINEL_TOPIC', 'user-1-elastest_tss'),
+                 series= os.environ.get('ESM_SENTINEL_SERIES_NAME', 'service-health-check'),
+                 sentinel=True)
 
 '''
     *******************
@@ -92,7 +99,7 @@ class Measurer(threading.Thread):
         endpoint = self.get_endpoint()
 
         while not endpoint and self.max_retries:
-            LOG.warning('Endpoint for InstanceID \'{}\' could not be retrieved!'.format(self.cache['instance_id']))
+            LOG.warning('{}#Endpoint could not be retrieved!'.format(self.cache['instance_id']))
             time.sleep(2)
             endpoint = self.get_endpoint()
             self.max_retries = self.max_retries - 1
@@ -111,25 +118,27 @@ class Measurer(threading.Thread):
         LOG.info('Checking instance...')
         try:
             if not self.__endpoint_is_healthy():
-                LOG.warning('Instance endpoint is not alive')
+                LOG.warning('{}#Endpoint \'{}\' is down!'
+                        .format(self.instance_id, self.endpoint))
             else:
-                LOG.info('sending health status!')
+                LOG.warning('{}#Endpoint \'{}\' is alive!'
+                        .format(self.instance_id, self.endpoint))
         except:
-            LOG.warning('Endpoint \'{}\' for InstanceID \'{}\' is not contactable!'
-                        .format(self.endpoint, self.instance_id))
+            LOG.warning('{}#Endpoint \'{}\' is unreachable!'
+                        .format(self.instance_id, self.endpoint))
 
     def run(self):
         super().run()
-        LOG.warning('Measurer created with...{}'.format(self.instance_id))
+        LOG.warning('{}#Measurer created'.format(self.instance_id))
         self.endpoint = self.__poll_endpoint()
 
         # VALIDATE ENDPOINT
         # valid = MeasurerUtils.validate_endpoint(self.endpoint) or True
         # valid = True
         while not self.is_stopped():
-            time.sleep(2)
-            LOG.warning('stopped status...,{}'.format(self.is_stopped()))
-            self.__measure_health()  # measure service's health
+            periodicity = os.environ.get('ESM_SENTINEL_HEALTH_CHECK_INTERVAL', 2)
+            self.__measure_health()
+            time.sleep(int(periodicity))
 
     def stop(self):
         self._stop_event.set()

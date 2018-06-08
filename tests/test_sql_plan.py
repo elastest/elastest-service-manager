@@ -12,16 +12,16 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
-from esm.models.service_type import Plan
-from adapters.sql_store import PlanSQL
-from adapters.sql_store import PlanAdapter
-from adapters.sql_store import ServiceTypeAdapter
-
 from unittest import skipIf
 import unittest
 import os
-from orator.exceptions.query import QueryException
+
+if os.getenv('ESM_SQL_HOST', 'NO') != 'NO':
+    from esm.models.service_type import Plan
+    from adapters.sql_store import PlanSQL
+    from adapters.sql_store import PlanAdapter
+    from adapters.sql_store import ServiceTypeAdapter
+    from orator.exceptions.query import QueryException
 
 
 # TODO: move to test_store_backends module
