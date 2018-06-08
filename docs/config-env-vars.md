@@ -96,6 +96,4 @@ Below is the set of environment variables and their defaults that can be set to 
 
 `EPM_TESTS` Default is `’NO’`
 
-`BINDING_TESTS` Default is `’NO’`
-
 `SENTINEL_TESTS` Default is `'NO'`

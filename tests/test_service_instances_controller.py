@@ -99,7 +99,6 @@ class TestServiceInstancesController(BaseTestCase):
         response = self._delete_service_instance()
         self._assert200(response)
 
-
     def _send_service_request(self, headers=[('X_Broker_Api_Version', '2.12')], params={}):
         service = ServiceRequest(service_id=self.test_service.id, plan_id=self.test_plan.id,
                                  organization_guid='org', space_guid='space', parameters=params)
@@ -116,7 +115,7 @@ class TestServiceInstancesController(BaseTestCase):
     def _delete_service_instance(self):
         query_string = [('service_id', 'srv'),
                         ('plan_id', 'plan'),
-                        ('accept_incomplete', True)]
+                        ('accept_incomplete', False)]
         headers = [('X_Broker_Api_Version', '2.12')]
 
         response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id=self.instance_id),
@@ -261,9 +260,9 @@ class TestServiceInstancesController(BaseTestCase):
 
         Gets the current state of the last operation upon the specified resource.
         """
-        query_string = [('service_id', 'service_id_example'),
-                        ('plan_id', 'plan_id_example'),
-                        ('operation', 'operation_example')]
+        query_string = [('service_id', self.test_service.id),  # 'service_id_example'
+                        ('plan_id', self.test_plan.id),  # 'plan_id_example'
+                        ('operation', 'operation_example')]  # not used
         headers = [('X_Broker_Api_Version', '2.12')]
         response = self.client.open('/v2/service_instances/{instance_id}/last_operation'.format(
             instance_id=self.instance_id),
@@ -271,32 +270,11 @@ class TestServiceInstancesController(BaseTestCase):
                                     query_string=query_string, headers=headers)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
-    # @unittest.skipIf(os.getenv('BINDING_TESTS', 'NO') == 'NO', "No AAA testing configured.")
-    # def test_service_bind(self):
-    #     """
-    #     Test case for service_bind
-    #
-    #     Binds to a service
-    #     """
-    #     self.assert200(self.response, "Response body is : " + self.response.data.decode('utf-8'))
-    #
-    #     # bind to the service
-    #     binding = BindingRequest(service_id=self.test_service.id, plan_id=self.test_plan.id)
-    #     headers = [('X_Broker_Api_Version', '2.12')]
-    #     response = self.client.open('/v2/service_instances/{instance_id}/service_bindings/{binding_id}'.format(
-    #         instance_id=self.instance_id, binding_id=self.binding_id),
-    #                                 method='PUT',
-    #                                 data=json.dumps(binding),
-    #                                 content_type='application/json',
-    #                                 headers=headers)
-    #     self.assertStatus(response, 200, "Response body is : " + response.data.decode('utf-8'))
-
-    @unittest.skipIf(os.getenv('BINDING_TESTS', 'NO') == 'NO', "No AAA testing configured.")
     def test_service_bind_unbind(self):
         """
         Test case for service_bind, service_unbind
 
-        Unbinds a service
+        Bind & Unbinds a service
         """
 
         self.assert200(self.response, "Response body is : " + self.response.data.decode('utf-8'))
@@ -312,10 +290,10 @@ class TestServiceInstancesController(BaseTestCase):
             headers=headers)
         self.assertStatus(response, 200, "Response body is : " + response.data.decode('utf-8'))
 
-        # bind to the service
-        binding = BindingRequest(service_id=self.test_service.id, plan_id=self.test_plan.id)
+        # unbind the service
+        # binding = BindingRequest(service_id=self.test_service.id, plan_id=self.test_plan.id)
         headers = [('X_Broker_Api_Version', '2.12')]
-        params = {'service_id': self.test_service.id, 'plan_id': self.test_plan.id}
+        # params = {'service_id': self.test_service.id, 'plan_id': self.test_plan.id}
         response = self.client.open('/v2/service_instances/{instance_id}/service_bindings/{binding_id}?'
                                     'service_id={sid}&plan_id={pid}'.format(
                                         instance_id=self.instance_id, binding_id=self.binding_id,
@@ -333,7 +311,7 @@ class TestServiceInstancesController(BaseTestCase):
         Updating a Service Instance
         """
         plan = UpdateRequest(service_id='svc')
-        query_string = [('accept_incomplete', True)]
+        query_string = [('accept_incomplete', False)]
         headers = [('X_Broker_Api_Version', '2.12')]
         response = self.client.open('/v2/service_instances/{instance_id}'.format(instance_id='svc_id'),
                                     method='PATCH',
