@@ -1150,3 +1150,7 @@ class Helper:
     @staticmethod
     def from_blob(blob) -> dict:
         return dict(json.loads(blob))
+
+
+if __name__ == "__main__":
+   pass

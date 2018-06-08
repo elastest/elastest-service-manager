@@ -70,13 +70,15 @@ class SentinelLogHandler(logging.Handler):
         if record.name == 'kafka':
             return
         try:
-            print('logging received', record.msg)
+            print('emitting...', record.msg)
             msg_dict = {'msg': record.msg}
+            if '#' in record.msg:
+                msg_dict['instance_id'], msg_dict['msg'] = record.msg.split('#')
             msg_dict['level'] = logging.getLevelName(self.level)
             msg_dict['file'] = __file__
 
             # msg = self.format_msg(record)
-            print('emitting, ', msg_dict)
+            print('Preparing to send log-payload: ', msg_dict)
             self._send_msg(msg_dict)
 
         except AttributeError:
