@@ -16,7 +16,7 @@ from unittest import skipIf
 import unittest
 import os
 
-if os.getenv('ESM_SQL_HOST', 'NO') == 'YES':
+if os.getenv('ESM_SQL_HOST', 'NO') != 'NO':
     from esm.models.service_type import Plan
     from adapters.sql_store import PlanSQL
     from adapters.sql_store import PlanAdapter

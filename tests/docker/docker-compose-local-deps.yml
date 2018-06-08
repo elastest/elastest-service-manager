@@ -1,55 +1,49 @@
 version: '2.1'
 
+# you can use this docker compose file to bring up ESM dependencies and then run tests, debug locally
+# in your IDE or command line.
+
 services:
-
-## ESM Containers
-  esm:
-    build:
-      context: ../../
-      dockerfile: ./tests/docker/Dockerfile-tests
-    depends_on:
-      mongo:
-        condition: service_started
-      aaa:
-        condition: service_healthy
-    image: elastest/esm:latest
-    container_name: esm
-    hostname: esm
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:rw
-      - ./:/output:rw
-    environment:
-      # testing params
-      - DOCKER_TESTS=NO
-      - MONGODB_TESTS=NO
-      - HEARTBEAT_TESTS=NO
-      - SENTINEL_TESTS=NO
-      - MYSQL_TESTS=NO
-      - EPM_TESTS=NO
-      # execution params, also required for testing
-      - ESM_PORT=37005
-      - ESM_CHECK_PORT=5001
-      - ESM_DOCKER_DELETE_TIMEOUT=1  # low for quicker test runs
-      - ESM_MEASURE_INSTANCES=NO
-      - ESM_MONGO_HOST=mongo
-      - ET_AAA_ESM_KEYSTONE_BASE_URL=http://aaa
-      - ET_AAA_ESM_KEYSTONE_USERNAME=admin
-      - ET_AAA_ESM_KEYSTONE_PASSWD=admin
-      - ET_AAA_ESM_KEYSTONE_TENANT=admin
-
-    networks:
-      - elastest_elastest
 
   mongo:
     image: mongo:latest
     container_name: mongo
     hostname: mongo
     ports:
-      - "27017"
+      - 27017:27017
+    expose:
+        - 27017
     networks:
       - elastest_elastest
 
-## AAA Containers
+## EPM Containers
+  epm:
+    container_name: epm
+    image: elastest/epm
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock:rw
+    expose:
+        - 8180
+    ports:
+        - 8180:8180
+    networks:
+        - elastest_elastest
+
+  epm-dca:
+    container_name: epm-dca
+    image: elastest/epm-adapter-docker-compose
+    entrypoint: python run.py --register-adapter epm epm-dca
+    depends_on:
+        - epm
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock:rw
+    expose:
+        - 50051
+    ports:
+        - 50051:50051
+    networks:
+        - elastest_elastest
+
   aaa:
     depends_on:
       mysql:
@@ -60,8 +54,8 @@ services:
     links:
       - mysql
     ports:
-      - "35357:35357"
-      - "5000:5000"
+      - 35357:35357
+      - 5000:5000
     environment:
       MYSQL_HOST: mysql
       MYSQL_ROOT_PASSWORD: shush
@@ -84,7 +78,9 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: shush
     ports:
-      - "3306"
+      - 3306:3306
+    expose:
+        - 3306
     healthcheck:  # required in order to signal correct startup to dependent services (see aaa)
       test: "/usr/bin/mysql --user=root --password=shush --execute \"show databases;\""
       interval: 10s

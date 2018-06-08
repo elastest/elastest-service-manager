@@ -40,8 +40,10 @@ services:
     hostname: mysql
     environment:
       - MYSQL_ALLOW_EMPTY_PASSWORD=YES
+    expose:
+      - 3306
     ports:
-      - "3306"
+      - 3306:3306
     networks:
       - elastest_elastest
 

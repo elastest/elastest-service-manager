@@ -23,7 +23,7 @@ import os
 from unittest.mock import patch
 
 
-if os.getenv('ESM_SQL_HOST', 'NO') == 'YES':
+if os.getenv('ESM_SQL_HOST', "NO") != "NO":
     from adapters.sql_store import ServiceTypeSQL
     from adapters.sql_store import PlanServiceTypeSQL
     from adapters.sql_store import PlanServiceTypeAdapter
