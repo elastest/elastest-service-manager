@@ -7,31 +7,34 @@ python:
 
 sudo: required
 
+services:
+  - docker
+#  - mongodb
+#  - mysql
+
 install:
+  - docker-compose --version
+  - "docker-compose -f tests/docker/docker-compose-local-deps.yml up -d"
   - "pip install -r src/requirements.txt"
   - "pip install -r tests/test-requirements.txt"
   - "pip install codecov"  # only for use on travis
 
 env:
-  - MONGODB_TESTS=YES MYSQL_TESTS=YES DOCKER_TESTS=YES
+  - DOCKER_TESTS=YES MONGODB_TESTS=YES EPM_TESTS=YES ET_EPM_API=http://localhost:8180/ ESM_DOCKER_DELETE_TIMEOUT=1 ESM_MONGO_HOST=localhost BINDING_TESTS=YES ET_AAA_ESM_KEYSTONE_BASE_URL=http://localhost ET_AAA_ESM_KEYSTONE_USERNAME=admin ET_AAA_ESM_KEYSTONE_PASSWD=admin ET_AAA_ESM_KEYSTONE_TENANT=admin
 
 before_script:
   - sleep 15
-  - docker network create elastest
+#  - docker network create elastest
 
 script:
   - nosetests --with-xunit --with-coverage --cover-erase --cover-package=adapters --cover-package=esm --cover-min-percentage=70
-  - docker build -t dizz/esm .
-  - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-
-services:
-  - docker
-  - mongodb
-  - mysql
+#  - docker build -t dizz/esm .
+#  - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 
 after_success:
+  - "docker-compose -f tests/docker/docker-compose-local-deps.yml down -v"
   - codecov
-  - if [ "$TRAVIS_BRANCH" == "master" ]; then
-    docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-    docker push dizz/esm;
-    fi
+#  - if [ "$TRAVIS_BRANCH" == "master" ]; then
+#    docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
+#    docker push dizz/esm;
+#    fi
