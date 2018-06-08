@@ -1,7 +1,7 @@
 version: '2.1'
 
-# you can use this docker compose file to bring up ESM dependencies and then run tests, debug locally
-# in your IDE or command line.
+# this is used to bring up service dependencies inside of travis.org
+# main thing is not to expose mysql's 3306 port
 
 services:
 

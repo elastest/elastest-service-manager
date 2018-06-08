@@ -14,13 +14,15 @@
 #    under the License.
 import os
 import connexion
-import time
 
-from adapters import auth
-from adapters.measurer import MeasurerFactory
+from adapters.generic import AsychExe
 from adapters.store import STORE
 from adapters.resources import RM
+from adapters.auth import AUTH
 from esm.controllers import _version_ok
+from esm.controllers.tasks import CreateInstance, DeleteInstance, RetrieveInstance, \
+    RetrieveAllInstances, RetrieveInstanceLastOp, BindInstance, UnbindInstance, \
+    UpdateInstance, MeasureInstance
 
 from esm.models.binding_response import BindingResponse
 from esm.models.empty import Empty
@@ -36,7 +38,7 @@ from adapters.log import get_logger
 LOG = get_logger(__name__)
 
 
-def create_service_instance(instance_id, service, accept_incomplete=None):
+def create_service_instance(instance_id, service, accept_incomplete=False):
     """
     Provisions a service instance
     When the broker receives a provision request from a client, it should synchronously take whatever action is
@@ -56,72 +58,27 @@ def create_service_instance(instance_id, service, accept_incomplete=None):
     if not ok:
         return message, code
     else:
-        if len(STORE.get_service_instance(instance_id=instance_id)) == 1:
-            return 'Service instance with id {id} already exists'.format(id=instance_id), 409
-
         if connexion.request.is_json:
-            service = ServiceRequest.from_dict(connexion.request.get_json())
+            service_inst_req = ServiceRequest.from_dict(connexion.request.get_json())
         else:
             return "Supplied body content is not or is mal-formed JSON", 400
 
-        # look up manifest based on plan id
-        # based on the manifest type, select the driver
-        # send the manifest for creation to the target system
-        # store the ID along with refs to service, plan and manifest
-
-        # get the manifest for the service/plan
-        svc_type = STORE.get_service(service.service_id)[0]
-        if svc_type is None:
-            return 'Unrecognised service requested to be instantiated', 404
-
-        plans = svc_type.plans
-        plan = [p for p in plans if p.id == service.plan_id]
-        if len(plan) <= 0:
-            return 'Plan {p_id} found.'.format(p_id=service.plan_id), 404
-
-        mani = STORE.get_manifest(plan_id=plan[0].id)
-        if len(mani) <= 0:
-            return 'no manifest for service {plan} found.'.format(plan=service.plan_id), 404
-        mani = mani[0]
-
-        if accept_incomplete:  # given docker-compose runs in detached mode this is not needed - only timing can verify
-            # XXX put this in a thread to allow for asynch processing?
-            RM.create(instance_id=instance_id, content=mani.manifest_content,
-                      c_type=mani.manifest_type, parameters=service.parameters)
-        else:
-            RM.create(instance_id=instance_id, content=mani.manifest_content,
-                      c_type=mani.manifest_type, parameters=service.parameters)
-
-        last_op = LastOperation(  # stored within the service instance doc
-            state='creating',
-            description='service instance is being created'
-        )
-
-        # store the instance Id with manifest id
-        srv_inst = ServiceInstance(
-            service_type=svc_type,
-            state=last_op,
-            context={
-                'id': instance_id,
-                'manifest_id': mani.id,
-            }
-        )
-
-        STORE.add_service_instance(srv_inst)
-
-        instance_id = srv_inst.context['id']
-
-        if os.environ.get('ESM_MEASURE_INSTANCES', 'NO') == 'YES':
-            factory = MeasurerFactory.instance()
-            factory.start_heartbeat_measurer({'instance_id': instance_id, 'RM': RM, 'mani': mani})
+        entity = {'entity_id': instance_id, 'entity_req': service_inst_req, 'entity_res': None}
+        context = {'STORE': STORE, 'RM': RM}
 
         if accept_incomplete:
-            STORE.add_last_operation(instance_id=instance_id, last_operation=last_op)
+            AsychExe([CreateInstance(entity, context)]).start()
+            return 'accepted', 201
+        else:
+            # we have the result of the operation in entity, good/bad status in context
+            entity, context = CreateInstance(entity, context).start()
+            if os.environ.get('ESM_MEASURE_INSTANCES', 'NO') == 'YES':
+                entity, context = MeasureInstance(entity, context).start()
+            # Response is ServiceResponse not a service instance
+            return entity['entity_res'], context['status'][1]
 
-        return 'created', 200
 
-
-def deprovision_service_instance(instance_id, service_id, plan_id, accept_incomplete=None):
+def deprovision_service_instance(instance_id, service_id, plan_id, accept_incomplete=False):
     """
     Deprovisions a service instance.
     &#39;When a broker receives a deprovision request from a client, it should delete any resources it
@@ -143,62 +100,18 @@ def deprovision_service_instance(instance_id, service_id, plan_id, accept_incomp
     if not ok:
         return message, code
     else:
+        entity = {'entity_id': instance_id, 'entity_req': {'service_id':service_id, 'plan_id': plan_id},
+                  'entity_res': None}
+        context = {'STORE': STORE, 'RM': RM}
+
         # XXX if there's bindings remove first?
-        # XXX what about undo?
-        # check that the instance exists first
-        instance = STORE.get_service_instance(instance_id=instance_id)
-
-        err = 'stopping....{}'.format(instance_id)
-        LOG.warning(err)
-
-        if os.environ.get('ESM_MEASURE_INSTANCES', 'NO') == 'YES':
-            factory = MeasurerFactory.instance()
-            factory.stop_heartbeat_measurer(instance_id)
-
-        if len(instance) == 1:
-            mani_id = instance[0].context['manifest_id']
-            mani = STORE.get_manifest(manifest_id=mani_id)
-            if len(mani) < 1:
-                return 'no service manifest found.', 404
-
-            RM.delete(instance_id=instance_id, manifest_type=mani[0].manifest_type)
-            STORE.delete_service_instance(instance_id)
-            # we don't delete the last_operation explicitly as its embedded in the service_instance document
-            # STORE.delete_last_operation(instance_id)
-
-            return Empty(), 200
+        if accept_incomplete:
+            AsychExe([DeleteInstance(entity, context)]).start()
+            return 'accepted', 201
         else:
-            return Empty(), 404
-
-
-def _get_instance(srv_inst):
-    # get the latest info
-    mani_id = srv_inst.context['manifest_id']
-    mani = STORE.get_manifest(manifest_id=mani_id)
-    if len(mani) < 1:
-        return 'no manifest found.', 404
-    # Get the latest info of the instance
-    # could also use STORE.get_service_instance(srv_inst) but will not have all details
-    inst_info = RM.info(instance_id=srv_inst.context['id'], manifest_type=mani[0].manifest_type)
-
-    if inst_info['srv_inst.state.state'] == 'failed':
-        # try epm.delete(instance_id=instance_id)?
-        return 'There has been a failure in creating the service instance.', 500
-
-    srv_inst.state.state = inst_info['srv_inst.state.state']
-    srv_inst.state.description = inst_info['srv_inst.state.description']
-
-    # don't need you any more, buh-bye!
-    del inst_info['srv_inst.state.state']
-    del inst_info['srv_inst.state.description']
-
-    # merge the two context dicts
-    srv_inst.context = {**srv_inst.context, **inst_info}
-
-    # update the service instance record - there should be an asynch method doing the update - event based
-    STORE.add_service_instance(srv_inst)
-
-    return srv_inst
+            entity, context = DeleteInstance(entity, context).start()
+            # response is UpdateOperationResponse
+            return entity['entity_res'], context['status'][1]
 
 
 def instance_info(instance_id):
@@ -216,15 +129,12 @@ def instance_info(instance_id):
     if not ok:
         return message, code
     else:
-        # service instance should already be recorded
-        srv_inst = STORE.get_service_instance(instance_id)
-        if len(srv_inst) < 1:
-            return 'no service instance found.', 404
-        srv_inst = srv_inst[0]
+        entity = {'entity_id': instance_id, 'entity_req': {}, 'entity_res': None}
+        context = {'STORE': STORE, 'RM': RM}
 
-        srv_inst = _get_instance(srv_inst)
-
-        return srv_inst, 200
+        entity, context = RetrieveInstance(entity, context).start()
+        # what's returned should be type ServiceInstance
+        return entity['entity_res'], context['status'][1]
 
 
 def all_instance_info():
@@ -238,12 +148,10 @@ def all_instance_info():
     if not ok:
         return message, code
     else:
-        instances = STORE.get_service_instance()
-        insts = list()
-        for inst in instances:
-            insts.append(_get_instance(inst))
-
-        return insts, 200
+        entity = {'entity_id': None, 'entity_req': {}, 'entity_res': None}
+        context = {'STORE': STORE, 'RM': RM}
+        entity, context = RetrieveAllInstances(entity, context).start()
+        return entity['entity_res'], context['status'][1]
 
 
 def last_operation_status(instance_id, service_id=None, plan_id=None, operation=None):
@@ -270,13 +178,14 @@ def last_operation_status(instance_id, service_id=None, plan_id=None, operation=
     if not ok:
         return message, code
     else:
-        # just re-use the method and return it's content and http status code.
-        # version check not required here as it's done in the proxied call
-        srv_inst, code = instance_info(instance_id=instance_id)
-        if code == 404:
-            return srv_inst + 'No service status therefore.', code
-        else:
-            return srv_inst.state, code
+        entity = {'entity_id': instance_id,
+                  'entity_req': {'service_id':service_id, 'plan_id': plan_id, 'operation':operation},
+                  'entity_res': None}
+        context = {'STORE': STORE, 'RM': RM}
+
+        entity, context = RetrieveInstanceLastOp(entity, context).start()
+        # response should be LastOperation
+        return entity['entity_res'], context['status'][1]
 
 
 def service_bind(instance_id, binding_id, binding):
@@ -302,27 +211,18 @@ def service_bind(instance_id, binding_id, binding):
     else:
         # if AAA is enabled and the service is bindable:
         #    create project, user and role bindings
-        if os.environ.get('ET_AAA_ESM_KEYSTONE_BASE_URL', '') != '':
+        # if os.environ.get('ET_AAA_ESM_KEYSTONE_BASE_URL', '') != '':
 
-            # what to do with dict:binding?
+        entity = {'entity_id': instance_id,
+                  'entity_req': {'binding_id': binding_id, 'binding': binding},
+                  'entity_res': None}
+        context = {'STORE': STORE, 'RM': RM, 'AUTH': AUTH}
 
-            svc_inst = STORE.get_service_instance(instance_id)[0]
-
-            if not svc_inst.service_type.bindable:
-                return 'The service instance does not support service binding', 400
-
-            creds = auth.create_credentials(binding_id, instance_id)
-            binding = BindingResponse(credentials=creds)
-            svc_inst.context['binding'] = binding.to_dict()
-
-            # update instance with binding info
-            LOG.info('Updating the service instance info with binding details:\n' + svc_inst.to_str())
-            STORE.add_service_instance(svc_inst)
-
-            return binding, 200
-
-        else:
-            return 'Not provided as there is no AAA endpoint configured.', 501
+        entity, context = BindInstance(entity, context).start()
+        # response should be a BindingResponse
+        return entity['entity_res'], context['status'][1]
+        # else:
+        #     return 'Not provided as there is no AAA endpoint configured.', 501
 
 
 def service_unbind(instance_id, binding_id, service_id, plan_id):
@@ -348,26 +248,20 @@ def service_unbind(instance_id, binding_id, service_id, plan_id):
     else:
         # if AAA is enabled and the service is bindable:
         #    create project, user and role bindings
-        if os.environ.get('ET_AAA_ESM_KEYSTONE_BASE_URL', '') != '':
-            svc_inst = STORE.get_service_instance(instance_id)[0]
-            if not svc_inst.service_type.bindable:
-                return 'The service instance does not support service (un)binding', 400
+        # if os.environ.get('ET_AAA_ESM_KEYSTONE_BASE_URL', '') != '':
+        entity = {'entity_id': instance_id,
+                  'entity_req': {'binding_id': binding_id, 'service_id': service_id, 'plan_id': plan_id},
+                  'entity_res': None}
+        context = {'STORE': STORE, 'RM': RM, 'AUTH': AUTH}
 
-            auth.delete_credentials(svc_inst.context['binding']['credentials'])
-
-            # remove binding info
-            del svc_inst.context['binding']
-
-            # update instance with binding info
-            STORE.add_service_instance(svc_inst)
-
-            return Empty(), 200
-
-        else:
-            return 'Not provided as there is no AAA endpoint configured.', 501
+        entity, context = UnbindInstance(entity, context).start()
+        # response should be Empty
+        return entity['entity_res'], context['status'][1]
+        # else:
+        #     return 'Not provided as there is no AAA endpoint configured.', 501
 
 
-def update_service_instance(instance_id, plan, accept_incomplete=None):
+def update_service_instance(instance_id, plan, accept_incomplete=False):
     """
     Updating a Service Instance
     Brokers that implement this endpoint can enable users to modify attributes of an existing service instance.
@@ -391,4 +285,17 @@ def update_service_instance(instance_id, plan, accept_incomplete=None):
             plan = UpdateRequest.from_dict(connexion.request.get_json())
         else:
             return "Supplied body content is not or is mal-formed JSON", 400
-        return 'Not implemented :-(', 501
+
+        entity = {'entity_id': instance_id,
+                  'entity_req': {'plan': plan},
+                  'entity_res': None}
+        context = {'STORE': STORE, 'RM': RM}
+
+        if accept_incomplete:
+            AsychExe([UpdateInstance(entity, context)]).start()
+            return 'accepted', 201
+        else:
+            # we have the result of the operation in entity, good/bad status in context
+            entity, context = UpdateInstance(entity, context).start()
+            # response should be Empty
+            return entity['entity_res'], context['status'][1]

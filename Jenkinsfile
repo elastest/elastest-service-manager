@@ -21,8 +21,8 @@ node('docker'){
                 sh "docker-compose -f tests/docker/docker-compose-tester-emp.yml down -v"
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
             }
-            stage ("ESM Tests: Core, AAA"){
-                echo ("Starting unit and integration tests for core & AAA from the tester container...")
+            stage ("ESM Tests: Core, AAA(keystone)"){
+                echo ("Starting unit and integration tests for core & AAA(keystone) from the tester container...")
                 sh "docker-compose -f tests/docker/docker-compose-tester-aaa.yml up --exit-code-from esm"
                 sh "docker-compose -f tests/docker/docker-compose-tester-aaa.yml down -v"
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])

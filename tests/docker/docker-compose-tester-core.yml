@@ -22,7 +22,6 @@ services:
       - DOCKER_TESTS=YES
       - MONGODB_TESTS=YES
       - EPM_TESTS=YES
-      - BINDING_TESTS=NO
       - MYSQL_TESTS=NO
       - HEARTBEAT_TESTS=NO
       - SENTINEL_TESTS=NO
@@ -44,7 +43,9 @@ services:
     container_name: mongo
     hostname: mongo
     ports:
-      - "27017"
+      - 27017:27017
+    expose:
+        - 27017
     networks:
       - elastest_elastest
 

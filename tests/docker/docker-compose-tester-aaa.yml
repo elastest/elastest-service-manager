@@ -21,7 +21,6 @@ services:
     environment:
       # testing params
       - DOCKER_TESTS=NO
-      - BINDING_TESTS=YES
       - MONGODB_TESTS=NO
       - HEARTBEAT_TESTS=NO
       - SENTINEL_TESTS=NO

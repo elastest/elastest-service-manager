@@ -32,7 +32,7 @@ from adapters.log import get_logger
 
 LOG = get_logger(__name__)
 
-
+# this adds keystone auth to access the ESM
 def add_mware(app):
     # See: https://docs.openstack.org/keystonemiddleware/latest/middlewarearchitecture.html
     if os.environ.get('ET_AAA_ESM_KEYSTONE_BASE_URL', '') != '':
