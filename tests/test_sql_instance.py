@@ -21,7 +21,7 @@ import os
 
 from adapters.sql_store import ServiceInstanceAdapter as Adapter
 
-if os.getenv('ESM_SQL_HOST', 'NO') == 'YES':
+if os.getenv('ESM_SQL_HOST', 'NO') != 'NO':
     # INSTANCE
     from adapters.sql_store import PlanAdapter, ServiceTypeAdapter, PlanServiceTypeAdapter, \
         ServiceInstanceSQL, ServiceTypeSQL, LastOperationAdapter

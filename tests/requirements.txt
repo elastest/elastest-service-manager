@@ -11,3 +11,4 @@ pymysql
 jsonpickle
 kafka
 requests
+codecov
