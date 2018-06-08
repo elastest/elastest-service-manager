@@ -14,7 +14,7 @@
 #    under the License.
 
 from adapters.generic import Task
-from adapters.measurer import Measurer
+from adapters.measurer import Measurer, MeasurerFactory
 from esm.models import LastOperation, ServiceInstance, Empty, BindingResponse
 
 # TODO remove duplication in constructors
@@ -55,7 +55,7 @@ class CreateInstance(Task):
         mani = mani[0]
 
         # stored within the service instance doc
-        last_op = LastOperation(state='creating', description='service instance is being created')
+        last_op = LastOperation(state='in progress', description='service instance is being created')
 
         # store the instance Id with manifest id
         srv_inst = ServiceInstance(service_type=svc_type, state=last_op,
@@ -68,8 +68,8 @@ class CreateInstance(Task):
 
         # instance_id = srv_inst.context['id']
 
-
-        # TODO when created (i.e. rm.create returns) we should update the LastOperation fields.
+        last_op = LastOperation(state='succeeded', description='service instance is created')
+        self.store.add_last_operation(instance_id=self.instance_id, last_operation=last_op)
 
         self.entity['entity_res'] = srv_inst
         self.context['status'] = ('created', 200)
@@ -271,8 +271,8 @@ class MeasureInstance(Task):
     def run(self):
         pass
         # if os.environ.get('ESM_MEASURE_INSTANCES', 'NO') == 'YES':
-        #     factory = MeasurerFactory.instance()
-        #     factory.start_heartbeat_measurer({'instance_id': instance_id, 'RM': RM, 'mani': mani})
-        m = Measurer(cache=None)
         factory = MeasurerFactory.instance()
-        factory.stop_heartbeat_measurer(self.instance_id)
+        factory.start_heartbeat_measurer({'instance_id': self.instance_id, 'RM': self.rm, 'mani': mani})
+        # m = Measurer(cache=None)
+        # factory = MeasurerFactory.instance()
+        # factory.stop_heartbeat_measurer(self.instance_id)

@@ -135,6 +135,7 @@ class TestServiceInstancesController(BaseTestCase):
         Provisions a service instance
         """
         self._assert200(self.response)
+        self.assertEquals(len(STORE.get_service_instance()), 1)
 
     def test_create_instance_with_same_id(self):
         # send the same request twice
