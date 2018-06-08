@@ -16,7 +16,7 @@ env:
   - DOCKER_TESTS=YES MONGODB_TESTS=YES EPM_TESTS=YES ET_EPM_API=http://localhost:8180/ ESM_DOCKER_DELETE_TIMEOUT=1 ESM_MONGO_HOST=localhost
 
 install:
-  - docker-compose -f tests/docker/docker-compose-local-deps.yml up -d
+  - docker-compose -f tests/docker/docker-compose-travis-deps.yml up -d
   - pip install -r src/requirements.txt
   - pip install -r tests/requirements.txt
 
