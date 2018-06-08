@@ -565,17 +565,15 @@ class InMemoryStore(Store):
             return [s for s in self.ESM_DB.services if s.id == service_id]
 
     def add_service(self, service: ServiceType) -> None:
-        if service not in self.ESM_DB.services:
+        srv = [s for s in self.ESM_DB.services if s.id == service.id]
+        if len(srv) > 0:
+            LOG.info('Service to be updated with:\n{content}'.format(content=service.to_str()))
+            self.ESM_DB.services.remove(srv[0])
+            self.ESM_DB.services.append(service)
+        else:
             self.ESM_DB.services.append(service)
             LOG.info('Adding a new service type to the catalog. '
                      'Content supplied: {content}'.format(content=service.to_str()))
-        else:
-            # get the service in the array and replace with supplied service
-            LOG.info('Service to be updated with:\n{content}'.format(content=service.to_str()))
-            srv = [s for s in self.ESM_DB.services if s.id == service.id][0]
-            self.ESM_DB.services.remove(srv)
-            self.ESM_DB.services.append(service)
-
 
     def delete_service(self, service_id: str=None) -> None:
         if not service_id:
@@ -591,14 +589,20 @@ class InMemoryStore(Store):
             self.ESM_DB.services.remove(service_to_delete[0])
 
     def add_manifest(self, manifest: Manifest) -> tuple:
-        if manifest not in self.ESM_DB.manifests:
+
+        m = [m for m in self.ESM_DB.manifests if m.id == manifest.id]
+
+        if len(m) == 0:
+            LOG.info('Manifest to be added with:\n{content}'.format(content=manifest.to_str()))
+            # self.ESM_DB.manifests.remove(m[0])
             self.ESM_DB.manifests.append(manifest)
             return 'ok', 200
         else:
-            LOG.warn('A duplicate manifest was attempted to be registered. '
-                     'Ignoring the request. '
-                     'Content supplied:\n{content}'.format(content=manifest.to_str()))
-            return 'duplicate', 400
+            print('client side error - 4XX')
+            return 'the manifest already exists in the catalog', 409
+            # self.ESM_DB.manifests.append(manifest)
+            # LOG.info('Adding a new service type to the catalog. '
+            #          'Content supplied: {content}'.format(content=manifest.to_str()))
 
     def get_manifest(self, manifest_id: str=None, plan_id: str=None) -> List[Manifest]:
         if manifest_id and plan_id:
@@ -614,25 +618,30 @@ class InMemoryStore(Store):
 
     def delete_manifest(self, manifest_id: str=None) -> None:
         if not manifest_id:
-            LOG.warn('Deleting ALL registered manifests in the catalog.')
+            LOG.warning('Deleting ALL registered manifests in the catalog.')
             self.ESM_DB.manifests = list()
         else:
-            manifest_to_delete = [m for m in self.ESM_DB.manifests if m.id == manifest_id][0]
+            manifest_to_delete = [m for m in self.ESM_DB.manifests if m.id == manifest_id]
+            if len(manifest_to_delete) < 1:
+                LOG.error('no manifest found.')
+                raise Exception('no manifest found.')
+
             LOG.info('Deleting the manifest {id} from the catalog. Content:\n{content}'.format(
-                id=manifest_id, content=manifest_to_delete.to_str()))
-            self.ESM_DB.manifests.remove(manifest_to_delete)
+                id=manifest_id, content=manifest_to_delete[0].to_str()))
+            self.ESM_DB.manifests.remove(manifest_to_delete[0])
 
     def add_service_instance(self, service_instance: ServiceInstance) -> None:
-        if service_instance not in self.ESM_DB.instances:
+
+        si = [si for si in self.ESM_DB.instances if si.context['id'] == service_instance.context['id']]
+
+        if len(si) > 0:
+            LOG.info('Service Instance to be updated with:\n{content}'.format(content=service_instance.to_str()))
+            self.ESM_DB.instances.remove(si[0])
             self.ESM_DB.instances.append(service_instance)
         else:
-            LOG.info('A duplicate service instance was attempted to be stored. '
-                     'Updating the existing service instance {id}.'
-                     'Content supplied:\n{content}'.format(id=service_instance.context['id'],
-                                                           content=service_instance.to_str()))
-            instance = [i for i in self.ESM_DB.instances if i.context['id'] == service_instance.context['id']]
-            self.ESM_DB.instances.remove(instance[0])
             self.ESM_DB.instances.append(service_instance)
+            LOG.info('Adding a new service instance. '
+                     'Content supplied: {content}'.format(content=service_instance.to_str()))
 
     def get_service_instance(self, instance_id: str=None) -> List[ServiceInstance]:
         if not instance_id:
@@ -653,14 +662,27 @@ class InMemoryStore(Store):
 
     def add_last_operation(self, instance_id: str, last_operation: LastOperation) -> None:
         last_op = {'id': instance_id, 'last_op': last_operation}
-        if last_op not in self.ESM_DB.last_operations:
-            self.ESM_DB.last_operations.append(last_op)
-        else:
+
+        lo = [lo for lo in self.ESM_DB.last_operations if lo['id'] == instance_id]
+
+        if len(lo) > 0:
             LOG.info('An existing last operation for service instance {id} is found. '
                      'Updating with {content}'.format(id=instance_id, content=last_operation.to_str()))
-            lo = [lo for lo in self.ESM_DB.last_operations if lo['id'] == instance_id]
             lo[0]['last_op'].state = last_operation.state
             lo[0]['last_op'].description = last_operation.description
+        else:
+            self.ESM_DB.last_operations.append(last_op)
+            LOG.info('Adding a new last operation. '
+                     'Content supplied: {content}'.format(content=str(last_op)))
+
+        # if last_op not in self.ESM_DB.last_operations:   # this check fails - need to search by instance.id
+        #     self.ESM_DB.last_operations.append(last_op)
+        # else:
+        #     LOG.info('An existing last operation for service instance {id} is found. '
+        #              'Updating with {content}'.format(id=instance_id, content=last_operation.to_str()))
+        #     lo = [lo for lo in self.ESM_DB.last_operations if lo['id'] == instance_id]
+        #     lo[0]['last_op'].state = last_operation.state
+        #     lo[0]['last_op'].description = last_operation.description
 
     def get_last_operation(self, instance_id: str=None) -> List[LastOperation]:
         if not instance_id:
