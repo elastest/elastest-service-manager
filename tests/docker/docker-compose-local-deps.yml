@@ -1,0 +1,94 @@
+version: '2.1'
+
+# you can use this docker compose file to bring up ESM dependencies and then run tests, debug locally
+# in your IDE or command line.
+
+services:
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    hostname: mongo
+    ports:
+      - 27017:27017
+    expose:
+        - 27017
+    networks:
+      - elastest_elastest
+
+## EPM Containers
+  epm:
+    container_name: epm
+    image: elastest/epm
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock:rw
+    expose:
+        - 8180
+    ports:
+        - 8180:8180
+    networks:
+        - elastest_elastest
+
+  epm-dca:
+    container_name: epm-dca
+    image: elastest/epm-adapter-docker-compose
+    entrypoint: python run.py --register-adapter epm epm-dca
+    depends_on:
+        - epm
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock:rw
+    expose:
+        - 50051
+    ports:
+        - 50051:50051
+    networks:
+        - elastest_elastest
+
+  aaa:
+    depends_on:
+      mysql:
+        condition: service_healthy
+    image: dizz/dock-os-keystone
+    hostname: aaa
+    container_name: aaa
+    links:
+      - mysql
+    ports:
+      - 35357:35357
+      - 5000:5000
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_ROOT_PASSWORD: shush
+      ADMIN_TOKEN: admintokin
+      ADMIN_TENANT_NAME: admin
+      ADMIN_USER_NAME: admin
+      ADMIN_PASSWORD: admin
+    healthcheck:
+      test: "curl -f http://localhost:5000"
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - elastest_elastest
+
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    hostname: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: shush
+    ports:
+      - 3306:3306
+    expose:
+        - 3306
+    healthcheck:  # required in order to signal correct startup to dependent services (see aaa)
+      test: "/usr/bin/mysql --user=root --password=shush --execute \"show databases;\""
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - elastest_elastest
+
+networks:
+    elastest_elastest:
+      driver: bridge
