@@ -122,7 +122,6 @@ class KeystoneAuth(Auth):
         # XXX note that the domain is assumed to be default
         auth = v3.Password(auth_url=base_url + ':' + str(admin_port) + base_path, username=username, password=passwd,
                            project_name=tenant, user_domain_id="default", project_domain_id="default")
-        # TODO Cache this client
         keystone = client.Client(session=session.Session(auth=auth))
         return keystone
 

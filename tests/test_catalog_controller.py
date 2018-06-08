@@ -24,9 +24,6 @@ from flask import json
 from adapters.store import STORE
 from esm.models.manifest import Manifest
 from esm.models import ServiceMetadata
-# from esm.models.catalog import Catalog
-# from esm.models.empty import Empty
-# from esm.models.error import Error
 from esm.models.plan import Plan
 from esm.models.service_type import ServiceType
 from . import BaseTestCase
@@ -109,6 +106,11 @@ class TestCatalogController(BaseTestCase):
         response = self._send_svc_reg()
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
 
+    def test_double_svc_registration_deny(self):
+        response = self._send_svc_reg()
+        self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+        self.assertEquals(len(STORE.get_service()), 1)
+
     def test_update_service(self):
         """
         Test case for udpate register_service
@@ -116,8 +118,21 @@ class TestCatalogController(BaseTestCase):
         Updates the service with the catalog via PUT.
         """
         self._send_svc_reg()
+        self.assertEquals(len(STORE.get_service()), 1)
+
+        self.test_service.name = 'this_is_a_fun_funk'
+        new_test_plan = Plan(
+            id='newtestplan', name='new testing plan', description='new plan for testing',
+            metadata=None, free=True, bindable=False
+        )
+        self.test_service.plans = [self.test_service.plans[0], new_test_plan]
+
         response = self._send_svc_reg()
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+
+        svcs = STORE.get_service()
+        self.assertEquals(len(svcs), 1)
+        self.assertEquals(len(svcs[0].plans), 2)
 
     def _send_svc_reg(self):
         headers = [('X_Broker_Api_Version', '2.12')]
@@ -137,6 +152,7 @@ class TestCatalogController(BaseTestCase):
         """
         response = self._send_svc_reg()
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+        self.assertEquals(len(STORE.get_service()), 1)
 
         headers = [('X_Broker_Api_Version', '2.12')]
         LOG.debug('Sending service registration content of:\n {content}'.format(content=json.dumps(self.test_manifest)))
@@ -146,6 +162,26 @@ class TestCatalogController(BaseTestCase):
                                     content_type='application/json',
                                     headers=headers)
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
+        self.assertEquals(len(STORE.get_manifest()), 1)
+
+    def test_update_manifest(self):
+        self.test_store_manifest()
+
+        new_test_manifest = Manifest(
+            id='test', plan_id=self.test_plan.id, service_id=self.test_service.id,
+            manifest_type='dummy', manifest_content=self.test_manifest.manifest_content,
+            endpoints=self.test_manifest.endpoints
+        )
+
+        headers = [('X_Broker_Api_Version', '2.12')]
+        LOG.debug('Sending service registration content of:\n {content}'.format(content=json.dumps(new_test_manifest)))
+        response = self.client.open('/v2/et/manifest/{manifest_id}'.format(manifest_id=new_test_manifest.id),
+                                    method='PUT',
+                                    data=json.dumps(new_test_manifest),
+                                    content_type='application/json',
+                                    headers=headers)
+        self.assertStatus(response, 409)
+        self.assertEquals(len(STORE.get_manifest()), 1)
 
     def test_get_manifest(self):
         """

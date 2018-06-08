@@ -426,7 +426,7 @@ class EPMBackend(DeployerBackend):
         package.delete_package(id=self.sid_to_rgid[instance_id])
 
     def is_ok(self, **kwargs):
-        # TODO
+        # TODO - call its health endpoint?
         return True
 
 
