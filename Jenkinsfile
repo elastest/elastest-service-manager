@@ -10,20 +10,26 @@ node('docker'){
             // we split the esm tests in functional areas to minimise resource usage
             stage ("ESM Tests: Core, EPM"){
                 echo ("Starting unit and integration tests for core, EMP & AAA from the tester container...")
-                sh "docker-compose -f tests/docker/docker-compose-tester-core.yml up --build --exit-code-from esm"
+                withCredentials([string(credentialsId: 'CODECOV_TOKEN', variable: 'CODECOV_TOKEN')]) {
+                    sh "docker-compose -f tests/docker/docker-compose-tester-core.yml up --build --exit-code-from esm"
+                }
                 sh "docker-compose -f tests/docker/docker-compose-tester-core.yml down -v"
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
             }
 
             stage ("ESM Tests: Core, EMP"){
                 echo ("Starting unit and integration tests for core & EMP from the tester container...")
-                sh "docker-compose -f tests/docker/docker-compose-tester-emp.yml up --exit-code-from esm"
+                withCredentials([string(credentialsId: 'CODECOV_TOKEN', variable: 'CODECOV_TOKEN')]) {
+                    sh "docker-compose -f tests/docker/docker-compose-tester-emp.yml up --exit-code-from esm"
+                }
                 sh "docker-compose -f tests/docker/docker-compose-tester-emp.yml down -v"
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
             }
             stage ("ESM Tests: Core, AAA(keystone)"){
                 echo ("Starting unit and integration tests for core & AAA(keystone) from the tester container...")
-                sh "docker-compose -f tests/docker/docker-compose-tester-aaa.yml up --exit-code-from esm"
+                withCredentials([string(credentialsId: 'CODECOV_TOKEN', variable: 'CODECOV_TOKEN')]) {
+                    sh "docker-compose -f tests/docker/docker-compose-tester-aaa.yml up --exit-code-from esm"
+                }
                 sh "docker-compose -f tests/docker/docker-compose-tester-aaa.yml down -v"
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
             }
