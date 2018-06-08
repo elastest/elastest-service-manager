@@ -25,6 +25,7 @@ services:
       - MYSQL_TESTS=NO
       - HEARTBEAT_TESTS=NO
       - SENTINEL_TESTS=NO
+      - CODECOV_TOKEN=${CODECOV_TOKEN:-NONE}
       # execution params, also required for testing
       - ET_EPM_API=http://epm:8180/
       - ESM_PORT=37005
