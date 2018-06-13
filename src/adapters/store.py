@@ -48,7 +48,7 @@ from adapters.log import get_logger
 LOG = get_logger(__name__)
 
 
-class Store(object):
+class Store(object):  # pragma: no cover
     def add_service(self, service: ServiceType) -> tuple:
         raise NotImplementedError
 
@@ -90,7 +90,7 @@ class Store(object):
 
 
 # TODO align method signatures
-class SQLStore(Store):
+class SQLStore(Store):  # pragma: no cover
 
     def __init__(self) -> None:
         LOG.info('Using the SQLStore.')
@@ -213,8 +213,10 @@ class SQLStore(Store):
         ''' Attempt to Create Table '''
         PlanAdapter.create_table()
         ServiceTypeAdapter.create_table()
-
-        ManifestAdapter.save(manifest)
+        if ServiceTypeAdapter.exists_in_db(manifest.service_id) and PlanAdapter.exists_in_db(manifest.plan_id):
+            ManifestAdapter.save(manifest)
+        else:
+            return 'Could not save the Manifest in the DB, Plan and Service don\'t exist', 500
         if ManifestAdapter.exists_in_db(manifest.id):
             return 'Manifest added successfully', 200
         else:
@@ -249,7 +251,9 @@ class SQLStore(Store):
     def add_service_instance(instance: ServiceInstance) -> tuple:
         id_name = ServiceInstanceAdapter.get_id(instance)
         if ServiceInstanceAdapter.exists_in_db(id_name):
-            return 'The Instance already exists in the catalog.', 409
+            LOG.warn('An existing instance was attempted to be saved. Updating it...')
+            SQLStore.delete_service_instance(id_name)
+            # return 'The Instance already exists in the catalog.', 409
 
         ''' Attempt to Create Table '''
         PlanAdapter.create_table()
@@ -261,8 +265,10 @@ class SQLStore(Store):
 
         id_name = ServiceInstanceAdapter.get_id(instance)
         if ServiceInstanceAdapter.exists_in_db(id_name):
+            LOG.warn('Instance added successfully...')
             return 'Instance added successfully', 200
         else:
+            LOG.warn('Could not save the Instance in the DB...')
             return 'Could not save the Instance in the DB', 500
 
     @staticmethod
@@ -349,7 +355,7 @@ class SQLStore(Store):
         return True
 
 
-class MongoDBStore(Store):
+class MongoDBStore(Store):  # pragma: no cover
 
     def __init__(self, host: str, port=27017) -> None:
         self.client = MongoClient(host, port)
@@ -550,7 +556,7 @@ class MongoDBStore(Store):
         return self.client.server_info()['ok'] == 1.0
 
 
-class InMemoryStore(Store):
+class InMemoryStore(Store):  # pragma: no cover
 
     # inner class as it's not used anywhere outside this class
     class DotDict(dict):
@@ -720,16 +726,18 @@ class InMemoryStore(Store):
         return True
 
 
+LOG.warn('selecting the host...')
 mongo_host = os.environ.get('ESM_MONGO_HOST', '')
-# sql_host = os.environ.get('ESM_SQL_HOST', os.environ.get('ET_EDM_MYSQL_HOST', ''))  # TODO(franco) reenable
+sql_host = os.environ.get('ESM_SQL_HOST', os.environ.get('ET_EDM_MYSQL_HOST', ''))
 
-# if len(mongo_host) and len(sql_host):
-#     raise RuntimeError('Both MongoDB and SQL datastore environment variables are set. Set and use only one.')
+if len(mongo_host) and len(sql_host):  # pragma: no cover
+    raise RuntimeError('Both MongoDB and SQL datastore environment variables are set. Set and use only one.')
 
-if len(mongo_host):  # not an empty string
+if len(mongo_host):  # pragma: no cover
     STORE = MongoDBStore(mongo_host)
-# elif len(sql_host):  # not an empty string  # TODO(franco) reenable
-#     STORE = SQLStore()
-#     STORE.set_up()
-else:  # default
+elif len(sql_host):  # pragma: no cover
+    LOG.warn('Initial SQLStore host setup...')
+    STORE = SQLStore()
+    STORE.set_up()
+else:  # pragma: no cover
     STORE = InMemoryStore()

@@ -44,6 +44,9 @@ class TestServiceInstancesController(BaseTestCase):
 
     def setUp(self):
         super().setUp()
+        sql_host = os.environ.get('ESM_SQL_HOST', os.environ.get('ET_EDM_MYSQL_HOST', ''))
+        if sql_host:
+            STORE.set_up()
 
         self.store = STORE
         self.instance_id = 'this_is_a_test_instance'
@@ -277,10 +280,12 @@ class TestServiceInstancesController(BaseTestCase):
 
         Bind & Unbinds a service
         """
+        LOG.warn('starting binding test case... asserting...')
 
         self.assert200(self.response, "Response body is : " + self.response.data.decode('utf-8'))
 
         # bind to the service
+        LOG.warn('binding...')
         binding = BindingRequest(service_id=self.test_service.id, plan_id=self.test_plan.id)
         headers = [('X_Broker_Api_Version', '2.12')]
         response = self.client.open('/v2/service_instances/{instance_id}/service_bindings/{binding_id}'.format(
@@ -292,6 +297,7 @@ class TestServiceInstancesController(BaseTestCase):
         self.assertStatus(response, 200, "Response body is : " + response.data.decode('utf-8'))
 
         # unbind the service
+        LOG.warn('un..binding.....')
         # binding = BindingRequest(service_id=self.test_service.id, plan_id=self.test_plan.id)
         headers = [('X_Broker_Api_Version', '2.12')]
         # params = {'service_id': self.test_service.id, 'plan_id': self.test_plan.id}
