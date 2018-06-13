@@ -47,9 +47,12 @@ from esm.models.service_instance import ServiceInstance
     ******** ♥ ********
     *******************
 '''
+from adapters.log import get_logger
+
+LOG = get_logger(__name__)
 
 
-class LastOperationSQL(Model):
+class LastOperationSQL(Model):  # pragma: sql NO cover
     __table__ = 'last_operation'
 
     @belongs_to
@@ -95,7 +98,7 @@ class LastOperationSQL(Model):
             Helper().schema.drop_if_exists(cls.__table__)
 
 
-class LastOperationAdapter(LastOperation):
+class LastOperationAdapter(LastOperation):  # pragma: sql NO cover
     @staticmethod
     def create_table():
         if not LastOperationSQL.table_exists():
@@ -211,7 +214,7 @@ class LastOperationAdapter(LastOperation):
 '''
 
 
-class ServiceInstanceSQL(Model):
+class ServiceInstanceSQL(Model):  # pragma: sql NO cover
     __table__ = 'service_instance'
 
     @belongs_to('service_id', 'id')  # local key, parent key
@@ -264,7 +267,7 @@ class ServiceInstanceSQL(Model):
             Helper().schema.drop_if_exists(cls.__table__)
 
 
-class ServiceInstanceAdapter:
+class ServiceInstanceAdapter:  # pragma: sql NO cover
     @staticmethod
     def create_table():
         if not ServiceInstanceSQL.table_exists():
@@ -291,6 +294,7 @@ class ServiceInstanceAdapter:
         ''' OBJECT '''
         model_sql.state = LastOperationAdapter.to_blob(model.state)
         ''' OBJECT '''
+        LOG.warn('SI saving  context... {}'.format(model.context))
         model_sql.context = Helper().to_blob(model.context)
         model_sql.id_name = ServiceInstanceAdapter.get_id(model)
         return model_sql
@@ -311,6 +315,7 @@ class ServiceInstanceAdapter:
         model.state = LastOperationAdapter.from_blob(model_sql.state)
         ''' OBJECT '''
         model.context = Helper().from_blob(model_sql.context)
+        LOG.warn('SI retrieving context... {}'.format(model.context))
         return model
 
     @staticmethod
@@ -397,7 +402,7 @@ class ServiceInstanceAdapter:
 '''
 
 
-class ManifestSQL(Model):
+class ManifestSQL(Model):  # pragma: sql NO cover
     __table__ = 'service_manifests'
 
     @belongs_to
@@ -443,7 +448,7 @@ class ManifestSQL(Model):
             table.integer('plan_id').unsigned()
             table.foreign('plan_id').references('id').on('plans')
             ''' OBJECTS '''
-            table.string('endpoints').nullable()
+            table.medium_text('endpoints').nullable()
             ''' DATES '''
             table.datetime('created_at')
             table.datetime('updated_at')
@@ -458,7 +463,7 @@ class ManifestSQL(Model):
             Helper().schema.drop_if_exists(cls.__table__)
 
 
-class ManifestAdapter:
+class ManifestAdapter:  # pragma: sql NO cover
     @staticmethod
     def create_table():
         if not ManifestSQL.table_exists():
@@ -488,6 +493,8 @@ class ManifestAdapter:
         model_sql.manifest_content = model.manifest_content
         ''' FOREIGN KEY '''
         model_sql.service_id_name = model.service_id
+        LOG.warn('service id received... {}'.format(model.service_id))
+        # we are saving a manifest, so a service and a plan have to exist.
         service = ServiceTypeAdapter.find_by_id_name(model.service_id)
         if not service:
             raise Exception('Bad Service ID provided')
@@ -513,7 +520,8 @@ class ManifestAdapter:
     def model_sql_to_model(model_sql: ManifestSQL) -> Manifest:
         model = Manifest()
         ''' STRINGS '''
-        model.id_name = model_sql.id_name
+        model.id = model_sql.id_name
+        # model.id_name = model_sql.id_name
         model.manifest_type = model_sql.manifest_type
         model.manifest_content = model_sql.manifest_content
         ''' FOREIGN KEY '''
@@ -532,6 +540,7 @@ class ManifestAdapter:
         if model_sql:
             ''' STRINGS '''
             model_sql.id_name = model.id
+            LOG.warn('saving service with id: {}'.format(model.id))
             model_sql.manifest_type = model.manifest_type
             model_sql.manifest_content = model.manifest_content
             ''' FOREIGN KEY '''
@@ -601,7 +610,7 @@ class ManifestAdapter:
 '''
 
 
-class PlanSQL(Model):
+class PlanSQL(Model):  # pragma: sql NO cover
     __table__ = 'plans'
 
     @has_many
@@ -656,7 +665,7 @@ class PlanSQL(Model):
         return Helper().schema.has_table(cls.__table__)
 
 
-class PlanAdapter:
+class PlanAdapter:  # pragma: sql NO cover
     @staticmethod
     def create_table():
         if not PlanSQL.table_exists():
@@ -778,7 +787,7 @@ class PlanAdapter:
         return [PlanAdapter.model_sql_to_model(plan_sql) for plan_sql in service_sql.plans.all()]
 
 
-class PlanMetadataAdapter(PlanMetadata):
+class PlanMetadataAdapter(PlanMetadata):  # pragma: sql NO cover
     @classmethod
     def to_blob(cls, model: PlanMetadata) -> dict:
         if model is None:
@@ -822,7 +831,7 @@ class PlanMetadataAdapter(PlanMetadata):
 '''
 
 
-class ServiceTypeSQL(Model):
+class ServiceTypeSQL(Model):  # pragma: sql NO cover
     __table__ = 'service_types'
 
     @has_many('service_id')   # foreign key
@@ -873,7 +882,7 @@ class ServiceTypeSQL(Model):
         return Helper().schema.has_table(cls.__table__)
 
 
-class PlanServiceTypeSQL(Model):
+class PlanServiceTypeSQL(Model):  # pragma: sql NO cover
     __table__ = 'plans_service_types'
 
     @classmethod
@@ -897,7 +906,7 @@ class PlanServiceTypeSQL(Model):
             Helper().schema.drop_if_exists(cls.__table__)
 
 
-class PlanServiceTypeAdapter:
+class PlanServiceTypeAdapter:  # pragma: sql NO cover
     @staticmethod
     def create_table():
         if not PlanServiceTypeSQL.table_exists():
@@ -920,7 +929,7 @@ class PlanServiceTypeAdapter:
 '''
 
 
-class ServiceTypeAdapter:
+class ServiceTypeAdapter:  # pragma: sql NO cover
     @staticmethod
     def create_table():
         if not ServiceTypeSQL.table_exists():
@@ -1066,7 +1075,7 @@ class ServiceTypeAdapter:
             return False
 
 
-class DashboardClientAdapter(DashboardClient):
+class DashboardClientAdapter(DashboardClient):  # pragma: sql NO cover
     @classmethod
     def to_blob(cls, model: DashboardClient) -> dict:
         if model is None:
@@ -1086,7 +1095,7 @@ class DashboardClientAdapter(DashboardClient):
             return cls.from_dict(dict(json.loads(blob)))
 
 
-class ServiceMetadataAdapter(ServiceMetadata):
+class ServiceMetadataAdapter(ServiceMetadata):  # pragma: sql NO cover
     @classmethod
     def to_blob(cls, model: ServiceMetadata) -> dict:
         if model is None:
@@ -1122,7 +1131,7 @@ class ServiceMetadataAdapter(ServiceMetadata):
 '''
 
 
-class Helper:
+class Helper:  # pragma: sql NO cover
     host = os.environ.get('ESM_SQL_HOST', os.environ.get('ET_EDM_MYSQL_HOST', '127.0.0.1'))
     port = int(os.environ.get('ESM_SQL_PORT', os.environ.get('ET_EDM_MYSQL_PORT', 3306)))
     user = os.environ.get('ESM_SQL_USER', 'root')
@@ -1149,8 +1158,12 @@ class Helper:
 
     @staticmethod
     def from_blob(blob) -> dict:
-        return dict(json.loads(blob))
+        temp = json.loads(blob)
+        if temp:
+            return dict(json.loads(blob))
+        else:
+            return temp
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: sql NO cover
    pass

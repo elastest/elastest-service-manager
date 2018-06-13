@@ -43,7 +43,7 @@ class DummyAuth(Auth):
         pass
 
 
-class KeystoneAuth(Auth):
+class KeystoneAuth(Auth):  # pragma: keystone  no cover
 
     def create_credentials(self, binding_id, instance_id):
         keystone = self._keystone_client()

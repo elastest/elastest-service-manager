@@ -19,6 +19,9 @@ from esm.models import LastOperation, ServiceInstance, Empty, BindingResponse
 
 # TODO remove duplication in constructors
 
+from adapters.log import get_logger
+
+LOG = get_logger(__name__)
 
 class CreateInstance(Task):
 
@@ -206,11 +209,10 @@ class BindInstance(Task):
         creds = self.auth.create_credentials(self.entity_req['binding_id'], self.instance_id)
         binding = BindingResponse(credentials=creds)
         svc_inst.context['binding'] = binding.to_dict()
-
+        LOG.warn('the service instance should have this context: {}'.format(svc_inst.context))
         # update instance with binding info
         # LOG.info('Updating the service instance info with binding details:\n' + svc_inst.to_str())
         self.store.add_service_instance(svc_inst)
-
         self.entity['entity_res'] = svc_inst
         self.context['status'] = ('bound.', 200)
         return self.entity, self.context

@@ -41,6 +41,10 @@ class TestCatalogController(BaseTestCase):
 
     def setUp(self):
         super().setUp()
+        sql_host = os.environ.get('ESM_SQL_HOST', os.environ.get('ET_EDM_MYSQL_HOST', ''))
+        if sql_host:
+            STORE.set_up()
+
         self.test_plan = Plan(
             id='testplan', name='testing plan', description='plan for testing',
             metadata=None, free=True, bindable=False
@@ -64,6 +68,10 @@ class TestCatalogController(BaseTestCase):
             metadata=self.svc_md, requires=[],
             plan_updateable=False, plans=[self.test_plan],
             dashboard_client=None)
+
+        self.store = STORE
+        self.instance_id = 'this_is_a_test_instance'
+        self.binding_id = 'this_is_a_test_instance_binding'
 
         path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         with open(path + "/manifests/docker-compose.yml", "r") as mani_file:
@@ -153,6 +161,11 @@ class TestCatalogController(BaseTestCase):
 
         returns a specific of manifest registered at with the ESM
         """
+
+        self.store.add_service(self.test_service)
+        print('Service registration content of:\n {content}'.format(content=json.dumps(self.test_service)))
+
+
         headers = [('X_Broker_Api_Version', '2.12')]
         LOG.debug('Sending service registration content of:\n {content}'.format(content=json.dumps(self.test_manifest)))
         response = self.client.open('/v2/et/manifest/{manifest_id}'.format(manifest_id=self.test_manifest.id),
@@ -181,6 +194,11 @@ class TestCatalogController(BaseTestCase):
 
         returns a list of manifests registered at with the ESM
         """
+
+        self.store.add_service(self.test_service)
+        print('Service registration content of:\n {content}'.format(content=json.dumps(self.test_service)))
+
+
         headers = [('X_Broker_Api_Version', '2.12')]
         LOG.debug('Sending service registration content of:\n {content}'.format(content=json.dumps(self.test_manifest)))
         response = self.client.open('/v2/et/manifest/{manifest_id}'.format(manifest_id=self.test_manifest.id),

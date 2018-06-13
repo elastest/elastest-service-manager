@@ -43,7 +43,8 @@ LOG = get_logger(__name__,
 
 
 @Singleton
-class MeasurerFactory:
+class MeasurerFactory:  # pragma: no cover
+
     def __init__(self):
         self.measurers = {}
 
@@ -56,7 +57,8 @@ class MeasurerFactory:
         self.measurers[instance_id].stop()
 
 
-class Measurer(threading.Thread):
+class Measurer(threading.Thread):  # pragma: no cover
+
     """
         Measurer Sequence
 
@@ -147,7 +149,7 @@ class Measurer(threading.Thread):
         return self._stop_event.is_set()
 
 
-class MeasurerException(Exception):
+class MeasurerException(Exception):  # pragma: no cover
     def __init__(self, message, errors):
         # Call the base class constructor with the parameters it needs
         super(MeasurerException, self).__init__(message)
