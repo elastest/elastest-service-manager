@@ -70,7 +70,7 @@ class DeployerBackend(object):
                 info['srv_inst.state.description'] = 'The service instance has been created successfully'
 
 
-class DockerBackend(DeployerBackend):
+class DockerBackend(DeployerBackend):  # pragma: docker NO cover
     def __init__(self) -> None:
         super().__init__()
         LOG.info('Adding DockerBackend')
@@ -282,7 +282,7 @@ class DockerBackend(DeployerBackend):
         return True
 
 
-class EPMBackend(DeployerBackend):
+class EPMBackend(DeployerBackend):  # pragma: epm NO cover
     def __init__(self) -> None:
         super().__init__()
         LOG.info('Adding EPMBackend')

@@ -21,7 +21,7 @@ from time import sleep
 from kafka import KafkaProducer
 
 
-def get_logger(name, level=logging.DEBUG, space=None, series=None, sentinel=False):
+def get_logger(name, level=logging.DEBUG, space=None, series=None, sentinel=False):  # pragma: sentinel NO cover
     if os.environ.get('ESM_SENTINEL_KAFKA_ENDPOINT', '') != '' and sentinel:
         logger = logging.getLogger(name)
         logger.setLevel(level)
@@ -40,7 +40,7 @@ def get_logger(name, level=logging.DEBUG, space=None, series=None, sentinel=Fals
     return logger
 
 
-class SentinelLogHandler(logging.Handler):
+class SentinelLogHandler(logging.Handler):  # pragma: sentinel NO cover
     """Kafka logger handler attempts to write python logs directly
     into specified kafka topic instead of writing them into file.
     """

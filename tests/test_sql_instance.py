@@ -120,7 +120,7 @@ class TestCaseServiceInstance(unittest.TestCase):
     def test_add_instance_existing(self, mock_exists):
         mock_exists.return_value = True
         _, result = SQLStore.add_service_instance(self.test_model)
-        self.assertEqual(result, 409, msg='Assert Instance Already Exists')
+        self.assertEqual(result, 200, msg='Assert Instance Already Exists')
 
     def test_delete_instance_nonexistent(self):
         _, result = SQLStore.delete_service_instance(self.id_name)
