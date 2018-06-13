@@ -21,6 +21,7 @@ from unittest.mock import patch
 from adapters.sql_store import ManifestAdapter
 
 if os.getenv('ESM_SQL_HOST', 'NO') != 'NO':
+# if True:
     # MANIFEST
     from esm.models.manifest import Manifest
     from adapters.sql_store import ManifestSQL
