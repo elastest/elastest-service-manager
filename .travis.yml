@@ -29,7 +29,7 @@ script:
   - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 
 after_success:
-  - docker-compose -f tests/docker/docker-compose-local-deps.yml down -v
+  - docker-compose -f tests/docker/docker-compose-travis-deps.yml down -v
 #  - codecov
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
