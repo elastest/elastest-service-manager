@@ -24,6 +24,7 @@ services:
       - MYSQL_TESTS=YES
       - EPM_TESTS=NO
       - BINDING_TESTS=NO
+      - CODECOV_TOKEN=${CODECOV_TOKEN:-NONE}
       # execution params, also required for testing
       - ESM_PORT=37005
       - ESM_CHECK_PORT=5001

@@ -39,7 +39,7 @@ class AsychExe(Thread):
 
 # TODO look into asyncio and asyncio.Task
 class Task:
-    def __init__(self, entity, context, state=''):
+    def __init__(self, entity=None, context=None, state=''):
         self.entity = entity
         self.context = context
         self.state = state

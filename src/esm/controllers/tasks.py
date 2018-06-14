@@ -69,10 +69,14 @@ class CreateInstance(Task):
         self.rm.create(instance_id=self.instance_id, content=mani.manifest_content,
                        c_type=mani.manifest_type, parameters=self.entity_req.parameters)
 
-        # instance_id = srv_inst.context['id']
+        # should loop or receive call back to when the stack is done
 
-        last_op = LastOperation(state='succeeded', description='service instance is created')
-        self.store.add_last_operation(instance_id=self.instance_id, last_operation=last_op)
+        svc_up = self.store.get_service_instance(instance_id=self.instance_id)[0]
+
+        svc_up.state.state = 'succeeded'
+        svc_up.state.description = 'service instance is created'
+
+        self.store.add_service_instance(svc_up)
 
         self.entity['entity_res'] = srv_inst
         self.context['status'] = ('created', 200)
