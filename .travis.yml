@@ -30,7 +30,7 @@ script:
 
 after_success:
   - docker-compose -f tests/docker/docker-compose-local-deps.yml down -v
-  - codecov
+#  - codecov
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
     docker push dizz/esm;

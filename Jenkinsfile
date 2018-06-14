@@ -8,7 +8,7 @@ node('docker'){
             git 'https://github.com/elastest/elastest-service-manager'
 
             // we split the esm tests in functional areas to minimise resource usage
-            stage ("ESM Tests: Core, EPM"){
+            stage ("ESM Tests: Core, Mongo, EPM"){
                 echo ("Starting unit and integration tests for core, EMP & AAA from the tester container...")
                 withCredentials([string(credentialsId: 'CODECOV_TOKEN', variable: 'CODECOV_TOKEN')]) {
                     sh "docker-compose -f tests/docker/docker-compose-tester-core.yml up --build --exit-code-from esm"
@@ -33,17 +33,25 @@ node('docker'){
                 sh "docker-compose -f tests/docker/docker-compose-tester-aaa.yml down -v"
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
             }
+            stage ("ESM Tests: MySQL"){
+                echo ("Starting unit and integration tests for core & MySQL from the tester container...")
+                withCredentials([string(credentialsId: 'CODECOV_TOKEN', variable: 'CODECOV_TOKEN')]) {
+                    sh "docker-compose -f tests/docker/docker-compose-tester-sql.yml up --exit-code-from esm"
+                }
+                sh "docker-compose -f tests/docker/docker-compose-tester-sql.yml down -v"
+                step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
+            }
             stage "Build ESM Image"
                 echo ("building...")
                 sh 'docker build --build-arg GIT_COMMIT=$(git rev-parse HEAD) --build-arg COMMIT_DATE=$(git log -1 --format=%cd --date=format:%Y-%m-%dT%H:%M:%S) . -t elastest/esm:latest'
-                def myimage = docker.image("elastest/esm:latest")
+                def esm_image = docker.image("elastest/esm:latest")
 
             stage "Publish ESM Image to DockerHub"
                 echo ("Publishing as all tests succeeded...")
                 withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'elastestci-dockerhub',
                 usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
                     sh 'docker login -u "$USERNAME" -p "$PASSWORD"'
-                    myimage.push()
+                    esm_image.push()
                 }
         }
 }
