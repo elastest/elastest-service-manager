@@ -158,6 +158,9 @@ class DockerBackend(DeployerBackend):  # pragma: docker NO cover
 
         project = project_from_options(mani_dir, self.options)
         cmd = TopLevelCommand(project)
+        if os.environ.get('ESM_DOCKER_UPDATE_IMAGES', 'NO') == 'YES':
+            LOG.info('Updating all images to the version as defined in the manifest to the latest')
+            cmd.pull(self.options)  # TODO consider an updater thread that is ran over all registered manifests
         cmd.up(self.options)
 
     def dict_to_list(self, parameters):
