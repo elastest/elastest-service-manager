@@ -34,6 +34,8 @@ Below is the set of environment variables and their defaults that can be set to 
 
 `ESM_DOCKER_DELETE_TIMEOUT` Default is `20` seconds
 
+`ESM_DOCKER_UPDATE_IMAGES` Default is `NO`
+
 **EPM**
 
 `ET_EPM_API` Default is `'http://localhost:8180/v1'`
