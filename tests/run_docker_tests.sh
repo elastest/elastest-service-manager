@@ -13,5 +13,5 @@ docker-compose -f docker/docker-compose-tester-aaa.yml up --exit-code-from esm
 docker-compose -f docker/docker-compose-tester-aaa.yml down -v
 
 # test the sql components and their required services
-docker-compose -f docker/docker-compose-tester-sql.yml up --exit-code-from esm
-docker-compose -f docker/docker-compose-tester-sql.yml down -v
+# docker-compose -f docker/docker-compose-tester-sql.yml up --exit-code-from esm
+# docker-compose -f docker/docker-compose-tester-sql.yml down -v
