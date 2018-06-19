@@ -24,7 +24,7 @@ before_script:
   - sleep 15
 
 script:
-  - nosetests --with-xunit --with-coverage --cover-erase --cover-package=adapters --cover-package=esm --cover-min-percentage=70
+  - nosetests --with-xunit --with-coverage --cover-erase --cover-package=adapters --cover-package=esm
   - docker build -t dizz/esm .
   - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 
