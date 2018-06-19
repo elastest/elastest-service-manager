@@ -649,7 +649,8 @@ class PlanSQL(Model):  # pragma: sql NO cover
             table.increments('id')
             ''' STRINGS '''
             table.string('id_name').unique()
-            table.string('name').unique()
+            # table.string('name').unique()
+            table.string('name').nullable()
             table.string('description').nullable()
             ''' BOOLEANS '''
             table.boolean('free').nullable()

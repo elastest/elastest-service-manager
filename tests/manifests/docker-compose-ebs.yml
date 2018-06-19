@@ -1,0 +1,21 @@
+networks:
+  elastest_elastest: {external: true}
+services:
+  rest-api:
+    container_name: restapi
+    depends_on: [sparkmaster]
+    environment: [EBS_PORT=5000, 'EBS_SPARK_MASTER_URL=http://sparkmaster:8080/']
+    image: elastest/ebs:latest
+    links: [sparkmaster]
+    networks: [elastest_elastest]
+  sparkmaster:
+    command: [/usr/bin/supervisord, --configuration=/opt/conf/master.conf]
+    hostname: sparkmaster
+    image: elastest/ebs-spark:latest
+    networks: [elastest_elastest]
+  sparkworker:
+    command: [/usr/bin/supervisord, --configuration=/opt/conf/slave.conf]
+    depends_on: [sparkmaster]
+    image: elastest/ebs-spark:latest
+    networks: [elastest_elastest]
+version: '2.1'
