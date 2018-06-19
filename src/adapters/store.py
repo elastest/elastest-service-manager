@@ -726,18 +726,18 @@ class InMemoryStore(Store):  # pragma: no cover
         return True
 
 
-LOG.warn('selecting the host...')
+LOG.warning('selecting the host...')
 mongo_host = os.environ.get('ESM_MONGO_HOST', '')
-sql_host = os.environ.get('ESM_SQL_HOST', os.environ.get('ET_EDM_MYSQL_HOST', ''))
+# sql_host = os.environ.get('ESM_SQL_HOST', os.environ.get('ET_EDM_MYSQL_HOST', ''))
 
-if len(mongo_host) and len(sql_host):  # pragma: no cover
-    raise RuntimeError('Both MongoDB and SQL datastore environment variables are set. Set and use only one.')
+# if len(mongo_host) and len(sql_host):  # pragma: no cover
+#     raise RuntimeError('Both MongoDB and SQL datastore environment variables are set. Set and use only one.')
 
 if len(mongo_host):  # pragma: no cover
     STORE = MongoDBStore(mongo_host)
-elif len(sql_host):  # pragma: no cover
-    LOG.warn('Initial SQLStore host setup...')
-    STORE = SQLStore()
-    STORE.set_up()
+# elif len(sql_host):  # pragma: no cover
+#     LOG.warn('Initial SQLStore host setup...')
+#     STORE = SQLStore()
+#     STORE.set_up()
 else:  # pragma: no cover
     STORE = InMemoryStore()

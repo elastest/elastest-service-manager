@@ -1,0 +1,25 @@
+networks:
+  elastest_elastest: {external: true}
+services:
+  eds-base:
+    expose: [8000]
+    image: elastest/eds-base:latest
+    networks: [elastest_elastest]
+  frontend:
+    environment: ['ci_env=`bash <(curl -s https://codecov.io/env)`']
+    expose: [4000, 6065, 8000]
+    image: elastest/eds-frontend:latest
+    networks: [elastest_elastest]
+  memsipe:
+    environment: ['ci_env=`bash <(curl -s https://codecov.io/env)`']
+    expose: [5050, 8000]
+    image: elastest/eds-memsipe:latest
+    links: [frontend]
+    networks: [elastest_elastest]
+  rest_app:
+    environment: ['ci_env=`bash <(curl -s https://codecov.io/env)`']
+    expose: [8080, 9090]
+    image: elastest/eds-api:latest
+    links: [frontend]
+    networks: [elastest_elastest]
+version: '2.1'

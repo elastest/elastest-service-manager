@@ -1,19 +1,10 @@
-version: "2.1"
-
-services: 
+networks:
+  elastest_elastest: {external: true}
+services:
   elastest-eus:
-    environment: 
-      - USE_TORM=true
-      - ET_DOCKER_IMG_NOVNC=elastest/eus-novnc:latest
-    expose: 
-      - 8040
+    environment: [USE_TORM=true, 'ET_DOCKER_IMG_NOVNC=elastest/eus-novnc:latest']
+    expose: [8040]
     image: elastest/eus
-    networks: 
-      - elastest_elastest
-    volumes: 
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /tmp:/shared-data
-
-networks: 
-  elastest:
-    external: true
+    networks: [elastest_elastest]
+    volumes: ['/var/run/docker.sock:/var/run/docker.sock', '/shared-data:/shared-data']
+version: '2.1'

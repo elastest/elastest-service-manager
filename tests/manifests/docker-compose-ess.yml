@@ -1,11 +1,7 @@
-version: '2.1'
-
+networks:
+  elastest_elastest: {external: true}
 services:
   ess:
     image: elastest/ess:latest
-    networks:
-     - elastest_elastest
-
-networks:
-  elastest_elastest:
-    external: true
+    networks: [elastest_elastest]
+version: '2.1'
