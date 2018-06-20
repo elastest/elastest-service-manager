@@ -182,13 +182,16 @@ class SQLStore(Store):  # pragma: no cover
             return 'Deleted all Services', 200
 
     @staticmethod
-    def get_manifest(manifest_id: str = None, plan_id: str = None):  # -> List[Manifest]
+    def get_manifest(manifest_id: str = None, plan_id: str = None) -> List[Manifest]:
         if manifest_id and plan_id:
             raise Exception('Query Manifests only by manifest_id OR plan_id')
 
         if plan_id:
             manifests = ManifestSQL.where('plan_id_name', '=', '{}'.format(plan_id)).get().serialize()
-            return manifests
+            if len(manifests) > 1:
+                raise Exception('Too many manifests {mani_len} returned for the Plan: {plan_id}'.format(
+                    mani_len=len(manifests), plan_id=plan_id))
+            return [Manifest.from_dict(manifests[0])]
 
         if manifest_id:
             if ManifestAdapter.exists_in_db(manifest_id):

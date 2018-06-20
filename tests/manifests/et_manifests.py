@@ -2,6 +2,9 @@ import json
 import requests
 import yaml
 
+
+# TODO convert this into an E2E test
+
 services = [
     'elastest-user-emulator-service',
     'elastest-device-emulator-service',

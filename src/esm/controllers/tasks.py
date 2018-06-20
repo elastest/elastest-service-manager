@@ -63,7 +63,7 @@ class CreateInstance(Task):
 
         # store the instance Id with manifest id
         srv_inst = ServiceInstance(service_type=svc_type, state=last_op,
-                                   context={ 'id': self.instance_id, 'manifest_id': mani.id,})
+                                   context={'id': self.instance_id, 'manifest_id': mani.id,})
 
         self.store.add_service_instance(srv_inst)
 
