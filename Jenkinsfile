@@ -33,14 +33,14 @@ node('docker'){
                 sh "docker-compose -f tests/docker/docker-compose-tester-aaa.yml down -v"
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
             }
-            // stage ("ESM Tests: MySQL"){
-            //     echo ("Starting unit and integration tests for core & MySQL from the tester container...")
-            //     withCredentials([string(credentialsId: 'CODECOV_TOKEN', variable: 'CODECOV_TOKEN')]) {
-            //         sh "docker-compose -f tests/docker/docker-compose-tester-sql.yml up --exit-code-from esm"
-            //     }
-            //     sh "docker-compose -f tests/docker/docker-compose-tester-sql.yml down -v"
-            //     step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
-            // }
+            stage ("ESM Tests: MySQL"){
+                echo ("Starting unit and integration tests for core & MySQL from the tester container...")
+                withCredentials([string(credentialsId: 'CODECOV_TOKEN', variable: 'CODECOV_TOKEN')]) {
+                    sh "docker-compose -f tests/docker/docker-compose-tester-sql.yml up --exit-code-from esm"
+                }
+                sh "docker-compose -f tests/docker/docker-compose-tester-sql.yml down -v"
+                step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
+            }
             stage "Build ESM Image"
                 echo ("building...")
                 sh 'docker build --build-arg GIT_COMMIT=$(git rev-parse HEAD) --build-arg COMMIT_DATE=$(git log -1 --format=%cd --date=format:%Y-%m-%dT%H:%M:%S) . -t elastest/esm:latest'

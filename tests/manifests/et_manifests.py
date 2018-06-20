@@ -43,17 +43,18 @@ for svc in services:
     f.close()
 
 # validate number of services registered
-url = "http://localhost:8080/v2/catalog"
-response = requests.request("GET", url, headers=headers)
-print("Should be {expected} service registered. There are: {actual}"
-      .format(expected=len(services), actual=len(response.json()['services'])))
-if len(services) == len(response.json()['services']):
-    print("ALL SERVICES OK!")
+if register_service:
+    url = "http://localhost:8080/v2/catalog"
+    response = requests.request("GET", url, headers=headers)
+    print("Should be {expected} service registered. There are: {actual}"
+          .format(expected=len(services), actual=len(response.json()['services'])))
+    if len(services) == len(response.json()['services']):
+        print("ALL SERVICES OK!")
 
-url = "http://localhost:8080/v2/et/manifest"
-response = requests.request("GET", url, headers=headers)
+    url = "http://localhost:8080/v2/et/manifest"
+    response = requests.request("GET", url, headers=headers)
 
-print("Should be {expected} manifests registered. There are: {actual}"
-      .format(expected=len(services), actual=len(response.json())))
-if len(services) == len(response.json()):
-    print("ALL MANIFESTS OK!")
+    print("Should be {expected} manifests registered. There are: {actual}"
+          .format(expected=len(services), actual=len(response.json())))
+    if len(services) == len(response.json()):
+        print("ALL MANIFESTS OK!")

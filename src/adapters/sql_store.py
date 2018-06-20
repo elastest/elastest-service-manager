@@ -797,7 +797,6 @@ class PlanMetadataAdapter(PlanMetadata):  # pragma: sql NO cover
         ''' STRINGS '''
         my_dict['bullets'] = model._bullets
         my_dict['display_name'] = model._display_name
-        # TODO ambiguity | content will be lost | treated as None/List
         ''' OBJECTS '''
         my_dict['costs'] = model._costs
         my_dict['extras'] = model._extras
