@@ -186,10 +186,9 @@ class SQLStore(Store):  # pragma: no cover
         if manifest_id and plan_id:
             raise Exception('Query Manifests only by manifest_id OR plan_id')
 
-        if plan_id:  # bug here
-            manifests = ManifestSQL.where('plan_id', '=', '{}'.format(plan_id)).get().serialize()
-            if manifests:
-                manifest_id = manifests[0]['id']
+        if plan_id:
+            manifests = ManifestSQL.where('plan_id_name', '=', '{}'.format(plan_id)).get().serialize()
+            return manifests
 
         if manifest_id:
             if ManifestAdapter.exists_in_db(manifest_id):
@@ -728,16 +727,16 @@ class InMemoryStore(Store):  # pragma: no cover
 
 LOG.warning('selecting the host...')
 mongo_host = os.environ.get('ESM_MONGO_HOST', '')
-# sql_host = os.environ.get('ESM_SQL_HOST', os.environ.get('ET_EDM_MYSQL_HOST', ''))
+sql_host = os.environ.get('ESM_SQL_HOST', os.environ.get('ET_EDM_MYSQL_HOST', ''))
 
-# if len(mongo_host) and len(sql_host):  # pragma: no cover
-#     raise RuntimeError('Both MongoDB and SQL datastore environment variables are set. Set and use only one.')
+if len(mongo_host) and len(sql_host):  # pragma: no cover
+    raise RuntimeError('Both MongoDB and SQL datastore environment variables are set. Set and use only one.')
 
 if len(mongo_host):  # pragma: no cover
     STORE = MongoDBStore(mongo_host)
-# elif len(sql_host):  # pragma: no cover
-#     LOG.warn('Initial SQLStore host setup...')
-#     STORE = SQLStore()
-#     STORE.set_up()
+elif len(sql_host):  # pragma: no cover
+    LOG.warn('Initial SQLStore host setup...')
+    STORE = SQLStore()
+    STORE.set_up()
 else:  # pragma: no cover
     STORE = InMemoryStore()

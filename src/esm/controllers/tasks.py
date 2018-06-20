@@ -51,7 +51,8 @@ class CreateInstance(Task):
             return self.entity, self.context
 
         mani = self.store.get_manifest(plan_id=plan[0].id)
-        if len(mani) <= 0:
+
+        if not len(mani) == 1:
             self.context['status'] = ('no manifest for service {plan} found.'.format(plan=self.entity_req.plan_id), 404)
             return self.entity, self.context
 
