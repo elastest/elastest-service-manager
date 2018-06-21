@@ -21,7 +21,7 @@ import os
 
 from adapters.sql_store import ServiceInstanceAdapter as Adapter
 
-if os.getenv('ESM_SQL_HOST', 'NO') != 'NO':
+if os.getenv('MYSQL_TESTS', 'NO') == 'YES':
     # INSTANCE
     from adapters.sql_store import PlanAdapter, ServiceTypeAdapter, PlanServiceTypeAdapter, \
         ServiceInstanceSQL, ServiceTypeSQL, LastOperationAdapter
@@ -31,7 +31,6 @@ if os.getenv('ESM_SQL_HOST', 'NO') != 'NO':
     from orator.exceptions.query import QueryException
 
 
-# TODO: move to test_store_backends module
 @skipIf(os.getenv('MYSQL_TESTS', 'NO') != 'YES', "MYSQL_TESTS_TESTS not set in environment variables")
 class TestCaseServiceInstance(unittest.TestCase):
     def setUp(self):

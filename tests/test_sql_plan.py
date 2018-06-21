@@ -16,15 +16,12 @@ from unittest import skipIf
 import unittest
 import os
 
-if os.getenv('ESM_SQL_HOST', 'NO') != 'NO':
+if os.getenv('MYSQL_TESTS', 'NO') == 'YES':
     from esm.models.service_type import Plan
     from adapters.sql_store import PlanSQL
     from adapters.sql_store import PlanAdapter
     from adapters.sql_store import ServiceTypeAdapter
     from orator.exceptions.query import QueryException
-
-
-# TODO: move to test_store_backends module
 
 
 @skipIf(os.getenv('MYSQL_TESTS', 'NO') != 'YES', "MYSQL_TESTS not set in environment variables")

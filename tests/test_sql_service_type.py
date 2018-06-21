@@ -23,15 +23,13 @@ import os
 from unittest.mock import patch
 
 
-if os.getenv('ESM_SQL_HOST', "NO") != "NO":
+if os.getenv('MYSQL_TESTS', 'NO') == 'YES':
     from adapters.sql_store import ServiceTypeSQL
     from adapters.sql_store import PlanServiceTypeSQL
     from adapters.sql_store import PlanServiceTypeAdapter
     from adapters.sql_store import PlanAdapter
     from adapters.store import SQLStore
     from orator.exceptions.query import QueryException
-
-# TODO: move to test_store_backends module
 
 
 @skipIf(os.getenv('MYSQL_TESTS', 'NO') != 'YES', "MYSQL_TESTS not set in environment variables")
