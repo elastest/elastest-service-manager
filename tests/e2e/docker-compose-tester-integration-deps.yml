@@ -1,0 +1,83 @@
+version: '2.1'
+
+# all core services provided in order to test a basic e2e test (register, create, delete) of the ESM
+
+services:
+
+## ESM Containers
+  esm:
+    build:
+      context: ../../
+      dockerfile: ./Dockerfile
+    depends_on:
+      - mysql
+      - epm
+      - epm-dca
+    image: elastest/esm:latest
+    container_name: esm
+    hostname: esm
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+    environment:
+      # execution params, also required for testing
+      - ET_EPM_API=http://epm:8180/
+      - ESM_PORT=44551
+      - ESM_CHECK_PORT=5001
+      - ESM_DOCKER_DELETE_TIMEOUT=1  # low for quicker test runs
+      - ESM_MEASURE_INSTANCES=NO
+      - ET_EDM_MYSQL_HOST=mysql
+      - ESM_SQL_USER=root
+      - ESM_SQL_PASSWORD=
+      - ESM_DOCKER_UPDATE_IMAGES=YES
+    expose:
+      - 44551
+    ports:
+      - 44551:44551
+
+    networks:
+      - elastest_elastest
+
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    hostname: mysql
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=YES
+    expose:
+      - 3306
+    ports:
+      - 3306:3306
+    networks:
+      - elastest_elastest
+
+## EPM Containers
+  epm:
+    container_name: epm
+    image: elastest/epm
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock:rw
+    expose:
+        - 8180
+    ports:
+        - 8180:8180
+    networks:
+        - elastest_elastest
+
+  epm-dca:
+    container_name: epm-dca
+    image: elastest/epm-adapter-docker-compose
+    entrypoint: python run.py --register-adapter epm epm-dca
+    depends_on:
+        - epm
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock:rw
+    expose:
+        - 50051
+    ports:
+        - 50051:50051
+    networks:
+        - elastest_elastest
+
+networks:
+    elastest_elastest:
+      driver: bridge
