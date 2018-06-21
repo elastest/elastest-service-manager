@@ -6,7 +6,7 @@ services:
   esm:
     build:
       context: ../../
-      dockerfile: ./tests/docker/Dockerfile-tests
+      dockerfile: ./tests/docker/Dockerfile
     depends_on:
       mongo:
         condition: service_started

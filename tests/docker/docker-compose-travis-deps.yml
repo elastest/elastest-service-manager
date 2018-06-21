@@ -78,9 +78,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: shush
     ports:
-      - 3306  #:3306
-#    expose:
-#        - 3306
+      - 3306
     healthcheck:  # required in order to signal correct startup to dependent services (see aaa)
       test: "/usr/bin/mysql --user=root --password=shush --execute \"show databases;\""
       interval: 10s
