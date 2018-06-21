@@ -8,7 +8,7 @@ services:
       context: ../../
       dockerfile: ./tests/docker/Dockerfile-tests
     depends_on:
-      - mongo
+      - mysql
       - epm
       - epm-dca
     image: elastest/esm:latest
@@ -20,9 +20,9 @@ services:
     environment:
       # testing params
       - DOCKER_TESTS=YES
-      - MONGODB_TESTS=YES
+      - MONGODB_TESTS=NO
       - EPM_TESTS=YES
-      - MYSQL_TESTS=NO
+      - MYSQL_TESTS=YES
       - HEARTBEAT_TESTS=NO
       - SENTINEL_TESTS=NO
       - CODECOV_TOKEN=${CODECOV_TOKEN:-NONE}
@@ -31,22 +31,35 @@ services:
       - ESM_PORT=37005
       - ESM_CHECK_PORT=5001
       - ESM_DOCKER_DELETE_TIMEOUT=1  # low for quicker test runs
-      - ESM_MONGO_HOST=mongo
       - ESM_MEASURE_INSTANCES=NO
-#      - ET_EDM_MYSQL_HOST=mysql
-#      - ESM_SQL_PASSWORD=shush
+      - ET_EDM_MYSQL_HOST=mysql
+      - ESM_SQL_USER=root
+      - ESM_SQL_PASSWORD=
 
     networks:
       - elastest_elastest
 
-  mongo:
-    image: mongo:latest
-    container_name: mongo
-    hostname: mongo
-    ports:
-      - 27017:27017
+#  mongo:
+#    image: mongo:latest
+#    container_name: mongo
+#    hostname: mongo
+#    ports:
+#      - 27017:27017
+#    expose:
+#        - 27017
+#    networks:
+#      - elastest_elastest
+
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    hostname: mysql
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=YES
     expose:
-        - 27017
+      - 3306
+    ports:
+      - 3306:3306
     networks:
       - elastest_elastest
 

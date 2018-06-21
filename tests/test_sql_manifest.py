@@ -20,8 +20,7 @@ import os
 from unittest.mock import patch
 from adapters.sql_store import ManifestAdapter
 
-if os.getenv('ESM_SQL_HOST', 'NO') != 'NO':
-# if True:
+if os.getenv('MYSQL_TESTS', 'NO') == 'YES':
     # MANIFEST
     from esm.models.manifest import Manifest
     from adapters.sql_store import ManifestSQL
@@ -34,9 +33,6 @@ if os.getenv('ESM_SQL_HOST', 'NO') != 'NO':
     # GENERICS
     from adapters.store import SQLStore
     from orator.exceptions.query import QueryException
-
-
-# TODO: move to test_store_backends module
 
 
 @skipIf(os.getenv('MYSQL_TESTS', 'NO') != 'YES', "MYSQL_TESTS not set in environment variables")

@@ -21,10 +21,6 @@ from unittest import skipIf
 import unittest
 import os
 
-# TODO: move to test_store_backends module
-
-    # SQLStore.set_up()
-
 
 @skipIf(os.getenv('MYSQL_TESTS', 'NO') != 'YES', "MYSQL_TESTS not set in environment variables")
 class TestCaseManifestManifest(unittest.TestCase):
