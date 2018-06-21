@@ -23,6 +23,7 @@ from adapters.log import get_logger
 
 LOG = get_logger(__name__)
 
+
 class CreateInstance(Task):
 
     def __init__(self, entity, context):
@@ -50,7 +51,9 @@ class CreateInstance(Task):
             self.context['status'] = ('Plan {p_id} found.'.format(p_id=self.entity_req.plan_id), 404)
             return self.entity, self.context
 
-        mani = self.store.get_manifest(plan_id=plan[0].id)
+        # mani = self.store.get_manifest(plan_id=plan[0].id)  # TODO revert once underlying bug is fixed
+        manis = self.store.get_manifest()
+        mani = [m for m in manis if m.plan_id == plan[0].id]
 
         if not len(mani) == 1:
             self.context['status'] = ('no manifest for service {plan} found.'.format(plan=self.entity_req.plan_id), 404)
@@ -63,7 +66,7 @@ class CreateInstance(Task):
 
         # store the instance Id with manifest id
         srv_inst = ServiceInstance(service_type=svc_type, state=last_op,
-                                   context={'id': self.instance_id, 'manifest_id': mani.id,})
+                                   context={'id': self.instance_id, 'manifest_id': mani.id})
 
         self.store.add_service_instance(srv_inst)
 
@@ -96,7 +99,7 @@ class DeleteInstance(Task):
     def run(self):
         instance = self.store.get_service_instance(instance_id=self.instance_id)
 
-        if len(instance) == 1:  # XXX if greater than 1?
+        if len(instance) == 1:
             mani_id = instance[0].context['manifest_id']
             mani = self.store.get_manifest(manifest_id=mani_id)
             if len(mani) < 1:

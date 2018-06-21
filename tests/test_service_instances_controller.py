@@ -49,6 +49,9 @@ class TestServiceInstancesController(BaseTestCase):
             STORE.set_up()
 
         self.store = STORE
+        if len(self.store.get_service_instance()) > 0:
+            raise Exception('This shouldnt happen - the store should be empty on each run!')
+
         self.instance_id = 'this_is_a_test_instance'
         self.binding_id = 'this_is_a_test_instance_binding'
 
