@@ -100,7 +100,7 @@ def deprovision_service_instance(instance_id, service_id, plan_id, accept_incomp
     if not ok:
         return message, code
     else:
-        entity = {'entity_id': instance_id, 'entity_req': {'service_id':service_id, 'plan_id': plan_id},
+        entity = {'entity_id': instance_id, 'entity_req': {'service_id': service_id, 'plan_id': plan_id},
                   'entity_res': None}
         context = {'STORE': STORE, 'RM': RM}
 
@@ -179,7 +179,7 @@ def last_operation_status(instance_id, service_id=None, plan_id=None, operation=
         return message, code
     else:
         entity = {'entity_id': instance_id,
-                  'entity_req': {'service_id':service_id, 'plan_id': plan_id, 'operation':operation},
+                  'entity_req': {'service_id':service_id, 'plan_id': plan_id, 'operation': operation},
                   'entity_res': None}
         context = {'STORE': STORE, 'RM': RM}
 
