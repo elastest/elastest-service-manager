@@ -32,6 +32,7 @@ services:
       - ESM_CHECK_PORT=5001
       - ESM_DOCKER_DELETE_TIMEOUT=1  # low for quicker test runs
       - ESM_MEASURE_INSTANCES=NO
+      - ESM_IN_MEM=NO
       - ET_EDM_MYSQL_HOST=mysql
       - ESM_SQL_USER=elastest
       - ESM_SQL_PASSWORD=elastest

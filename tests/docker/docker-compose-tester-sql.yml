@@ -34,6 +34,7 @@ services:
       - ESM_SQL_USER=elastest
       - ESM_SQL_PASSWORD=elastest
       - ESM_SQL_DBNAME=ESM
+      - ESM_IN_MEM=NO
 
     networks:
       - elastest_elastest

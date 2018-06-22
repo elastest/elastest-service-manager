@@ -34,6 +34,7 @@ services:
       - ESM_DOCKER_DELETE_TIMEOUT=1  # low for quicker test runs
       - ESM_MEASURE_INSTANCES=NO
       - ESM_MONGO_HOST=mongo
+      - ESM_IN_MEM=NO
 
     networks:
       - elastest_elastest
