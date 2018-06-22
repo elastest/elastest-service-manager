@@ -9,14 +9,21 @@ node('docker'){
 
             stage ("ESM Service"){
                 echo ("Starting ESM service...")
-                sh "docker-compose -f tests/e2e/docker-compose-tester-integration-deps.yml up --build
+                sh "docker-compose -f tests/e2e/docker-compose.yml up --build -d"
             }
             stage ("ESM E2E Test"){
+                esmIP = sh (
+                     script: 'docker inspect --format=\\"{{.NetworkSettings.Networks.elastest_elastest.IPAddress}}\\" esm',
+                     returnStdout: true
+                 ).trim()
+                esmIP = esmIP.substring(1, esmIP.length()-1)
+                echo "ESM container IP=${esmIP}"
 
+                sh "docker run -it --network elastest_elastest -e ESM_EP_IP=${esmIP} dizz/esm_e2e:latest"
             }
 
-            stage ("ESM report and cleanup"){
-                step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
+            stage ("ESM E2E cleanup"){
+                // step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
                 sh "docker-compose -f tests/e2e/docker-compose-tester-integration-deps.yml down -v"
             }
         }
