@@ -14,18 +14,13 @@
 #    under the License.
 
 import inspect
+import os
 from unittest import TestCase
 from unittest import skipIf
 
-import os
-
-from adapters.resources import EPMBackend
-
-INST_ID = 'test-id-123'
-
 
 @skipIf(os.getenv('E2E_TESTS', 'NO') != 'YES', "E2E_TESTS not set in environment variables")
-class TestEPMBackend(TestCase):
+class TestESME2E(TestCase):
     def setUp(self):
         super().setUp()
         # self.epm = EPMBackend()

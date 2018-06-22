@@ -1,7 +1,11 @@
 version: '2.1'
 
 # you can use this docker compose file to bring up ESM dependencies and then run tests, debug locally
-# in your IDE or command line.
+# in your IDE or command line. For using SQL use the following env. var.s
+# - ET_EDM_MYSQL_HOST=mysql
+# - ESM_SQL_USER=elastest
+# - ESM_SQL_PASSWORD=elastest
+# - ESM_SQL_DBNAME=ESM
 
 services:
 
@@ -88,6 +92,23 @@ services:
       retries: 5
     networks:
       - elastest_elastest
+
+#  edm-mysql:
+#    image: elastest/edm-mysql:latest
+#    ports:
+#      - "3306:3306"
+#    expose:
+#      - 3306
+#    environment:
+#      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+#      MYSQL_DATABASE: "elastest"
+#      MYSQL_USER: elastest
+#      MYSQL_PASSWORD: elastest
+##    volumes:
+##      - edm-mysql:/var/lib/mysql
+#    # restart: always
+#    networks:
+#      - elastest_elastest
 
 networks:
     elastest_elastest:
