@@ -6,11 +6,11 @@ services:
 
 ## ESM Containers
   esm:
-    build:
-      context: ../../
-      dockerfile: ./Dockerfile
+    # build:
+    #   context: ../../
+    #   dockerfile: ./Dockerfile
     depends_on:
-      - mysql
+      - edm-mysql
       - epm
       - epm-dca
     image: elastest/esm:latest
@@ -25,10 +25,12 @@ services:
       - ESM_CHECK_PORT=5001
       - ESM_DOCKER_DELETE_TIMEOUT=1  # low for quicker test runs
       - ESM_MEASURE_INSTANCES=NO
-      - ET_EDM_MYSQL_HOST=mysql
-      - ESM_SQL_USER=root
-      - ESM_SQL_PASSWORD=
       - ESM_DOCKER_UPDATE_IMAGES=YES
+      - ET_EDM_MYSQL_HOST=edm-mysql
+      - ESM_SQL_USER=elastest
+      - ESM_SQL_PASSWORD=elastest
+      - ESM_SQL_DBNAME=ESM
+
     expose:
       - 44551
     ports:
@@ -37,16 +39,20 @@ services:
     networks:
       - elastest_elastest
 
-  mysql:
-    image: mysql:5.7
-    container_name: mysql
-    hostname: mysql
-    environment:
-      - MYSQL_ALLOW_EMPTY_PASSWORD=YES
+  edm-mysql:
+    image: elastest/edm-mysql:latest
+    ports:
+      - "3306:3306"
     expose:
       - 3306
-    ports:
-      - 3306:3306
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: "elastest"
+      MYSQL_USER: elastest
+      MYSQL_PASSWORD: elastest
+#    volumes:
+#      - edm-mysql:/var/lib/mysql
+    # restart: always
     networks:
       - elastest_elastest
 
