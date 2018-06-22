@@ -6,9 +6,9 @@ services:
 
 ## ESM Containers
   esm:
-    # build:
-    #   context: ../../
-    #   dockerfile: ./Dockerfile
+    build:
+      context: ../../
+      dockerfile: ./Dockerfile
     depends_on:
       - edm-mysql
       - epm
@@ -26,10 +26,11 @@ services:
       - ESM_DOCKER_DELETE_TIMEOUT=1  # low for quicker test runs
       - ESM_MEASURE_INSTANCES=NO
       - ESM_DOCKER_UPDATE_IMAGES=YES
-      - ET_EDM_MYSQL_HOST=edm-mysql
-      - ESM_SQL_USER=elastest
-      - ESM_SQL_PASSWORD=elastest
-      - ESM_SQL_DBNAME=ESM
+#      - ET_EDM_MYSQL_HOST=edm-mysql
+#      - ESM_SQL_USER=elastest
+#      - ESM_SQL_PASSWORD=elastest
+#      - ESM_SQL_DBNAME=ESM
+#      - ESM_IN_MEM=NO
 
     expose:
       - 44551

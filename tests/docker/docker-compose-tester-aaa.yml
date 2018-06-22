@@ -33,6 +33,7 @@ services:
       - ESM_DOCKER_DELETE_TIMEOUT=1  # low for quicker test runs
       - ESM_MEASURE_INSTANCES=NO
       - ESM_MONGO_HOST=mongo
+      - ESM_IN_MEM=NO
       - ET_AAA_ESM_KEYSTONE_BASE_URL=http://aaa
       - ET_AAA_ESM_KEYSTONE_USERNAME=admin
       - ET_AAA_ESM_KEYSTONE_PASSWD=admin
