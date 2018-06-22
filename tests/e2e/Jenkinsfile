@@ -13,13 +13,13 @@ node('docker'){
             }
             stage ("ESM E2E Test"){
                 esmIP = sh (
-                     script: 'docker inspect --format=\\"{{.NetworkSettings.Networks.elastest_elastest.IPAddress}}\\" esm',
+                     script: 'docker inspect --format=\\"{{.NetworkSettings.Networks.e2e_elastest_elastest.IPAddress}}\\" esm',
                      returnStdout: true
                  ).trim()
                 esmIP = esmIP.substring(1, esmIP.length()-1)
                 echo "ESM container IP=${esmIP}"
 
-                sh "docker run -it --network elastest_elastest -e ESM_EP_IP=${esmIP} dizz/esm_e2e:latest"
+                sh "docker run -it --network e2e_elastest_elastest   -e ESM_EP_IP=${esmIP} dizz/esm_e2e:latest"
             }
 
             stage ("ESM E2E cleanup"){
