@@ -12,7 +12,7 @@ LABEL version=$VERSION
 WORKDIR /app
 COPY ./src /app
 
-RUN apk --update add --virtual build-deps python3-dev build-base linux-headers
+RUN apk --update add --virtual build-deps python3-dev build-base linux-headers libffi-dev openssl-dev
 RUN apk --update add python3 py3-pip openssl ca-certificates git \
     && pip3 install --upgrade setuptools pip \
     && pip3 install -r /app/requirements.txt && rm /app/requirements.txt \
