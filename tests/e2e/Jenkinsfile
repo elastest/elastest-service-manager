@@ -8,8 +8,19 @@ node('docker'){
             git 'https://github.com/elastest/elastest-service-manager'
 
             stage ("ESM Service"){
+
+                try {
+                   sh "docker rm -f esm_e2e"
+                } catch(e) {
+                   echo "Error: $e"
+                }
+
+                sh "docker network create elastest_elastest"
+                sh "docker network list"
+                
+                sh "docker-compose -f tests/e2e/docker-compose.yml down -v"
                 echo ("Starting ESM service...")
-                sh "docker-compose -f tests/e2e/docker-compose.yml up --build -d"
+                sh "docker-compose -f tests/e2e/docker-compose.yml up -d"
             }
             stage ("ESM E2E Test"){
                 esmIP = sh (
@@ -18,13 +29,17 @@ node('docker'){
                  ).trim()
                 esmIP = esmIP.substring(1, esmIP.length()-1)
                 echo "ESM container IP=${esmIP}"
-
-                sh "docker run -it --network e2e_elastest_elastest   -e ESM_EP_IP=${esmIP} dizz/esm_e2e:latest"
+                sleep 20
+                sh "docker run -t --name esm_e2e --network e2e_elastest_elastest -e ESM_EP_IP=${esmIP} dizz/esm_e2e:latest"
             }
 
             stage ("ESM E2E cleanup"){
                 // step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
-                sh "docker-compose -f tests/e2e/docker-compose-tester-integration-deps.yml down -v"
+                sh "docker logs esm_e2e"
+                sh "docker rm -f esm_e2e"
+                sh "docker-compose -f tests/e2e/docker-compose.yml logs"
+                sh "docker-compose -f tests/e2e/docker-compose.yml down -v"
+                sh "docker network rm elastest_elastest"
             }
         }
 }
