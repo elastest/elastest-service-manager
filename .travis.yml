@@ -25,13 +25,13 @@ before_script:
 
 script:
   - nosetests --with-xunit --with-coverage --cover-erase --cover-package=adapters --cover-package=esm
-  - docker build -t dizz/esm .
-  - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+#  - docker build -t dizz/esm .
+#  - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 
 after_success:
   - docker-compose -f tests/docker/docker-compose-travis-deps.yml down -v
 #  - codecov
-  - if [ "$TRAVIS_BRANCH" == "master" ]; then
-    docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-    docker push dizz/esm;
-    fi
+#  - if [ "$TRAVIS_BRANCH" == "master" ]; then
+#    docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
+#    docker push dizz/esm;
+#    fi
