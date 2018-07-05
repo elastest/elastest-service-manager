@@ -148,6 +148,8 @@ The service manager endpoint should only be the scheme (http or https) and the f
 ## Continuous Test and Integration
 There is a `Jenkinsfile` in the root of this project that defines the Jenkins pipeline that executes all tests and if successful builds and pushes a new docker image to docker hub. This pipeline also generates the required code coverage statistics - [![codecov](https://codecov.io/gh/elastest/elastest-service-manager/branch/master/graph/badge.svg)](https://codecov.io/gh/elastest/elastest-service-manager)
 
+Once the set of tests have executed, a second set of smoke tests are then executed. You can see that [test pipeline here](https://github.com/elastest/elastest-service-manager/blob/master/tests/e2e/Jenkinsfile).
+
 ## Notes
 
 To build the swagger-codegen [tool yourself](https://github.com/swagger-api/swagger-codegen/tree/master#building)
