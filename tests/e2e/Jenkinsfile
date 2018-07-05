@@ -17,7 +17,7 @@ node('docker'){
 
                 sh "docker network create elastest_elastest"
                 sh "docker network list"
-                
+
                 sh "docker-compose -f tests/e2e/docker-compose.yml down -v"
                 echo ("Starting ESM service...")
                 sh "docker-compose -f tests/e2e/docker-compose.yml up -d"
