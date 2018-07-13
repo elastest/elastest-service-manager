@@ -42,15 +42,15 @@ node('docker'){
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
             }
             stage("Build ESM Image"){
-                echo ("building...")
+                echo ("Building as all tests succeeded...")
                 sh 'docker build --build-arg GIT_COMMIT=$(git rev-parse HEAD) --build-arg COMMIT_DATE=$(git log -1 --format=%cd --date=format:%Y-%m-%dT%H:%M:%S) . -t elastest/esm:latest'
-                def esm_image = docker.image("elastest/esm:latest")
             }
             stage ("Publish ESM Image to DockerHub"){
-                echo ("Publishing as all tests succeeded...")
+                echo ("Publishing to dockerhub...")
                 withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'elastestci-dockerhub',
                 usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
                     sh 'docker login -u "$USERNAME" -p "$PASSWORD"'
+                    def esm_image = docker.image("elastest/esm:latest")
                     esm_image.push()
                 }
             }
