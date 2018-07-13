@@ -6,6 +6,8 @@ version: '2.1'
 # - ESM_SQL_USER=elastest
 # - ESM_SQL_PASSWORD=elastest
 # - ESM_SQL_DBNAME=ESM
+# For testing EPM set:
+# - `ET_EPM_API` Default is `'http://localhost:8180/v1'`
 
 services:
 
