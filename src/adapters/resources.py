@@ -125,11 +125,13 @@ class DockerBackend(DeployerBackend):  # pragma: docker NO cover
         # if none supplied, we use an empty dict
         # add optionally supplied parameters as environment variables
         parameters = kwargs.get('parameters', dict())
+
+        # if overriding service parameters
         if parameters and len(parameters) > 0:
             # convert dict to a list
             m = yaml.load(content)
-            if 'all' in parameters and len(parameters['all']) > 0:
-                LOG.warning('Common AND service specific environment variables not implemented at the moment')
+            # if 'all' in parameters and len(parameters['all']) > 0:
+            #     LOG.warning('Common AND service specific environment variables not implemented at the moment')
                 # all_env_list = self.dict_to_list(parameters['all'])
 
             extra_env_list = self.dict_to_list(parameters)
@@ -302,8 +304,17 @@ class EPMBackend(DeployerBackend):  # pragma: epm NO cover
         # create the tar file including metadata.yaml and docker-compose.yaml
         dirpath = tempfile.mkdtemp()
 
+        # if a specific pop is supplied
+        parameters = kwargs.get('parameters', dict())
+        pop_name = None
+        if 'pop_name' in parameters:
+            LOG.info('POP Name specified: ' + parameters['pop_name'])
+            pop_name = parameters['pop_name']
+
         with open(dirpath + 'metadata.yaml', 'w') as out:
-            out.write('name: ' + instance_id + '\ntype: docker-compose')
+            out.write('name: ' + instance_id + '\ntype: docker-compose\n')
+            if pop_name:
+                out.write('pop: ' + pop_name + '\n')
 
         # update parameters if they're supplied
         with open(dirpath + 'docker-compose.yaml', 'w') as out:

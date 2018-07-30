@@ -174,6 +174,7 @@ class TestServiceInstancesController(BaseTestCase):
 
         params = dict()
         params['ET_ESM_API'] = 'http://esm:37005/'
+        params['pop_name'] = 'just_a_test'
 
         # params['all'] = dict()
         # params['svc1'] = dict()  # should raise a 4xx error as it doesnt exist in manifest
@@ -197,15 +198,12 @@ class TestServiceInstancesController(BaseTestCase):
                                     method='GET', headers=headers)
         self._assert200(response)
 
-
         def _check_key(key_name, info):
             res = False
-            # num = 0
             for x in info:
                 if key_name in x:
                     res = True
-                    # num = num + 1
-            return res  # , num
+            return res
 
         self.assertTrue(_check_key('ET_ESM_API', response.json['context']))
 

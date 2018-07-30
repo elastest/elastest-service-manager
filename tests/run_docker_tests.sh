@@ -17,9 +17,8 @@ docker-compose -f docker/docker-compose-tester-sql.yml up --exit-code-from esm
 docker-compose -f docker/docker-compose-tester-sql.yml down -v
 
 # test a simple e2e
-docker-compose -f e2e/docker-compose-tester-integration-deps.yml up --build -d
+cd e2e
+docker-compose -f docker-compose.yml up --build -d
 sleep 10s
-cd manifests
-python ./et_manifests.py
-cd ..
-docker-compose -f e2e/docker-compose-tester-integration-deps.yml down -v
+python ./e2e.py
+docker-compose -f docker-compose.yml down -v
