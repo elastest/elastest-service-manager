@@ -53,7 +53,13 @@ To retrieve the swagger specification of the running ESM simply use `curl` or `w
 http://localhost:8080/swagger.json
 ```
 
-## Running Tests
+### Python Version
+
+The ESM has been tested upon python 3.6. If you do not have such a version on your system the suggestion is to use [pyenv](https://github.com/pyenv/pyenv) and [install it as per directions](https://github.com/pyenv/pyenv#installation) and then install the required version (3.6).
+
+
+
+##Running Tests
 
 Ensure that you run from a virtual environment (see above).
 

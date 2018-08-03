@@ -9,6 +9,7 @@ import yaml
 # docker-compose -f docker/docker-compose-tester-integration-deps.yml up
 
 register_service = True
+save_mani = False
 services = [
     'elastest-user-emulator-service',
     'elastest-device-emulator-service',
@@ -17,10 +18,11 @@ services = [
     'elastest-security-service'
 ]
 
-create_services = True
-delete_services = True  # left to inspect the services
+create_services = False
+delete_services = False  # left to inspect the services
 
-host = "http://0.0.0.0:44551"
+# host = "http://0.0.0.0:44551"
+host = "http://localhost:8080"
 headers = {
             'Accept': "application/json",
             'Content-Type': "application/json",
@@ -42,18 +44,19 @@ def run_me():
 
             # register manifest description
             url = host + "/v2/et/manifest/{id}".format(id=content['manifest']['id'])
+            content['manifest']['manifest_type'] = 'epm'
             payload = json.dumps(content['manifest'])
             response = requests.request("PUT", url, data=payload, headers=headers)
 
-        f = open('./elastestservice-{svc}.json'.format(svc=content['register']['short_name'].lower()), 'w')
-        f.write(json.dumps(content))
-        f.close()
+        if save_mani:
+            f = open('./elastestservice-{svc}.json'.format(svc=content['register']['short_name'].lower()), 'w')
+            f.write(json.dumps(content))
+            f.close()
 
-        dc = yaml.load(content['manifest']['manifest_content'])
-        f = open('./docker-compose-{svc}.yml'.format(svc=content['register']['short_name'].lower()), 'w')
-        f.write(yaml.dump(dc))
-        f.close()
-
+            dc = yaml.load(content['manifest']['manifest_content'])
+            f = open('./docker-compose-{svc}.yml'.format(svc=content['register']['short_name'].lower()), 'w')
+            f.write(yaml.dump(dc))
+            f.close()
 
     def create_svc(name, svc_id, plan_id, delete=False):
         global url, payload, response
@@ -76,7 +79,6 @@ def run_me():
             }
             response = requests.request("DELETE", url, headers=headers, params=querystring)
             print(response.text)
-
 
     # validate number of services registered
     if register_service:
