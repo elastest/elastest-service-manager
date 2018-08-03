@@ -129,7 +129,7 @@ if __name__ == '__main__':
     LOG.info('ESM available at http://{IP}:{PORT}'.format(IP=esm_ip, PORT=esm_port))
 
     esm_check_ip = os.environ.get('ESM_CHECK_IP', '0.0.0.0')
-    check_port = os.environ.get('ESM_CHECK_PORT', 5000)
+    check_port = os.environ.get('ESM_CHECK_PORT', 5001)
     check_server = HTTPServer(WSGIContainer(check_app))
     check_server.listen(address=esm_check_ip, port=check_port)
     LOG.info('ESM Health available at http://{IP}:{PORT}'.format(IP=esm_check_ip, PORT=check_port))

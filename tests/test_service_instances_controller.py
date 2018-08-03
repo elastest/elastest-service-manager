@@ -174,7 +174,7 @@ class TestServiceInstancesController(BaseTestCase):
 
         params = dict()
         params['ET_ESM_API'] = 'http://esm:37005/'
-        params['pop_name'] = 'just_a_test'
+        params['pop_name'] = 'compose-193.147.51.153'
 
         # params['all'] = dict()
         # params['svc1'] = dict()  # should raise a 4xx error as it doesnt exist in manifest

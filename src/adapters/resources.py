@@ -307,7 +307,7 @@ class EPMBackend(DeployerBackend):  # pragma: epm NO cover
         # if a specific pop is supplied
         parameters = kwargs.get('parameters', dict())
         pop_name = None
-        if 'pop_name' in parameters:
+        if parameters and 'pop_name' in parameters:
             LOG.info('POP Name specified: ' + parameters['pop_name'])
             pop_name = parameters['pop_name']
 

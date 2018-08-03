@@ -10,7 +10,7 @@ Below is the set of environment variables and their defaults that can be set to 
 
 `ET_AAA_ESM_KEYSTONE_ADMIN_PORT` Default is `35357`
 
-`ET_AAA_ESM_KEYSTONE_USER_PORT` Default is `5000`
+`ET_AAA_ESM_KEYSTONE_USER_PORT` Default is `5001`
 
 `ET_AAA_ESM_KEYSTONE_USERNAME` Default is `''`
 
