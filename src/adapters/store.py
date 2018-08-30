@@ -13,23 +13,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os
+import config
+import pymysql
 import time
 from typing import List
 
-if os.environ.get('ESM_MONGO_HOST', '') != '':
-    from pymongo import MongoClient
 
-# if os.environ.get('ESM_SQL_HOST', os.environ.get('ET_EDM_MYSQL_HOST', '')) != '':
-#     import pymysql
-#     from adapters.sql_store import *
+if config.esm_mongo_host != '':
+    from pymongo import MongoClient
 
 from esm.models import LastOperation
 from esm.models import Manifest
 from esm.models import ServiceInstance
 from esm.models import ServiceType
-# if os.environ.get('ESM_SQL_HOST', '') != '':
-import pymysql
+
 from adapters.sql_store import Helper
 from adapters.sql_store import ServiceTypeAdapter
 from adapters.sql_store import PlanAdapter
@@ -253,7 +250,7 @@ class SQLStore(Store):  # pragma: no cover
     def add_service_instance(instance: ServiceInstance) -> tuple:
         id_name = ServiceInstanceAdapter.get_id(instance)
         if ServiceInstanceAdapter.exists_in_db(id_name):
-            LOG.warn('An existing instance was attempted to be saved. Updating it...')
+            LOG.warning('An existing instance was attempted to be saved. Updating it...')
             SQLStore.delete_service_instance(id_name)
             # return 'The Instance already exists in the catalog.', 409
 
@@ -267,10 +264,10 @@ class SQLStore(Store):  # pragma: no cover
 
         id_name = ServiceInstanceAdapter.get_id(instance)
         if ServiceInstanceAdapter.exists_in_db(id_name):
-            LOG.warn('Instance added successfully...')
+            LOG.warning('Instance added successfully...')
             return 'Instance added successfully', 200
         else:
-            LOG.warn('Could not save the Instance in the DB...')
+            LOG.warning('Could not save the Instance in the DB...')
             return 'Could not save the Instance in the DB', 500
 
     @staticmethod
@@ -374,7 +371,7 @@ class MongoDBStore(Store):  # pragma: no cover
                     )
                 ]
             else:
-                LOG.warn('Requested service type not found: {id}'.format(id=service_id))
+                LOG.warning('Requested service type not found: {id}'.format(id=service_id))
                 return []
         else:
             services = []
@@ -430,7 +427,7 @@ class MongoDBStore(Store):  # pragma: no cover
                 m.manifest_content = m.manifest_content.replace('</br>', '\n')
                 return [m]
             else:
-                LOG.warn('Requested manifest by plan ID not found: {id}'.format(id=plan_id))
+                LOG.warning('Requested manifest by plan ID not found: {id}'.format(id=plan_id))
                 return []
         elif manifest_id:
             if self.ESM_DB.manifests.count({'id': manifest_id}) == 1:
@@ -440,7 +437,7 @@ class MongoDBStore(Store):  # pragma: no cover
                 m.manifest_content = m.manifest_content.replace('</br>', '\n')
                 return [m]
             else:
-                LOG.warn('Requested manifest not found: {id}'.format(id=manifest_id))
+                LOG.warning('Requested manifest not found: {id}'.format(id=manifest_id))
                 return []
         else:
             manifests = []
@@ -469,7 +466,7 @@ class MongoDBStore(Store):  # pragma: no cover
                     )
                 ]
             else:
-                LOG.warn('Requested service instance not found: {id}'.format(id=instance_id))
+                LOG.warning('Requested service instance not found: {id}'.format(id=instance_id))
                 return []
         else:
             instances = []
@@ -535,7 +532,7 @@ class MongoDBStore(Store):  # pragma: no cover
                     )
                 ]
             else:
-                LOG.warn('Requested last operation not found: {id}'.format(id=instance_id))
+                LOG.warning('Requested last operation not found: {id}'.format(id=instance_id))
                 return []
         else:
             last_ops = []
@@ -569,7 +566,7 @@ class InMemoryStore(Store):  # pragma: no cover
 
     def __init__(self) -> None:
         LOG.info('Using the InMemoryStore.')
-        LOG.warn('InMemoryStore is not persistent.')
+        LOG.warning('InMemoryStore is not persistent.')
         self.ESM_DB = dict()
         self.ESM_DB['services'] = list()
         self.ESM_DB['instances'] = list()
@@ -597,7 +594,7 @@ class InMemoryStore(Store):  # pragma: no cover
 
     def delete_service(self, service_id: str=None) -> None:
         if not service_id:
-            LOG.warn('Deleting ALL registered service types in the catalog.')
+            LOG.warning('Deleting ALL registered service types in the catalog.')
             self.ESM_DB.services = list()
         else:
             service_to_delete = [s for s in self.ESM_DB.services if s.id == service_id]
@@ -671,7 +668,7 @@ class InMemoryStore(Store):  # pragma: no cover
 
     def delete_service_instance(self, service_instance_id: str=None) -> None:
         if not service_instance_id:
-            LOG.warn('Deleting ALL service instances in the catalog.')
+            LOG.warning('Deleting ALL service instances in the catalog.')
             self.ESM_DB.instances = list()
         else:
             service_instance_to_delete = [si for si in self.ESM_DB.instances if si.context['id'] ==
@@ -712,7 +709,7 @@ class InMemoryStore(Store):  # pragma: no cover
 
     def delete_last_operation(self, instance_id: str=None) -> None:
         if not instance_id:
-            LOG.warn('Deleting ALL last operations in the data store.')
+            LOG.warning('Deleting ALL last operations in the data store.')
             self.ESM_DB.last_operations = list()
         else:
             last_op_to_delete = [lo for lo in self.ESM_DB.last_operations if lo['id'] == instance_id]
@@ -724,16 +721,16 @@ class InMemoryStore(Store):  # pragma: no cover
             self.ESM_DB.last_operations.remove(last_op_to_delete[0])
 
     def is_ok(self):
-        # no other logic needed - this store is inmemory
+        # no other logic needed - this store is in-memory
         return True
 
 
-mongo_host = os.environ.get('ESM_MONGO_HOST', '')
-sql_host = os.environ.get('ESM_SQL_HOST', os.environ.get('ET_EDM_MYSQL_HOST', ''))
-in_mem = os.environ.get('ESM_IN_MEM', 'YES')
+mongo_host = config.esm_mongo_host
+sql_host = config.esm_sql_host
+in_mem = config.esm_in_mem
 
 if len(mongo_host) and len(sql_host):  # pragma: no cover
-    raise RuntimeError('Both MongoDB and SQL datastore environment variables are set. Set and use only one.')
+    raise RuntimeError('Both MongoDB and SQL data store environment variables are set. Set and use only one.')
 
 if len(mongo_host) and in_mem == 'NO':  # pragma: no cover
     STORE = MongoDBStore(mongo_host)

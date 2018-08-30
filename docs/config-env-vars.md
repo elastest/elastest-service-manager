@@ -88,6 +88,10 @@ Below is the set of environment variables and their defaults that can be set to 
 
 `ESM_SENTINEL_SERIES_NAME` Default is `None`
 
+**ESM Sentinel Logging Agent**
+
+`ESM_SENTINEL_INJECT_LOGGER` Default is `False`
+
 **ESM Test Related**
 
 `DOCKER_TESTS` Default is `'NO’`
