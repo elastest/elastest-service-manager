@@ -108,7 +108,10 @@ def register_services():
 
         # register manifest description
         url = host + "/v2/et/manifest/{id}".format(id=content['manifest']['id'])
+        if bool(os.environ.get('USE_EPM', 'False')):
+            content['manifest']['manifest_type'] = 'epm'
         payload = json.dumps(content['manifest'])
+
         response = requests.request("PUT", url, data=payload, headers=headers)
 
 

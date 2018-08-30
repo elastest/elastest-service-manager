@@ -1,7 +1,7 @@
 FROM gliderlabs/alpine:latest
 
 LABEL maintainer="elastest-users@googlegroups.com"
-LABEL description="Builds the test service manager docker image."
+LABEL description="Provides the test service manager docker image."
 
 RUN mkdir /output
 WORKDIR /app
