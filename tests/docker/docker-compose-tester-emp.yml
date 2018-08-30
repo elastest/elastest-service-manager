@@ -35,7 +35,15 @@ services:
       - ESM_MEASURE_INSTANCES=NO
       - ESM_MONGO_HOST=mongo
       - ESM_IN_MEM=NO
-
+#      - DOCKER_TESTS=YES
+#      - ESM_DOCKER_DELETE_TIMEOUT=1
+#      - ESM_MONGO_HOST=localhost
+#      - ESM_SENTINEL_KAFKA_ENDPOINT=localhost:9092
+#      - ESM_TMP_DIR=/tmp
+#      - ESM_SENTINEL_INJECT_LOGGER=True
+#      - ESM_SENTINEL_API_ENDPOINT=http://localhost:9100
+#      - SENTINEL_SYSLOG_KEY=2268a449-8596-42a8-96a9-6a9a8ab994b3
+#      - SENTINEL_SYSLOG_USERNAME=syslog_agent1
     networks:
       - elastest_elastest
 
