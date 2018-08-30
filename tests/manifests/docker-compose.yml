@@ -5,7 +5,7 @@ services:
     image: elastest/ebs-spark:latest
     container_name: spark-master
     ports:
-      - "8080:8080"
+      - "8082:8082"
       - "7077:7077"
     # volumes:
     #   - ./spark/alluxio_conf:/opt/alluxio/conf
@@ -33,14 +33,14 @@ services:
   rest-api:
     image: elastest/ebs:latest
     environment:
-      - EBS_PORT=5001
-      - EBS_SPARK_MASTER_URL=http://spark-master:8080/
+      - EBS_PORT=5002
+      - EBS_SPARK_MASTER_URL=http://spark-master:8082/
         #    volumes:
         #      - ./rest-api:/app
     links:
       - spark-master
     ports:
-      - 5001:5001
+      - 5002:5002
     networks:
         - elastest_elastest
 

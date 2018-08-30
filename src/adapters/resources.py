@@ -115,7 +115,7 @@ class DockerBackend(DeployerBackend):  # pragma: docker NO cover
 
         m = yaml.load(content)
 
-        # should we inject the sentinel syslog logging agent?
+        # inject the sentinel syslog logging agent
         if bool(config.esm_dock_inject_logger):
             LOG.info('Injecting the Sentinel syslog logging agent')
             m = SentinelAgentInjector().inject(m, instance_id)
@@ -254,6 +254,11 @@ class DockerBackend(DeployerBackend):  # pragma: docker NO cover
         if not os.path.exists(mani_dir):
             LOG.warning('requested directory does not exist: {mani_dir}'.format(mani_dir=mani_dir))
             return
+
+        # we remove the sentinel syslog logging agent
+        if bool(config.esm_dock_inject_logger):
+            LOG.info('Removing the Sentinel syslog logging agent')
+            SentinelAgentInjector().remove(instance_id)
 
         self.options["--force"] = True
         self.options["--rmi"] = "none"
