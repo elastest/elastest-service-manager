@@ -17,29 +17,13 @@
 import time
 import requests
 import threading
-import os
+
+import config
 from adapters.log import get_logger
 from esm.util import Singleton
 
 
-
-
-LOG = get_logger(__name__,
-                 'WARN',
-                 space= os.environ.get('ESM_SENTINEL_TOPIC', 'user-1-elastest_tss'),
-                 series= os.environ.get('ESM_SENTINEL_SERIES_NAME', 'service-health-check'),
-                 sentinel=True)
-
-'''
-    *******************
-    *******************
-    **** TESTED CODE **
-    *******************
-    **** MEASURER *****
-    *******************
-    ******** ♥ ********
-    *******************
-'''
+LOG = get_logger(__name__, 'WARN', space=config.esm_hc_sen_topic, series=config.esm_hc_sen_series, sentinel=True)
 
 
 @Singleton
@@ -80,7 +64,7 @@ class Measurer(threading.Thread):  # pragma: no cover
         self.instance_id = cache['instance_id']
         self._stop_event = threading.Event()
         self.endpoint = None
-        self.max_retries = os.environ.get('ESM_SENTINEL_MAX_RETRIES', '5')
+        self.max_retries = config.esm_hc_sen_max_retries
 
     def get_endpoint(self):
         try:
@@ -90,7 +74,7 @@ class Measurer(threading.Thread):  # pragma: no cover
             for k, v in inst_info.items():
                 if 'Ip' in k:
                     endpoint = v
-                    port = os.environ.get('ESM_SENTINEL_HEALTH_CHECK_PORT', '80')
+                    port = config.esm_hc_sen_hc_port
                     endpoint = 'http://{}:{}/health'.format(endpoint, port)
             return endpoint
         except MeasurerException as e:
@@ -138,7 +122,7 @@ class Measurer(threading.Thread):  # pragma: no cover
         # valid = MeasurerUtils.validate_endpoint(self.endpoint) or True
         # valid = True
         while not self.is_stopped():
-            periodicity = os.environ.get('ESM_SENTINEL_HEALTH_CHECK_INTERVAL', 2)
+            periodicity = config.esm_hc_interval
             self.__measure_health()
             time.sleep(int(periodicity))
 

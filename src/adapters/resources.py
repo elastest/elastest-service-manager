@@ -19,21 +19,20 @@ from typing import Dict
 import yaml
 import tarfile
 import tempfile
+import time
 
 import docker
 # XXX these docker imports are internal and not supported to be used by external processes
 from compose.cli.main import TopLevelCommand
 from compose.cli.command import project_from_options
 
-# from kubernetes import client, config
 from epm_client.apis.package_api import PackageApi
 from epm_client.apis.resource_group_api import ResourceGroupApi
 
-from adapters.log import get_logger
+import config
+from adapters.log import get_logger, SentinelAgentInjector
 
 LOG = get_logger(__name__)
-
-# TODO better exception handling
 
 
 class DeployerBackend(object):
@@ -85,24 +84,19 @@ class DockerBackend(DeployerBackend):  # pragma: docker NO cover
             "--build": False,
             '--no-build': False,
             '--no-color': False,
-            # "--rmi": "none",
             "--volumes": "/private",
-            # "--follow": False,
-            # "--timestamps": False,
-            # "--tail": "all",
             "-d": True,  # currently with docker-compose 1.20.1 this is ignored! resolved by supplying --detach
             "--detach": True,
             "-q": False,  # quiet
             "--scale": [],  # don't need this but have to supply
         }
-
-        self.manifest_cache = os.environ.get('ESM_TMP_DIR', tempfile.gettempdir())
+        self.manifest_cache = config.esm_dock_tmp_dir
 
     def create(self, instance_id: str, content: str, c_type: str, **kwargs) -> None:
         """
         This creates a set of containers using docker compose.
         Note: the use of the docker compose python module is unsupported by docker inc.
-        :param content: the docker compose file as a string
+        :param content: the docker compose file as a yaml string
         :return:
         """
         if c_type != 'docker-compose':
@@ -118,21 +112,23 @@ class DockerBackend(DeployerBackend):  # pragma: docker NO cover
         else:
             LOG.info('The instance is already running with the following project: {mani_dir}'.format(mani_dir=mani_dir))
             LOG.warning('Content in this directory will be overwritten.')
-            # XXX shouldn't this raise an exception?
+
+        m = yaml.load(content)
+
+        # should we inject the sentinel syslog logging agent?
+        if bool(config.esm_dock_inject_logger):
+            LOG.info('Injecting the Sentinel syslog logging agent')
+            m = SentinelAgentInjector().inject(m, instance_id)
 
         # can supply external parameters here...
         # parameters is the name set in the OSBA spec for additional parameters supplied on provisioning
         # if none supplied, we use an empty dict
         # add optionally supplied parameters as environment variables
         parameters = kwargs.get('parameters', dict())
-
-        # if overriding service parameters
         if parameters and len(parameters) > 0:
-            # convert dict to a list
-            m = yaml.load(content)
             # if 'all' in parameters and len(parameters['all']) > 0:
             #     LOG.warning('Common AND service specific environment variables not implemented at the moment')
-                # all_env_list = self.dict_to_list(parameters['all'])
+            # all_env_list = self.dict_to_list(parameters['all'])
 
             extra_env_list = self.dict_to_list(parameters)
 
@@ -151,16 +147,15 @@ class DockerBackend(DeployerBackend):  # pragma: docker NO cover
                     LOG.info(
                         'New set of environment variables for {svc} are: \n{env}'.format(svc=k, env=v['environment']))
 
-            content = yaml.dump(m)
-
         LOG.debug('writing to: {compo}'.format(compo=mani_dir + '/docker-compose.yml'))
+        content = yaml.dump(m)
         m = open(mani_dir + '/docker-compose.yml', 'wt')
         m.write(content)
         m.close()
 
         project = project_from_options(mani_dir, self.options)
         cmd = TopLevelCommand(project)
-        if os.environ.get('ESM_DOCKER_UPDATE_IMAGES', 'NO') == 'YES':
+        if config.esm_dock_update_images == 'YES':
             LOG.info('Updating all images to the version as defined in the manifest to the latest')
             cmd.pull(self.options)  # TODO consider an updater thread that is ran over all registered manifests
         cmd.up(self.options)
@@ -262,10 +257,9 @@ class DockerBackend(DeployerBackend):  # pragma: docker NO cover
 
         self.options["--force"] = True
         self.options["--rmi"] = "none"
-        timeout = os.environ.get('ESM_DOCKER_DELETE_TIMEOUT', 20)
-        self.options['--timeout'] = timeout
+        self.options['--timeout'] = config.esm_dock_del_timeout
         LOG.info('destroying: {compo} with timeout of: {timeout}'.format(compo=mani_dir + '/docker-compose.yml',
-                                                                         timeout=timeout))
+                                                                         timeout=config.esm_dock_del_timeout))
         project = project_from_options(mani_dir, self.options)
         cmd = TopLevelCommand(project)
         cmd.down(self.options)
@@ -292,7 +286,7 @@ class EPMBackend(DeployerBackend):  # pragma: epm NO cover
         super().__init__()
         LOG.info('Adding EPMBackend')
         self.sid_to_rgid = dict()  # TODO make this persistent... better that this done in the caller of the method
-        self.api_endpoint = os.environ.get('ET_EPM_API', 'http://localhost:8180/') + 'v1'
+        self.api_endpoint = config.esm_epm_api
         LOG.info('EPM API Endpoint: ' + self.api_endpoint)
 
     def create(self, instance_id: str, content: str, c_type: str, **kwargs) -> None:

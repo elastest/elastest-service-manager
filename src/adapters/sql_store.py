@@ -12,9 +12,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-# GENERICS
+
 import json
-import os
 
 from orator import DatabaseManager, Schema
 from orator import Model
@@ -22,6 +21,7 @@ from orator.orm import belongs_to_many
 from orator.orm import belongs_to
 from orator.orm import has_many
 
+import config
 # SERVICE TYPE
 from esm.models.service_type import ServiceType
 from esm.models.dashboard_client import DashboardClient
@@ -37,16 +37,6 @@ from esm.models.plan_metadata import PlanMetadata
 from esm.models.service_instance import ServiceInstance
 
 
-'''    
-    *******************
-    *******************
-    **** TESTED CODE **
-    *******************
-    **** INSTANCE *****
-    *******************
-    ******** ♥ ********
-    *******************
-'''
 from adapters.log import get_logger
 
 LOG = get_logger(__name__)
@@ -1132,11 +1122,11 @@ class ServiceMetadataAdapter(ServiceMetadata):  # pragma: sql NO cover
 
 
 class Helper:  # pragma: sql NO cover
-    host = os.environ.get('ESM_SQL_HOST', os.environ.get('ET_EDM_MYSQL_HOST', '127.0.0.1'))
-    port = int(os.environ.get('ESM_SQL_PORT', os.environ.get('ET_EDM_MYSQL_PORT', 3306)))
-    user = os.environ.get('ESM_SQL_USER', 'root')
-    password = os.environ.get('ESM_SQL_PASSWORD', '')
-    database = os.environ.get('ESM_SQL_DBNAME', 'mysql')  # TODO make this something other than mysql!
+    host = config.esm_sql_host
+    port = config.esm_sql_port
+    user = config.esm_sql_user
+    password = config.esm_sql_password
+    database = config.esm_sql_database
 
     config = {
         'mysql': {

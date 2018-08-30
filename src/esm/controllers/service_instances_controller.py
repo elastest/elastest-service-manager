@@ -12,9 +12,10 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import os
+
 import connexion
 
+import config
 from adapters.generic import AsychExe
 from adapters.store import STORE
 from adapters.resources import RM
@@ -72,7 +73,7 @@ def create_service_instance(instance_id, service, accept_incomplete=False):
         else:
             # we have the result of the operation in entity, good/bad status in context
             entity, context = CreateInstance(entity, context).start()
-            if os.environ.get('ESM_MEASURE_INSTANCES', 'NO') == 'YES':
+            if config.esm_measure_insts == 'YES':
                 entity, context = MeasureInstance(entity, context).start()
             # Response is ServiceResponse not a service instance
             return entity['entity_res'], context['status'][1]
@@ -211,8 +212,6 @@ def service_bind(instance_id, binding_id, binding):
     else:
         # if AAA is enabled and the service is bindable:
         #    create project, user and role bindings
-        # if os.environ.get('ET_AAA_ESM_KEYSTONE_BASE_URL', '') != '':
-
         entity = {'entity_id': instance_id,
                   'entity_req': {'binding_id': binding_id, 'binding': binding},
                   'entity_res': None}
@@ -248,7 +247,6 @@ def service_unbind(instance_id, binding_id, service_id, plan_id):
     else:
         # if AAA is enabled and the service is bindable:
         #    create project, user and role bindings
-        # if os.environ.get('ET_AAA_ESM_KEYSTONE_BASE_URL', '') != '':
         entity = {'entity_id': instance_id,
                   'entity_req': {'binding_id': binding_id, 'service_id': service_id, 'plan_id': plan_id},
                   'entity_res': None}

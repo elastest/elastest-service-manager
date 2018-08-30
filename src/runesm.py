@@ -13,37 +13,38 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import signal
-
 import connexion
 import flask
 import os
+import signal
+
 from healthcheck import HealthCheck, EnvironmentDump
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 from tornado.wsgi import WSGIContainer
 
+import config
+from adapters.log import get_logger
 from adapters.store import STORE
 from adapters.resources import RM
-
 from esm.encoder import JSONEncoder
 
-from adapters.log import get_logger
 
 LOG = get_logger(__name__)
+
 
 # this adds keystone auth to access the ESM
 def add_mware(app):
     # See: https://docs.openstack.org/keystonemiddleware/latest/middlewarearchitecture.html
-    if os.environ.get('ET_AAA_ESM_KEYSTONE_BASE_URL', '') != '':
+    if config.auth_base_url != '':
         from keystonemiddleware import auth_token
 
-        base_url = os.environ.get('ET_AAA_ESM_KEYSTONE_BASE_URL', '')
-        admin_port = os.environ.get('ET_AAA_ESM_KEYSTONE_ADMIN_PORT', 35357)
-        user_port = os.environ.get('ET_AAA_ESM_KEYSTONE_USER_PORT', 5000)
-        username = os.environ.get('ET_AAA_ESM_KEYSTONE_USERNAME', '')
-        passwd = os.environ.get('ET_AAA_ESM_KEYSTONE_PASSWD', '')
-        tenant = os.environ.get('ET_AAA_ESM_KEYSTONE_TENANT', '')
+        base_url = config.auth_base_url
+        admin_port = config.auth_admin_port
+        user_port = config.auth_user_port
+        username = config.auth_username
+        passwd = config.auth_passwd
+        tenant = config.auth_tenant
 
         if '' in [username, passwd, tenant]:
             raise RuntimeError('Keystone admin username, password or tenant name is not set in the environment.')
@@ -119,24 +120,21 @@ def shutdown_handler(signum=None, frame=None):
 
 
 if __name__ == '__main__':
-    esm_app = create_api()
-    check_app = add_check_api()
-
-    esm_ip = os.environ.get('ESM_IP', '0.0.0.0')
-    esm_port = os.environ.get('ESM_PORT', 8080)
-    esm_server = HTTPServer(WSGIContainer(esm_app))
+    esm_ip = config.esm_bind_address
+    esm_port = config.esm_bind_port
+    esm_server = HTTPServer(WSGIContainer(create_api()))
     esm_server.listen(address=esm_ip, port=esm_port)
     LOG.info('ESM available at http://{IP}:{PORT}'.format(IP=esm_ip, PORT=esm_port))
 
-    esm_check_ip = os.environ.get('ESM_CHECK_IP', '0.0.0.0')
-    check_port = os.environ.get('ESM_CHECK_PORT', 5001)
-    check_server = HTTPServer(WSGIContainer(check_app))
+    esm_check_ip = config.esm_check_ip
+    check_port = config.esm_check_port
+    check_server = HTTPServer(WSGIContainer(add_check_api()))
     check_server.listen(address=esm_check_ip, port=check_port)
     LOG.info('ESM Health available at http://{IP}:{PORT}'.format(IP=esm_check_ip, PORT=check_port))
 
     for sig in [signal.SIGTERM, signal.SIGINT, signal.SIGHUP, signal.SIGQUIT]:
         signal.signal(sig, shutdown_handler)
 
+    LOG.info(config.print_env_vars())
     LOG.info('Press CTRL+C to quit.')
     IOLoop.instance().start()
-
