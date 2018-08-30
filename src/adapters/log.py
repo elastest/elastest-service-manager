@@ -222,7 +222,7 @@ class SentinelAgentInjector: # pragma: no cover
             syslog_agent = self.client.containers.get(syslog_agent.id)
             sysla_ip = syslog_agent.attrs['NetworkSettings']['Networks'][net.name]['IPAddress']
             sleep(2)
-        print("Syslog agent IP Address{}".format(sysla_ip))
+        print("Syslog agent IP Address {}".format(sysla_ip))
         return syslog_agent
 
     def _update_deployment(self, m, net, syslog_agent):
