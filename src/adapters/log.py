@@ -199,20 +199,24 @@ class SentinelAgentInjector: # pragma: no cover
         if config.sen_kafka_ep == "":
             raise Exception('sentinel syslog agent params are not configured')
 
-        syslog_agent = self.client.containers.run(image=config.syslog_agent_sentinel_image, detach=True,
-                                             labels={'creator': 'esm'}, network=net.name,
-                                             environment=[
-                                                 "SENTINEL_SYSLOG_SPACE_NAME={sn}".format(sn=svc_id),
-                                                 "SENTINEL_SYSLOG_TOPIC_NAME={st}".format(st=topic_name),
-                                                 "SENTINEL_AVAILABLE={ssla_enable}".format(ssla_enable=config.syslog_agent_sentinel_available),
-                                                 "SENTINEL_API={sa}".format(sa=config.syslog_agent_sentinel_api_ep),
-                                                 "SENTINEL_KAFKA_ENDPOINT={kep}".format(kep=config.sen_kafka_ep),
-                                                 "SENTINEL_SYSLOG_USERNAME={ssu}".format(ssu=config.syslog_agent_username),
-                                                 "SENTINEL_SYSLOG_USER_API_KEY={ssua}".format(ssua=config.syslog_agent_key),
-                                                 "SENTINEL_SYSLOG_BIND_ADDR={ssba}".format(ssba=config.syslog_agent_bind_address),
-                                                 "SENTINEL_SYSLOG_BIND_PORT={ssbp}".format(ssbp=config.syslog_agent_bind_port),
-                                             ]
-                                             )
+        syslog_agent = self.client.containers.run(
+            image=config.syslog_agent_sentinel_image, detach=True,
+            labels={
+                'service_id': svc_id
+            },
+            network=net.name,
+            environment=[
+                 "SENTINEL_SYSLOG_SPACE_NAME={sn}".format(sn=svc_id),
+                 "SENTINEL_SYSLOG_TOPIC_NAME={st}".format(st=topic_name),
+                 "SENTINEL_AVAILABLE={ssla_enable}".format(ssla_enable=config.syslog_agent_sentinel_available),
+                 "SENTINEL_API={sa}".format(sa=config.syslog_agent_sentinel_api_ep),
+                 "SENTINEL_KAFKA_ENDPOINT={kep}".format(kep=config.sen_kafka_ep),
+                 "SENTINEL_SYSLOG_USERNAME={ssu}".format(ssu=config.syslog_agent_username),
+                 "SENTINEL_SYSLOG_USER_API_KEY={ssua}".format(ssua=config.syslog_agent_key),
+                 "SENTINEL_SYSLOG_BIND_ADDR={ssba}".format(ssba=config.syslog_agent_bind_address),
+                 "SENTINEL_SYSLOG_BIND_PORT={ssbp}".format(ssbp=config.syslog_agent_bind_port),
+            ]
+        )
         sysla_ip = ''
         while sysla_ip == '':  # wait - there is a delay in IP address allocation
             syslog_agent = self.client.containers.get(syslog_agent.id)
@@ -242,10 +246,19 @@ class SentinelAgentInjector: # pragma: no cover
             }
 
         print(m)
-        print('\n at this stage we\'ll call docker-compose up')
         return m
 
     def inject(self, m_yaml, svc_id):
         net = self._setup_network(m_yaml, svc_id)
         syslog_agent = self._setup_logger(net, svc_id)
         return self._update_deployment(m_yaml, net, syslog_agent)
+
+    def remove(self, srv_id):
+        for c in self.client.containers.list(
+                all=True,
+                filters={
+                    "label": "service_id={}".format(srv_id)
+                }
+        ):
+            print('Removing the sentinel syslog agent {} for service id {}'.format(c.name, srv_id))
+            c.remove(force=True)
