@@ -26,6 +26,8 @@ services:
       - ET_EMP_INFLUXDB_API=http://emp-influxdb:8086/
       - ET_EMP_INFLUXDB_HOST=emp-influxdb
       - ET_EMP_INFLUXDB_GRAPHITE_PORT=2003
+      - ET_SHARED_FOLDER=${ET_DATA_IN_CONTAINER}
+      - ET_DATA_IN_HOST=${ET_DATA_IN_HOST}
     expose:
       - 37005
     ports:
