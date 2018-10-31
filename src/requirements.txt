@@ -2,7 +2,7 @@ connexion
 python_dateutil
 setuptools
 pymongo
-docker-compose
+docker-compose==1.22.0
 docker
 pykube
 healthcheck
