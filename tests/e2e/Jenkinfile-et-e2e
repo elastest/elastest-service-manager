@@ -42,8 +42,7 @@ elastest_lib.pipeline({
                 esmIP = esmIP.substring(1, esmIP.length()-1)
                 echo "ESM container IP=${esmIP}"
                 sleep 20
-                sh "docker build -f tests/e2e/Dockerfile -t esm_e2e:latest ."
-                sh "docker run -t --name esm_e2e --network e2e_elastest_elastest -e ESM_EP_IP=${esmIP} esm_e2e:latest"
+                sh "docker run -t --name esm_e2e --network e2e_elastest_elastest -e ESM_EP_IP=${esmIP} dizz/esm_e2e:latest"
             }
             stage ("ESM E2E cleanup"){
                 // step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
