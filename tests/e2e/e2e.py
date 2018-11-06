@@ -29,24 +29,16 @@ def create_svc(name, svc_id, plan_id, delete=False):
     url = host + "/v2/service_instances/{name}".format(name=name)
     querystring = {"accept_incomplete": "false"}
 
-    # these are current required for the EUS and ESS
-    parameters = {
-        "ET_DATA_IN_HOST": "/root/.elastest",
-        "ET_SHARED_FOLDER": "/data",
-        "ET_FILES_PATH_IN_HOST": "/root/.elastest/eus/"
-    }
-
     payload = {
         'organization_guid': 'org',
         'plan_id': plan_id,
         'service_id': svc_id,
-        'space_guid': 'space',
-        'parameters': parameters
+        'space_guid': 'space'
     }
 
     response = requests.request("PUT", url, data=json.dumps(payload), headers=headers, params=querystring)
     print(response.text)
-    
+
     if delete:
         url = host + "/v2/service_instances/{name}".format(name=name)
         querystring = {

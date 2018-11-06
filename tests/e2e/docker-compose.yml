@@ -31,6 +31,8 @@ services:
       - ESM_SQL_PASSWORD=elastest
       - ESM_SQL_DBNAME=ESM
       - ESM_IN_MEM=NO
+      - ET_SHARED_FOLDER=/tmp
+      - ET_DATA_IN_HOST=/tmp
 
     expose:
       - 44551
