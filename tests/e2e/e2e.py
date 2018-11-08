@@ -37,6 +37,8 @@ def create_svc(name, svc_id, plan_id, delete=False):
     }
 
     response = requests.request("PUT", url, data=json.dumps(payload), headers=headers, params=querystring)
+    # TODO: we should continue to poll the service via GET until the status of the service is 'ready'
+    
     print(response.text)
 
     if delete:
@@ -58,6 +60,7 @@ def report_svc_instances():
 
 
 def create_svc_instances(delete):
+    # TODO: this is repetitive, should merge the IDs into the services data structure
     create_svc(name="test_eus_service_instance",
                svc_id="29216b91-497c-43b7-a5c4-6613f13fa0e9",
                plan_id="b4cfc681-0e28-41f0-b88c-dde69169a256",
