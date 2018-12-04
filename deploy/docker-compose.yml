@@ -34,6 +34,8 @@ services:
       - "37005:37005"
     networks:
       - elastest
+    labels:
+      - io.elastest.type=core
 networks:
     elastest:
       driver: bridge
