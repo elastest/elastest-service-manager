@@ -5,6 +5,15 @@ node('et_in_et'){
             mycontainer.pull()
             mycontainer.inside("-u jenkins -v /var/run/docker.sock:/var/run/docker.sock:rw -v /dev/shm:/dev/shm")  {
                 git 'https://github.com/elastest/elastest-service-manager'
+                
+                stage ("Pre tests")
+                    try {
+                        sh 'env'
+                        sh 'pwd'
+                        sh 'pip install --user xmlrunner'
+                        sh 'pip3 install --user xmlrunner'
+                    } catch(e) {
+                    echo 'Err: ' + e.toString()
 
                 stage ("ESM Service"){
 
