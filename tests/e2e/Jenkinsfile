@@ -8,12 +8,13 @@ node('et_in_et'){
                 
                 stage ("Pre tests")
                     try {
-                        sh 'env'
-                        sh 'pwd'
-                        sh 'pip install --user xmlrunner'
-                        sh 'pip3 install --user xmlrunner'
-                    } catch(e) {
-                    echo 'Err: ' + e.toString()
+                            sh 'env'
+                            sh 'pwd'
+                            sh 'pip install --user xmlrunner'
+                            sh 'pip3 install --user xmlrunner'
+                        } catch(e) {
+                        echo 'Err: ' + e.toString()
+                        }
 
                 stage ("ESM Service"){
 
