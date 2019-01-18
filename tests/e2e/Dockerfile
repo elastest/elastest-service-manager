@@ -1,4 +1,5 @@
-FROM gliderlabs/alpine:latest
+# FROM gliderlabs/alpine:latest
+FROM python:3.4.9-alpine3.8
 
 LABEL maintainer="elastest-users@googlegroups.com"
 LABEL description="Executes a simple ESM E2E test"
