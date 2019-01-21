@@ -14,4 +14,4 @@ RUN apk --update add python3 py3-pip openssl ca-certificates git \
     && pip3 install -r /app/requirements.txt \
     && pip3 install requests
 
-CMD /usr/bin/python3 /app/e2e.py
+CMD python3 /app/e2e.py
