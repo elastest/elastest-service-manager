@@ -11,7 +11,6 @@ COPY . /app
 RUN apk --update add --virtual build-deps python3-dev build-base linux-headers  libffi-dev openssl-dev
 RUN apk --update add python3 py3-pip openssl ca-certificates git \
     && pip3 install --upgrade setuptools pip \
-    && pip3 install -r /app/requirements.txt \
-    && pip3 install requests
+    && pip3 install -r /app/requirements.txt
 
 CMD python3 /app/e2e.py
