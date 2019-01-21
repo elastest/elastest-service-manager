@@ -9,6 +9,9 @@ node('et_in_et'){
                 stage ("Pre tests")
                     try {
                             sh 'env'
+                            echo 'Verfying ESM Endpoint Variables'
+                            echo $ESM_EP_IP
+                            echo $ESM_IP 
                             sh 'pwd'
                             sh 'pip install --user xmlrunner'
                             sh 'pip3 install --user xmlrunner'
