@@ -35,6 +35,7 @@ elastest_lib.pipeline({
                 sh "docker-compose -f tests/e2e/docker-compose.yml up -d"
             }
             stage ("ESM E2E Test"){
+                sh "docker ps"
                 esmIP = sh (
                      script: 'docker inspect --format=\\"{{.NetworkSettings.Networks.e2e_elastest_elastest.IPAddress}}\\" esm',
                      returnStdout: true
