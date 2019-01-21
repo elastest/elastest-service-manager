@@ -34,6 +34,11 @@ elastest_lib.pipeline({
                 echo ("Starting ESM service...")
                 sh "docker-compose -f tests/e2e/docker-compose.yml up -d"
             }
+            stage ("wait_prior_starting_smoke_testing") {
+                def time = 20
+                echo "Waiting 20 seconds for deployment to complete prior starting smoke testing"
+                sleep time.toInteger() // seconds
+            }
             stage ("ESM E2E Test"){
                 sh "docker ps"
                 esmIP = sh (
