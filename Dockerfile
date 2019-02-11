@@ -24,4 +24,4 @@ ENV ESM_CHECK_PORT 5000
 
 EXPOSE 8080 5000
 
-CMD ["usr/bin/python3", "/app/runesm.py"]
+CMD ["python3", "/app/runesm.py"]
