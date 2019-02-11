@@ -25,14 +25,14 @@ node('docker'){
                 sh "docker-compose -f tests/docker/docker-compose-tester-emp.yml down -v"
                 step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
             }
-            stage ("ESM Tests: Core, AAA(keystone)"){
-                echo ("Starting unit and integration tests for core & AAA(keystone) from the tester container...")
-                withCredentials([string(credentialsId: 'CODECOV_TOKEN', variable: 'CODECOV_TOKEN')]) {
-                    sh "docker-compose -f tests/docker/docker-compose-tester-aaa.yml up --exit-code-from esm"
-                }
-                sh "docker-compose -f tests/docker/docker-compose-tester-aaa.yml down -v"
-                step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
-            }
+            //stage ("ESM Tests: Core, AAA(keystone)"){
+            //    echo ("Starting unit and integration tests for core & AAA(keystone) from the tester container...")
+            //    withCredentials([string(credentialsId: 'CODECOV_TOKEN', variable: 'CODECOV_TOKEN')]) {
+            //        sh "docker-compose -f tests/docker/docker-compose-tester-aaa.yml up --exit-code-from esm"
+            //    }
+            //    sh "docker-compose -f tests/docker/docker-compose-tester-aaa.yml down -v"
+            //    step([$class: 'JUnitResultArchiver', testResults: '**/nosetests.xml'])
+            //}
             stage ("ESM Tests: MySQL"){
                 echo ("Starting unit and integration tests for core & MySQL from the tester container...")
                 withCredentials([string(credentialsId: 'CODECOV_TOKEN', variable: 'CODECOV_TOKEN')]) {
