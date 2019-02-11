@@ -102,28 +102,34 @@ class SQLStore(Store):  # pragma: no cover
                 port=db_helper.port,
                 user=db_helper.user,
                 password=db_helper.password,
-                db=db_helper.database,
                 charset='utf8mb4',
                 cursorclass=pymysql.cursors.DictCursor
             )
             return connection
+        # except BaseException as e:
+        #     if "Unknown database" in str(e):
+        #         conn = pymysql.connect(host='localhost', port=3306, user='root', passwd='')
+        #         return None
         except pymysql.err.OperationalError as e:
-            print('* Error connecting to DB: ', e)
-            return None
+            # else:
+                print('* Error connecting to DB: ', e)
+                return None
 
     @staticmethod
     def set_up(wait_time=10):
         connection = SQLStore.get_connection()
         count = 3
         while not connection and count:
-            # print('Retrying to connect to Database \'{}\'...'.format(Helper.database))
+            LOG.debug('Retrying to connect to Database \'{}\'...'.format(Helper.database))
             count = count - 1
             time.sleep(wait_time)
             connection = SQLStore.get_connection()
 
         if connection:
+            # Create DB
+            connection.cursor().execute('CREATE DATABASE IF NOT EXISTS {}'.format(Helper.database))
             LOG.debug('Successfully connected to Database \'{}\'...'.format(Helper.database))
-            connection = SQLStore.get_connection()
+            # Create tables
             PlanAdapter.create_table()
             ServiceTypeAdapter.create_table()
             PlanServiceTypeAdapter.create_table()

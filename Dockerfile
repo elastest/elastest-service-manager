@@ -1,5 +1,5 @@
-# FROM gliderlabs/alpine:latest
-FROM python:3.4.9-alpine3.8
+FROM gliderlabs/alpine:latest
+#FROM python:3.4.9-alpine3.8
 
 LABEL maintainer="elastest-users@googlegroups.com"
 LABEL description="Provides the service manager docker image."
@@ -24,4 +24,4 @@ ENV ESM_CHECK_PORT 5000
 
 EXPOSE 8080 5000
 
-CMD ["/usr/bin/python3", "/app/runesm.py"]
+CMD ["usr/bin/python3", "/app/runesm.py"]
