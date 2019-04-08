@@ -24,4 +24,9 @@ ENV ESM_CHECK_PORT 5000
 
 EXPOSE 8080 5000
 
+COPY ./tests/kubernetes/kube_config /root/.kube/config
+COPY ./tests/kubernetes/kube_ca.crt /root/.kube/ca.crt
+COPY ./tests/kubernetes/kube_client.crt /root/.kube/client.crt
+COPY ./tests/kubernetes/kube_client.key /root/.kube/client.key
+COPY ./tests/kubernetes/nginx-deployment.yaml .
 CMD ["python3", "/app/runesm.py"]
