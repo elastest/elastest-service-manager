@@ -117,6 +117,7 @@ class Measurer(threading.Thread):  # pragma: no cover
         super().run()
         LOG.warning('{}#Measurer created'.format(self.instance_id))
         self.endpoint = self.__poll_endpoint()
+        LOG.debug("running measurer, endpoint found {}".format(self.endpoint))
 
         # VALIDATE ENDPOINT
         # valid = MeasurerUtils.validate_endpoint(self.endpoint) or True

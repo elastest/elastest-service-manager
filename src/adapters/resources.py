@@ -171,6 +171,7 @@ class DockerBackend(DeployerBackend):  # pragma: docker NO cover
 
     def info(self, instance_id: str, **kwargs) -> Dict[str, str]:
         mani_dir = self.manifest_cache + '/' + instance_id
+        LOG.debug('showing info for instance id {}, with DOCKER_COMPOSE backend...'.format(instance_id))
 
         if not os.path.exists(mani_dir):
             LOG.warning('requested directory does not exist: {mani_dir}'.format(mani_dir=mani_dir))
@@ -449,8 +450,20 @@ class KubernetesBackend(DeployerBackend):
     def __init__(self) -> None:
         super().__init__()
         LOG.info('Adding Kubernetes Backend')
-        kubernetes.config.load_kube_config()
+        # kubernetes.config.load_kube_config()
+
+        #ApiToken = 'eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJ6aGF3LWZyYW5jbyIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJzZXJ2aWNlLXpoYXctZnJhbmNvLXRva2VuLTV3Z2JjIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6InNlcnZpY2Utemhhdy1mcmFuY28iLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiJlNmRkZmZmZi01NDVkLTExZTktOTA1Yy1mYTE2M2U2MjIzOTkiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6emhhdy1mcmFuY286c2VydmljZS16aGF3LWZyYW5jbyJ9.TKZClqaLPV1sVDScEnbZrmuHmQj_CJkui6HmwaVXVpR8j5J8nGzSe8e1gfqsuYq9OkIMmw4zSx-68oprjXKsro7X0mZCjhkb2EtsGzkXY1ofCIAThIc5PQ4Hh6oWD17WRdeHk0v45xcPM8yuXI9aeiNXrzvQW_W9miMjnzxreAPAuXWuFp4bE8Zvfr5qHmmfVl5iN2aBYPzWYGUXqTrbtai_jniyoqcr4A_Mz4Lg6mrbzP1JVA5LVHJ4sSZ9KcdJepF6S_qZEwxez6fAhZjIUQmKnHWU1914MhwJ-r4X528s9KhKnqKhrv7-Mzc3l6F3XeQat5noI5q_CL826Dv79g'
+        ApiToken = 'eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImFwaS1zZXJ2aWNlLWFjY291bnQtdG9rZW4tNGM2cHgiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiYXBpLXNlcnZpY2UtYWNjb3VudCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6ImQ2ZThlOTlmLTdhNzktMTFlOS1hYTVjLTA4MDAyNzEzZDQ5YyIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDpkZWZhdWx0OmFwaS1zZXJ2aWNlLWFjY291bnQifQ.FEN3Qll27nP_8UVSVITsZJ1S4Xx7xMQpFDO5daxAsZSKtOQZZ4dgGUbQKIm0SSg5bTPPZJ1g00LBOxqom2sEBnsLydcMFgpV4xmrnnWK63XJTmjFfvgX-sS4musbXpXYzcC-gzVKt1kRkUgsBIcoQY5lfxDaHkynq1QddC37HvSFdIXnNenhXLjQDUSSYlCLzlAMr94ON2uOjQOQ53yBvbNAwTXNnUAE_RSA04eGFTWGXm1dgpkTagJqUhqZ7YPjOHF3WkvCk8nPABs0vBPV19qOZikalto5CqGeYJBt8-NR4CshDx2sglDrlz5Q1ei8uTJ4zTDLdIPeDaznK1YAAA'
+        configuration = kubernetes.client.Configuration()
+        configuration.host = 'https://192.168.99.101:8443'
+        # configuration.host = 'https://160.85.252.91:6443' # GCLOUD endpoint
+        configuration.verify_ssl = False
+        configuration.debug = True
+        configuration.api_key = {"authorization": "Bearer " + ApiToken}
+        kubernetes.client.Configuration.set_default(configuration)
+
         self.core_api_instance = kubernetes.client.CoreV1Api()  # services api
+        LOG.info("IMPORTED KUBERENTES INFO")
         self.extensions_api_instance = kubernetes.client.ExtensionsV1beta1Api()  # deployments api
         self.manifest_cache = config.esm_dock_tmp_dir
 
@@ -458,7 +471,9 @@ class KubernetesBackend(DeployerBackend):
         # for i in range(len(instance_id)):
         #     if instance_id[i] == "_":
         #         instance_id[i] = "-"
-        new_instance_id = ''.join([c if c != "_" else "-" for c in instance_id])
+
+        # k8s regex used for validation is '[a-z]([-a-z0-9]*[a-z0-9])?'); added an 'a'
+        new_instance_id = 'a' + ''.join([c if c != "_" else "-" for c in instance_id])
         LOG.warning("Instance ID name had to be modified to: {}".format(new_instance_id))
         return new_instance_id
 
@@ -469,12 +484,12 @@ class KubernetesBackend(DeployerBackend):
         m.write(content)
         m.close()
 
-    def _read_deployment(self, instance_id: str, namespace: str = "default"):
-        name = '{}-deployment'.format(self._translate_to_valid_name(instance_id))
+    def _read_deployment(self, instance_id: str, sub_index: int, namespace: str = "default"):
+        name = '{}{}-deployment'.format(self._translate_to_valid_name(instance_id), sub_index)
         return self.extensions_api_instance.read_namespaced_deployment(name=name, namespace=namespace)
 
-    def _read_service(self, instance_id: str, namespace: str = "default"):
-        name = '{}-service'.format(self._translate_to_valid_name(instance_id))
+    def _read_service(self, instance_id: str, sub_index: int, namespace: str = "default"):
+        name = '{}{}-service'.format(self._translate_to_valid_name(instance_id), sub_index)
         return self.core_api_instance.read_namespaced_service(name=name, namespace=namespace)
 
     def _create_deployment(self, body, namespace: str = "default"):
@@ -483,8 +498,8 @@ class KubernetesBackend(DeployerBackend):
     def _create_service(self, body, namespace: str = "default"):
         return self.core_api_instance.create_namespaced_service(body=body, namespace=namespace)
 
-    def _delete_deployment(self, instance_id: str, namespace: str = "default"):
-        name = '{}-deployment'.format(self._translate_to_valid_name(instance_id))
+    def _delete_deployment(self, instance_id: str, sub_index: int,namespace: str = "default"):
+        name = '{}{}-deployment'.format(self._translate_to_valid_name(instance_id), sub_index)
         return self.extensions_api_instance.delete_namespaced_deployment(
                 name=name,
                 namespace=namespace,
@@ -492,8 +507,8 @@ class KubernetesBackend(DeployerBackend):
                     propagation_policy='Foreground',
                     grace_period_seconds=5))
 
-    def _delete_service(self, instance_id: str, namespace: str = "default"):
-        name = '{}-service'.format(self._translate_to_valid_name(instance_id))
+    def _delete_service(self, instance_id: str, sub_index: int, namespace: str = "default"):
+        name = '{}{}-service'.format(self._translate_to_valid_name(instance_id), sub_index)
         return self.core_api_instance.delete_namespaced_service(
             name=name,
             namespace=namespace,
@@ -515,7 +530,7 @@ class KubernetesBackend(DeployerBackend):
     def _update_names(self, manifest, instance_id):
         for i in range(len(manifest['items'])):
             item = manifest['items'][i]
-            item['metadata']['name'] = '{}-{}'.format(self._translate_to_valid_name(instance_id), item['kind'].lower())
+            item['metadata']['name'] = '{}{}-{}'.format(self._translate_to_valid_name(instance_id), i, item['kind'].lower())
             # TODO verify about optionally supplied parameters as environment variables
         return manifest
 
@@ -544,6 +559,7 @@ class KubernetesBackend(DeployerBackend):
             # deploy contents
             with open(mani_path) as f:
                 manifest = yaml.safe_load(f)
+
                 self._deploy(manifest)
 
         else:
@@ -557,11 +573,12 @@ class KubernetesBackend(DeployerBackend):
         :return: update info with *status* information based on the information in the response
         '''
         # deployment-specific information
+        LOG.debug("requesting info... ready replicas: {}".format(api_response.status.ready_replicas))
         if api_response.status.ready_replicas is not None:
             if api_response.status.ready_replicas > 0:
                 info['srv_inst.state.state'] = 'succeeded'
                 info[
-                    'srv_inst.state.description'] = 'The service instance has been created successfully'
+                    'srv_inst.state.description'] = 'The kubernetes service instance has been created successfully'
             else:
                 info['srv_inst.state.state'] = 'failed'
                 info['srv_inst.state.description'] = \
@@ -569,7 +586,7 @@ class KubernetesBackend(DeployerBackend):
                         error=str(api_response.status))
         else:
             info['srv_inst.state.state'] = 'in progress'
-            info['srv_inst.state.description'] = 'The service instance is being created.'
+            info['srv_inst.state.description'] = 'The kubernetes service instance is being created.'
 
         return info
 
@@ -592,7 +609,7 @@ class KubernetesBackend(DeployerBackend):
         # super().info(instance_id)
         mani_dir = self.manifest_cache + '/' + instance_id
         mani_path = mani_dir + '/manifest.yaml'
-
+        LOG.debug('showing info for instance id {}, with Kubernetes backend...'.format(instance_id))
         if not os.path.exists(mani_dir):
             LOG.warning('requested directory does not exist: {mani_dir}'.format(mani_dir=mani_dir))
             return {}
@@ -607,7 +624,7 @@ class KubernetesBackend(DeployerBackend):
                 for i in range(len(manifest['items'])):
                     item = manifest['items'][i]
                     if item['kind'].lower() == 'service':
-                        api_response = self._read_service(instance_id)
+                        api_response = self._read_service(instance_id, i)
                         LOG.warning('reading service information')
                         LOG.warning(api_response)
                         # get the IP from the service
@@ -618,7 +635,7 @@ class KubernetesBackend(DeployerBackend):
                             info[instance_id + '_Ip'] = 'pending'
 
                     elif item['kind'].lower() == 'deployment':
-                        api_response = self._read_deployment(instance_id)
+                        api_response = self._read_deployment(instance_id, i)
                         info = self._get_instance_status(info, api_response)
                         info = self._get_container_data(info, api_response)
 
@@ -647,11 +664,11 @@ class KubernetesBackend(DeployerBackend):
             for i in range(len(manifest['items'])):
                 item = manifest['items'][i]
                 if item['kind'].lower() == 'service':
-                    api_response = self._delete_service(instance_id)
+                    api_response = self._delete_service(instance_id, i)
                     LOG.warning('Kubernetes Service deleted.')
 
                 elif item['kind'].lower() == 'deployment':
-                    api_response = self._delete_deployment(instance_id)
+                    api_response = self._delete_deployment(instance_id, i)
                     LOG.warning('Kubernetes Deployment deleted')
 
 

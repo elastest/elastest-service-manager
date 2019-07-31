@@ -28,6 +28,7 @@ services:
       - ET_EMP_INFLUXDB_GRAPHITE_PORT=2003
       - ET_SHARED_FOLDER=${ET_DATA_IN_CONTAINER}
       - ET_DATA_IN_HOST=${ET_DATA_IN_HOST}
+      - ESM_MEASURE_INSTANCES=NO
     expose:
       - 37005
     ports:
@@ -36,6 +37,31 @@ services:
       - elastest
     labels:
       - io.elastest.type=core
+
+  esm_ui:
+    depends_on:
+      - esm
+    image: ademord/esmweb:latest
+    environment:
+      - DEBUG=true
+      - SECRET_KEY=not secure only use for development
+      - ET_ESM_API=http://esm:37005
+    networks:
+      - elastest
+    ports:
+      - 8000:8000
+    expose:
+      - 8000
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    hostname: mongo
+    ports:
+      - "27017"
+    networks:
+      - elastest
+
 networks:
     elastest:
       driver: bridge

@@ -1,7 +1,7 @@
 ; this tox file is used to run tests locally
 
 [tox]
-envlist = py37
+envlist = py36
 setupdir = src/
 
 [testenv]

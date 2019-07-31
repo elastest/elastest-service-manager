@@ -37,10 +37,10 @@ from adapters.sql_store import LastOperationAdapter
 from adapters.sql_store import ManifestSQL
 
 
-
 # TODO implement exception handling
 
 from adapters.log import get_logger
+import yaml
 
 LOG = get_logger(__name__)
 
@@ -611,18 +611,34 @@ class InMemoryStore(Store):  # pragma: no cover
                 id=service_id, content=service_to_delete[0].to_str()))
             self.ESM_DB.services.remove(service_to_delete[0])
 
+    def valid_manifest_type(self, content, type):
+        mani = yaml.load(content)
+        if type == 'docker-compose':
+            return 'version' in mani
+        elif type == 'kubernetes':
+            return 'apiVersion' in mani
+        else:
+            return True # letting all other manifests pass
+
     def add_manifest(self, manifest: Manifest) -> tuple:
 
         m = [m for m in self.ESM_DB.manifests if m.id == manifest.id]
 
         if len(m) == 0:
             LOG.info('Manifest to be added with:\n{content}'.format(content=manifest.to_str()))
+
+            if not self.valid_manifest_type(manifest.manifest_content, manifest.manifest_type):
+                LOG.error("Incompatible manifest type and content.")
+                return 'the manifest has an incompatible type {}'.format(manifest.manifest_type), 400
+
             # self.ESM_DB.manifests.remove(m[0])
             self.ESM_DB.manifests.append(manifest)
             return 'ok', 200
         else:
             print('client side error - 4XX')
-            return 'the manifest already exists in the catalog', 409
+            error_msg = "The Manifest already exists in the catalog."
+            LOG.warning(error_msg)
+            return error_msg, 409
             # self.ESM_DB.manifests.append(manifest)
             # LOG.info('Adding a new service type to the catalog. '
             #          'Content supplied: {content}'.format(content=manifest.to_str()))
