@@ -28,10 +28,15 @@ def _deserialize(data, klass):
         return deserialize_date(data)
     elif klass == datetime:
         return deserialize_datetime(data)
-    elif type(klass) == GenericMeta:
-        if klass.__extra__ == list:
+    # elif type(klass) == GenericMeta:
+    #     if klass.__extra__ == list:
+    #         return _deserialize_list(data, klass.__args__[0])
+    #     if klass.__extra__ == dict:
+    #         return _deserialize_dict(data, klass.__args__[1])
+    elif hasattr(klass, '__origin__'):
+        if klass.__origin__ == list:
             return _deserialize_list(data, klass.__args__[0])
-        if klass.__extra__ == dict:
+        if klass.__origin__ == dict:
             return _deserialize_dict(data, klass.__args__[1])
     else:
         return deserialize_model(data, klass)

@@ -1,4 +1,5 @@
-FROM gliderlabs/alpine:latest
+# FROM gliderlabs/alpine:3.7
+FROM python:3.7-alpine3.10
 
 LABEL maintainer="elastest-users@googlegroups.com"
 LABEL description="Provides the test service manager docker image."

@@ -7,13 +7,12 @@ docker
 pykube
 healthcheck
 tornado
-pykafka
 git+https://github.com/mpauls/epm-client-python.git
 orator
 pymysql
 keystonemiddleware
 python-memcached
 jsonpickle
-kafka
+kafka-python
 requests
 kubernetes

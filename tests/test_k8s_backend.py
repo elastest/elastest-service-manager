@@ -29,7 +29,7 @@ class TestK8SBackend(TestCase):
         self.k8s = KubernetesBackend()
         path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         with open(path+"/manifests/k8s_basic.yml", "r") as mani:
-            content = mani.read().replace("\n", "</br>")
+            # content = mani.read().replace("\n", " </br>")
             self.k8s.create(instance_id=INST_ID, content=content, c_type="kubernetes")
 
     def tearDown(self):

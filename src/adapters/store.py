@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Copyright © 2017-2019 Zuercher Hochschule fuer Angewandte Wissenschaften.
 # All Rights Reserved.
 #

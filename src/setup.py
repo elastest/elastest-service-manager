@@ -15,6 +15,7 @@
 #    under the License.
 
 from setuptools import setup, find_packages
+import os
 
 NAME = "esm"
 VERSION = "0.9.0"
@@ -28,6 +29,7 @@ VERSION = "0.9.0"
 
 
 # XXX update if requirements.txt content is changed
+
 REQUIRES = [
     'connexion',
     'python_dateutil',
@@ -38,16 +40,27 @@ REQUIRES = [
     'pykube',
     'healthcheck',
     'tornado',
-    'pykafka',
     'epm-client',
     'orator',
     'pymysql',
     'keystonemiddleware',
     'python-memcached',
     'jsonpickle',
-    'kafka',
+    'kafka-python',
     'requests',
 ]
+
+# try:  # for pip >= 10
+#     from pip._internal.req import parse_requirements
+#     from pip._internal.download import PipSession
+# except ImportError:  # for pip <= 9.0.3
+#     from pip.req import parse_requirements
+#     from pip.download import PipSession
+#
+# REQUIRES = parse_requirements(os.path.join(os.path.dirname(__file__), 'requirements.txt'), session=PipSession())
+# REQUIRES = [str(requirement.req) for requirement in REQUIRES]
+
+print("my requires", REQUIRES)
 
 DEP_LINKS = [
     "git+https://github.com/mpauls/epm-client-python.git"
