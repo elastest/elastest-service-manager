@@ -19,10 +19,10 @@ services:
       - ./:/output:rw
     environment:
       # testing params
-      - DOCKER_TESTS=YES
+      - DOCKER_TESTS=NO
       - MONGODB_TESTS=NO
-      - EPM_TESTS=YES
-      - MYSQL_TESTS=YES
+      - EPM_TESTS=NO
+      - MYSQL_TESTS=NO
       - HEARTBEAT_TESTS=NO
       - SENTINEL_TESTS=NO
       - CODECOV_TOKEN=${CODECOV_TOKEN:-NONE}

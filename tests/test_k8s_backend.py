@@ -15,49 +15,103 @@
 
 import inspect
 from unittest import TestCase
+from unittest import skipIf
+
+from adapters.log import get_logger, SentinelAgentInjector
+
+LOG = get_logger(__name__)
 
 import os
-
 from adapters.resources import KubernetesBackend
 
 INST_ID = 'test-id-123'
 
-
+@skipIf(os.getenv('KUBERNETES_TESTS', 'NO') != 'YES', "KUBERNETES_TESTS not set in environment variables")
 class TestK8SBackend(TestCase):
     def setUp(self):
+        LOG.info("--------- TEST START --------")
         super().setUp()
         self.k8s = KubernetesBackend()
-        path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-        with open(path+"/manifests/k8s_basic.yml", "r") as mani:
-            # content = mani.read().replace("\n", " </br>")
-            self.k8s.create(instance_id=INST_ID, content=content, c_type="kubernetes")
 
     def tearDown(self):
+        LOG.info("--------- TEST END --------")
+
+    def test_end2end_with_create_twice(self):
+        path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        print(path)
+        with open(path + "/manifests/k8s_simple.yml", "r") as mani:
+            # content = mani.read().replace("\n", " </br>")
+
+            # test create
+            self.content = mani
+            outcome = self.k8s.create(instance_id=INST_ID, content=self.content, c_type="kubernetes")
+            self.assertEqual(True, outcome)
+
+            # test create when existing
+            self.content = mani
+            outcome = self.k8s.create(instance_id=INST_ID, content=self.content, c_type="kubernetes")
+            self.assertEqual(False, outcome)
+
+            # test delete
+            import time
+            time.sleep(10)
+            outcome = self.k8s.delete(instance_id=INST_ID, c_type="kubernetes")
+            self.assertEqual(True, outcome)
+
+    def test_create_with_null_manifest(self):
+        mani = None
+        # test create
+        self.content = mani
+        outcome = self.k8s.create(instance_id=INST_ID, content=self.content, c_type="kubernetes")
+        self.assertEqual(False, outcome)
+
+    def test_create_with_no_manifest(self):
+        # the k8s backend creates their own diretory and file, so this error is not viable
         pass
+
+    def test_create_with_invalid_manifest(self):
+        mani = "dumdum"
+        # test create
+        self.content = mani
+        outcome = self.k8s.create(instance_id=INST_ID, content=self.content, c_type="kubernetes")
+        LOG.info("outcome: {}".format(outcome))
+        self.assertEqual(False, outcome)
+
+    def test_delete_non_existent(self):
+        outcome = self.k8s.delete(instance_id=INST_ID, c_type="kubernetes")
+        self.assertEqual(False, outcome)
+
+    def test_delete_non_existent(self):
+        outcome = self.k8s.delete(instance_id=None, c_type="kubernetes")
+        self.assertEqual(False, outcome)
 
     def test_docker_info(self):
-        pass
+        info = self.k8s.info(instance_id=None)
+        LOG.info("Info retrieved: {}".format(info))
 
-    def test_docker_delete_cmd(self):
-        pass
+    def test_empty_delete(self):
+        outcome = self.k8s.delete(instance_id=INST_ID, c_type="kubernetes")
+        self.assertEqual(False, outcome)
 
 
-class TestK8SBackendWithoutSetup(TestCase):
+@skipIf(os.getenv('KUBERNETES_TESTS', 'NO') != 'NO', "Kubernetes Tests set to run, skipping OFFLINE tests.")
+class TestK8SBackendOffline(TestCase):
 
-    def setUp(self):
-        super().setUp()
-        self.k8s = KubernetesBackend()
+    def test_create_not_responding(self):
+        path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        with open(path + "/manifests/k8s_simple.yml", "r") as mani:
+            with self.assertRaises(Exception):
+                # test create
+                self.content = mani
+                outcome = self.k8s.create(instance_id=INST_ID, content=self.content, c_type="kubernetes")
 
-    def tearDown(self):
-        super().tearDown()
-        # self.k8s.delete(instance_id=INST_ID)
-
-    def test_k8s_create(self):
-        pass
+    def test_delete_not_responding(self):
+        with self.assertRaises(Exception):
+            # test delete
+            outcome = self.k8s.delete(instance_id=INST_ID, c_type="kubernetes")
+            self.assertEqual(False, outcome)
 
 
 if __name__ == '__main__':
     import unittest
     unittest.main()
-    # import nose
-    # nose.main()

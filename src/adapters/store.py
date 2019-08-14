@@ -308,9 +308,8 @@ class SQLStore(Store):  # pragma: no cover
             else:
                 return []
         else:
-            raise Exception('method not supported')
-            models = ServiceInstanceAdapter.get_all()
-            return models
+            LOG.warning('No instance ID was provided')
+            return []
 
     @staticmethod
     def add_last_operation(instance_id: str, last_operation: LastOperation) -> tuple:

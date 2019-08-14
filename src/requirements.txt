@@ -7,7 +7,7 @@ docker
 pykube
 healthcheck
 tornado
-git+https://github.com/mpauls/epm-client-python.git
+epm-client
 orator
 pymysql
 keystonemiddleware
