@@ -467,12 +467,13 @@ class KubernetesBackend(DeployerBackend):
             LOG.info(configuration.__dict__)
 
         else:
-            kubernetes.config.load_kube_config()
-            LOG.info("IMPORTED *LOCAL* KUBERENTES INFO")
+            try:
+                kubernetes.config.load_kube_config()
+                LOG.info("IMPORTED *LOCAL* KUBERENTES INFO")
+            except BaseException as e:
+                LOG.warning("No Kubernetes configuration could be retrieved.")
 
         self.core_api_instance = kubernetes.client.CoreV1Api()  # services api
-
-
         self.extensions_api_instance = kubernetes.client.ExtensionsV1beta1Api()  # deployments api
         self.manifest_cache = config.esm_dock_tmp_dir
 
