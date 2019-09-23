@@ -71,3 +71,4 @@ target/
 /mongodata/
 /.mypy_cache/
 penv/
+.DS_Store
