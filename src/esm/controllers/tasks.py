@@ -40,6 +40,7 @@ class CreateInstance(Task):
             return self.entity, self.context
 
         # get the manifest for the service/plan
+        LOG.debug("Executing run()... Looking for service_id: {}".format(self.entity_req.service_id))
         svc_type = self.store.get_service(self.entity_req.service_id)[0]
         if svc_type is None:
             self.context['status'] = ('Unrecognised service requested to be instantiated', 404)
@@ -77,6 +78,8 @@ class CreateInstance(Task):
         # should loop or receive call back to when the stack is done
 
         svc_up = self.store.get_service_instance(instance_id=self.instance_id)[0]
+        # TODO this is not true
+        LOG.debug("svcup result {} \n{}".format(type(svc_up), svc_up))
 
         svc_up.state.state = 'succeeded'
         svc_up.state.description = 'service instance is created'

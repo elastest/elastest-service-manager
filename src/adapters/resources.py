@@ -115,7 +115,7 @@ class DockerBackend(DeployerBackend):  # pragma: docker NO cover
             LOG.info('The instance is already running with the following project: {mani_dir}'.format(mani_dir=mani_dir))
             LOG.warning('Content in this directory will be overwritten.')
 
-        m = yaml.load(content)
+        m = yaml.safe_load(content)
 
         # inject the sentinel syslog logging agent
         if bool(config.esm_dock_inject_logger):
@@ -451,14 +451,13 @@ class KubernetesBackend(DeployerBackend):
         super().__init__()
         LOG.info('Adding Kubernetes Backend')
 
-        k8s_endpoint_exists = os.getenv('KUBERNETES_HOST', None) != None
+        K8S_ENDPOINT = os.getenv('KUBERNETES_HOST', None) != None
+        K8S_API_TOKEN = os.getenv('KUBERNETES_HOST', None) != None
 
-        if k8s_endpoint_exists:
-            # ApiToken = 'eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJ6aGF3LWZyYW5jbyIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJzZXJ2aWNlLXpoYXctZnJhbmNvLXRva2VuLTV3Z2JjIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6InNlcnZpY2Utemhhdy1mcmFuY28iLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiJlNmRkZmZmZi01NDVkLTExZTktOTA1Yy1mYTE2M2U2MjIzOTkiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6emhhdy1mcmFuY286c2VydmljZS16aGF3LWZyYW5jbyJ9.TKZClqaLPV1sVDScEnbZrmuHmQj_CJkui6HmwaVXVpR8j5J8nGzSe8e1gfqsuYq9OkIMmw4zSx-68oprjXKsro7X0mZCjhkb2EtsGzkXY1ofCIAThIc5PQ4Hh6oWD17WRdeHk0v45xcPM8yuXI9aeiNXrzvQW_W9miMjnzxreAPAuXWuFp4bE8Zvfr5qHmmfVl5iN2aBYPzWYGUXqTrbtai_jniyoqcr4A_Mz4Lg6mrbzP1JVA5LVHJ4sSZ9KcdJepF6S_qZEwxez6fAhZjIUQmKnHWU1914MhwJ-r4X528s9KhKnqKhrv7-Mzc3l6F3XeQat5noI5q_CL826Dv79g'
-            ApiToken = 'eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImFwaS1zZXJ2aWNlLWFjY291bnQtdG9rZW4tNGM2cHgiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiYXBpLXNlcnZpY2UtYWNjb3VudCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6ImQ2ZThlOTlmLTdhNzktMTFlOS1hYTVjLTA4MDAyNzEzZDQ5YyIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDpkZWZhdWx0OmFwaS1zZXJ2aWNlLWFjY291bnQifQ.FEN3Qll27nP_8UVSVITsZJ1S4Xx7xMQpFDO5daxAsZSKtOQZZ4dgGUbQKIm0SSg5bTPPZJ1g00LBOxqom2sEBnsLydcMFgpV4xmrnnWK63XJTmjFfvgX-sS4musbXpXYzcC-gzVKt1kRkUgsBIcoQY5lfxDaHkynq1QddC37HvSFdIXnNenhXLjQDUSSYlCLzlAMr94ON2uOjQOQ53yBvbNAwTXNnUAE_RSA04eGFTWGXm1dgpkTagJqUhqZ7YPjOHF3WkvCk8nPABs0vBPV19qOZikalto5CqGeYJBt8-NR4CshDx2sglDrlz5Q1ei8uTJ4zTDLdIPeDaznK1YAAA'
+        if K8S_ENDPOINT != None:
+            ApiToken = str(K8S_API_TOKEN)
             configuration = kubernetes.client.Configuration()
-            configuration.host = 'https://192.168.99.101:8443'
-            # configuration.host = 'https://160.85.252.91:6443' # GCLOUD endpoint
+            configuration.host = str(K8S_ENDPOINT) #TODO verify that it is of format ip:port
             configuration.verify_ssl = False
             configuration.debug = True
             configuration.api_key = {"authorization": "Bearer " + ApiToken}
@@ -499,6 +498,7 @@ class KubernetesBackend(DeployerBackend):
             name = '{}{}-deployment'.format(self._translate_to_valid_name(instance_id), sub_index)
             return self.extensions_api_instance.read_namespaced_deployment(name=name, namespace=namespace)
         except BaseException as e:
+            # TODO change to LOG + return 500
             raise Exception("Kubernetes backend is not responding")
 
     def _read_service(self, instance_id: str, sub_index: int, namespace: str = "default"):
@@ -567,8 +567,8 @@ class KubernetesBackend(DeployerBackend):
             LOG.error('Instance ID not valid')
             return outcome
 
-        if str(type(content)) != "<class '_io.TextIOWrapper'>":  # simple check
-            LOG.error('Manifest content not valid')
+        if str(type(content)) != "<class '_io.TextIOWrapper'>" and type(content) != str:  # simple check
+            LOG.error('Manifest content not valid. Received type: {} with content: {}'.format(type(content), str(content)))
             return outcome
 
         # super().create(instance_id, content, c_type)
@@ -657,7 +657,7 @@ class KubernetesBackend(DeployerBackend):
         # check if void
         if not os.path.exists(mani_path):
             LOG.error('requested file does not exist: {mani_path}'.format(mani_path=mani_path))
-            return {}
+            return {'srv_inst.state.state': 'failed'}
         # get info
         else:
             try:

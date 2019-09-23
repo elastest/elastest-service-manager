@@ -94,9 +94,9 @@ def validate_registrations():
     url = host + "/v2/et/manifest"
     response = requests.request("GET", url, headers=headers)
 
-    print("Should be {expected} manifests registered. There are: {actual}"
+    print("Should be *at least* {expected} manifests registered. There are: {actual}"
           .format(expected=len(services), actual=len(response.json())))
-    if len(services) == len(response.json()):
+    if len(services) <= len(response.json()):
         print("All manifests registered OK!")
 
 
@@ -112,13 +112,15 @@ def register_services():
         payload = json.dumps(content['register'])
         response = requests.request("PUT", url, data=payload, headers=headers)
 
-        # register manifest description
-        url = host + "/v2/et/manifest/{id}".format(id=content['manifest']['id'])
-        if bool(os.environ.get('USE_EPM', 'False')):
-            content['manifest']['manifest_type'] = 'epm'
-        payload = json.dumps(content['manifest'])
+        # register manifests description
+        for manifest in content['manifest']:
 
-        response = requests.request("PUT", url, data=payload, headers=headers)
+            url = host + "/v2/et/manifest/{id}".format(id=manifest['id'])
+            if bool(os.environ.get('USE_EPM', 'False')):
+                manifest['manifest_type'] = 'epm'
+            payload = json.dumps(manifest)
+
+            response = requests.request("PUT", url, data=payload, headers=headers)
 
 
 def run_me(delete_services):

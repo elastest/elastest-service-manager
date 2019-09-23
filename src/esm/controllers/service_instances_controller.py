@@ -74,7 +74,8 @@ def create_service_instance(instance_id, service, accept_incomplete=False):
             # we have the result of the operation in entity, good/bad status in context
             entity, context = CreateInstance(entity, context).start()
             if config.esm_measure_insts == 'YES':
-                entity, context = MeasureInstance(entity, context).start()
+                # entity, context = #
+                MeasureInstance(entity, context).start()
             # Response is ServiceResponse not a service instance
             return entity['entity_res'], context['status'][1]
 
