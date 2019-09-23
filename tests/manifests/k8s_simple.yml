@@ -1,0 +1,43 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      service: homestead
+    name: 496bb8f8510a4ff890d3c5736501ab18-service
+    namespace: default
+  spec:
+    ports:
+    - name: '5432'
+      port: 5432
+      protocol: TCP
+      targetPort: 5432
+    selector:
+      service: homestead
+    type: NodePort
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    creationTimestamp: null
+    name: 496bb8f8510a4ff890d3c5736501ab18-deployment
+    namespace: default
+  spec:
+    replicas: 1
+    strategy: {}
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          service: homestead
+      spec:
+        containers:
+        - image: ademord/homestead:latest
+          name: homestead
+          ports:
+          - containerPort: 5432
+            protocol: TCP
+          resources: {}
+        restartPolicy: Always
+  status: {}
+kind: List

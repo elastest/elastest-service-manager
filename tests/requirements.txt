@@ -9,6 +9,6 @@ mypy
 orator
 pymysql
 jsonpickle
-kafka
+kafka-python
 requests
 codecov

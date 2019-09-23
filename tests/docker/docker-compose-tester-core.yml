@@ -20,6 +20,7 @@ services:
     environment:
       # testing params
       - DOCKER_TESTS=YES
+      - KUBERNETES_TESTS=NO
       - MONGODB_TESTS=NO
       - EPM_TESTS=YES
       - MYSQL_TESTS=YES

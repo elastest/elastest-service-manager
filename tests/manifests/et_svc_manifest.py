@@ -53,7 +53,7 @@ def run_me():
             f.write(json.dumps(content))
             f.close()
 
-            dc = yaml.load(content['manifest']['manifest_content'])
+            dc = yaml.safe_load(content['manifest']['manifest_content'])
             f = open('./docker-compose-{svc}.yml'.format(svc=content['register']['short_name'].lower()), 'w')
             f.write(yaml.dump(dc))
             f.close()

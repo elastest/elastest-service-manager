@@ -40,6 +40,7 @@ class CreateInstance(Task):
             return self.entity, self.context
 
         # get the manifest for the service/plan
+        LOG.debug("Executing run()... Looking for service_id: {}".format(self.entity_req.service_id))
         svc_type = self.store.get_service(self.entity_req.service_id)[0]
         if svc_type is None:
             self.context['status'] = ('Unrecognised service requested to be instantiated', 404)
@@ -59,6 +60,7 @@ class CreateInstance(Task):
             self.context['status'] = ('no manifest for service {plan} found.'.format(plan=self.entity_req.plan_id), 404)
             return self.entity, self.context
 
+
         mani = mani[0]
 
         # stored within the service instance doc
@@ -76,6 +78,8 @@ class CreateInstance(Task):
         # should loop or receive call back to when the stack is done
 
         svc_up = self.store.get_service_instance(instance_id=self.instance_id)[0]
+        # TODO this is not true
+        LOG.debug("svcup result {} \n{}".format(type(svc_up), svc_up))
 
         svc_up.state.state = 'succeeded'
         svc_up.state.description = 'service instance is created'
@@ -149,6 +153,7 @@ class RetrieveInstance(Task):
             return 'no manifest found.', 404
         # Get the latest info of the instance
         # could also use STORE.get_service_instance(srv_inst) but will not have all details
+        LOG.debug("requesting instance info... with manifest type: {}".format(mani[0].manifest_type))
         inst_info = self.rm.info(instance_id=srv_inst.context['id'], manifest_type=mani[0].manifest_type)
 
         if inst_info['srv_inst.state.state'] == 'failed':
@@ -279,10 +284,20 @@ class MeasureInstance(Task):
         self.entity_req = entity.get('entity_req')
 
     def run(self):
-        pass
         # if os.environ.get('ESM_MEASURE_INSTANCES', 'NO') == 'YES':
         factory = MeasurerFactory.instance()
-        factory.start_heartbeat_measurer({'instance_id': self.instance_id, 'RM': self.rm, 'mani': mani})
+
+        svc_type = self.store.get_service(self.entity_req.service_id)[0]
+        plans = svc_type.plans
+        plan = [p for p in plans if p.id == self.entity_req.plan_id]
+        manis = self.store.get_manifest()
+        mani = [m for m in manis if m.plan_id == plan[0].id]
+        if mani:
+            mani = mani[0]
+            factory.start_heartbeat_measurer({'instance_id': self.instance_id, 'RM': self.rm, 'mani': mani})
+        else:
+            pass
+
         # m = Measurer(cache=None)
         # factory = MeasurerFactory.instance()
         # factory.stop_heartbeat_measurer(self.instance_id)

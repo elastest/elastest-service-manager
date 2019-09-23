@@ -70,7 +70,7 @@ class Measurer(threading.Thread):  # pragma: no cover
         try:
             endpoint = None  # endpoint = 'http://localhost:56567/health'  # .format(endpoint)
             inst_info = self.cache['RM'].info(instance_id=self.cache['instance_id'], manifest_type=self.cache['mani'].manifest_type)
-
+            LOG.debug("inst_info: {}".format(inst_info))
             for k, v in inst_info.items():
                 if 'Ip' in k:
                     endpoint = v
@@ -95,7 +95,7 @@ class Measurer(threading.Thread):  # pragma: no cover
         if self.endpoint is not None:
             response = requests.get(self.endpoint, timeout=5)
             data = response.json()
-            return data['status'] == 'up'
+            return data.get('status') == 'up'
 
         else:
             return False
@@ -117,6 +117,7 @@ class Measurer(threading.Thread):  # pragma: no cover
         super().run()
         LOG.warning('{}#Measurer created'.format(self.instance_id))
         self.endpoint = self.__poll_endpoint()
+        LOG.debug("running measurer, endpoint found {}".format(self.endpoint))
 
         # VALIDATE ENDPOINT
         # valid = MeasurerUtils.validate_endpoint(self.endpoint) or True
