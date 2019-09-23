@@ -41,6 +41,8 @@ services:
       - ESM_SENTINEL_KAFKA_VALUE_SERIALIZER=StringSerializer
       - ESM_SENTINEL_SERIES_NAME=service-health-check
       - ESM_SENTINEL_HEALTH_CHECK_INTERVAL=60
+      # - KUBERNETES_HOST=https://192.168.99.101:8443
+      # - KUBERNETES_TOKEN=my-token
     expose:
       - 37005
     ports:

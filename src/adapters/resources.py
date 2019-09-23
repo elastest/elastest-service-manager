@@ -452,7 +452,7 @@ class KubernetesBackend(DeployerBackend):
         LOG.info('Adding Kubernetes Backend')
 
         K8S_ENDPOINT = os.getenv('KUBERNETES_HOST', None) != None
-        K8S_API_TOKEN = os.getenv('KUBERNETES_HOST', None) != None
+        K8S_API_TOKEN = os.getenv('KUBERNETES_TOKEN', None) != None
 
         if K8S_ENDPOINT != None:
             ApiToken = str(K8S_API_TOKEN)
