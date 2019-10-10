@@ -79,6 +79,38 @@ paths:
           schema:
             $ref: "#/definitions/Error"
       x-swagger-router-controller: "esm.controllers.catalog_controller"
+    delete:
+      tags:
+      - "catalog"
+      summary: "Deletes a registered service type"
+      description: "Deletes a service that is already registered with the service\
+        \ manager. It does not delete the manifest or plan associated with the service\
+        \ type.\n"
+      operationId: "delete_service_type"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "service_id"
+        in: "query"
+        description: "service ID to be deprovisioned"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "MUST be returned if the service type was deleted as a result\
+            \ of this request. The expected response body is {}.\n"
+          schema:
+            $ref: "#/definitions/Empty"
+        202:
+          description: "MUST be returned if the service type deletion is in progress.\n"
+          schema:
+            $ref: "#/definitions/Empty"
+        404:
+          description: "Should be returned if the type does not exist. The expected\
+            \ response body is {}.\n"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "esm.controllers.catalog_controller"
   /v2/et/manifest:
     get:
       tags:
@@ -541,6 +573,7 @@ securityDefinitions:
     type: "basic"
 definitions:
   Catalog:
+    type: "object"
     required:
     - "services"
     properties:
@@ -549,7 +582,100 @@ definitions:
         items:
           $ref: "#/definitions/ServiceType"
     description: "list of service types"
+    example:
+      services:
+      - bindable: true
+        metadata:
+          longDescription: "longDescription"
+          documentationUrl: "documentationUrl"
+          providerDisplayName: "providerDisplayName"
+          displayName: "displayName"
+          imageUrl: "imageUrl"
+          supportUrl: "supportUrl"
+          extras: "{}"
+        plan_updateable: false
+        plans:
+        - metadata:
+            costs: "{}"
+            displayName: "displayName"
+            extras: "{}"
+            bullets: "bullets"
+          bindable: true
+          name: "name"
+          description: "description"
+          id: "id"
+          free: true
+        - metadata:
+            costs: "{}"
+            displayName: "displayName"
+            extras: "{}"
+            bullets: "bullets"
+          bindable: true
+          name: "name"
+          description: "description"
+          id: "id"
+          free: true
+        name: "name"
+        description: "description"
+        short_name: "short_name"
+        id: "id"
+        dashboard_client:
+          id: "id"
+          secret: "secret"
+          redirect_uri: "redirect_uri"
+        tags:
+        - "tags"
+        - "tags"
+        requires:
+        - "requires"
+        - "requires"
+      - bindable: true
+        metadata:
+          longDescription: "longDescription"
+          documentationUrl: "documentationUrl"
+          providerDisplayName: "providerDisplayName"
+          displayName: "displayName"
+          imageUrl: "imageUrl"
+          supportUrl: "supportUrl"
+          extras: "{}"
+        plan_updateable: false
+        plans:
+        - metadata:
+            costs: "{}"
+            displayName: "displayName"
+            extras: "{}"
+            bullets: "bullets"
+          bindable: true
+          name: "name"
+          description: "description"
+          id: "id"
+          free: true
+        - metadata:
+            costs: "{}"
+            displayName: "displayName"
+            extras: "{}"
+            bullets: "bullets"
+          bindable: true
+          name: "name"
+          description: "description"
+          id: "id"
+          free: true
+        name: "name"
+        description: "description"
+        short_name: "short_name"
+        id: "id"
+        dashboard_client:
+          id: "id"
+          secret: "secret"
+          redirect_uri: "redirect_uri"
+        tags:
+        - "tags"
+        - "tags"
+        requires:
+        - "requires"
+        - "requires"
   ServiceType:
+    type: "object"
     required:
     - "bindable"
     - "description"
@@ -619,7 +745,54 @@ definitions:
           \ for this service.\n"
         $ref: "#/definitions/DashboardClient"
     description: "Schema of an offered service"
+    example:
+      bindable: true
+      metadata:
+        longDescription: "longDescription"
+        documentationUrl: "documentationUrl"
+        providerDisplayName: "providerDisplayName"
+        displayName: "displayName"
+        imageUrl: "imageUrl"
+        supportUrl: "supportUrl"
+        extras: "{}"
+      plan_updateable: false
+      plans:
+      - metadata:
+          costs: "{}"
+          displayName: "displayName"
+          extras: "{}"
+          bullets: "bullets"
+        bindable: true
+        name: "name"
+        description: "description"
+        id: "id"
+        free: true
+      - metadata:
+          costs: "{}"
+          displayName: "displayName"
+          extras: "{}"
+          bullets: "bullets"
+        bindable: true
+        name: "name"
+        description: "description"
+        id: "id"
+        free: true
+      name: "name"
+      description: "description"
+      short_name: "short_name"
+      id: "id"
+      dashboard_client:
+        id: "id"
+        secret: "secret"
+        redirect_uri: "redirect_uri"
+      tags:
+      - "tags"
+      - "tags"
+      requires:
+      - "requires"
+      - "requires"
   Plan:
+    type: "object"
     required:
     - "description"
     - "id"
@@ -656,7 +829,19 @@ definitions:
           \ precedence over the bindable attribute of the service. If not specified,\
           \ the default is derived from the service.\n"
     description: "A plan for the service"
+    example:
+      metadata:
+        costs: "{}"
+        displayName: "displayName"
+        extras: "{}"
+        bullets: "bullets"
+      bindable: true
+      name: "name"
+      description: "description"
+      id: "id"
+      free: true
   DashboardClient:
+    type: "object"
     properties:
       id:
         type: "string"
@@ -672,7 +857,12 @@ definitions:
           \ server when the dashboard requests a token.\n"
     description: "Contains the data necessary to activate the Dashboard SSO feature\
       \ for this service"
+    example:
+      id: "id"
+      secret: "secret"
+      redirect_uri: "redirect_uri"
   ServiceRequest:
+    type: "object"
     required:
     - "organization_guid"
     - "plan_id"
@@ -716,7 +906,15 @@ definitions:
           \ configuration parameters and values for the operation.\n"
         properties: {}
     description: "Request for a Service instance"
+    example:
+      service_id: "service_id"
+      context: "{}"
+      organization_guid: "organization_guid"
+      space_guid: "space_guid"
+      parameters: "{}"
+      plan_id: "plan_id"
   ServiceResponse:
+    type: "object"
     required:
     - "dashboard_url"
     properties:
@@ -738,10 +936,14 @@ definitions:
     description: "The URL of a web-based management user interface for the service\
       \ instance; we refer to this as a service dashboard. The URL should contain\
       \ enough information for the dashboard to identify the resource being accessed.\n"
+    example:
+      dashboard_url: "dashboard_url"
+      operation: "operation"
   Empty:
     type: "string"
     description: "Expected empty response could be {}"
   UpdateRequest:
+    type: "object"
     required:
     - "service_id"
     properties:
@@ -772,7 +974,18 @@ definitions:
         description: "Information about the service instance prior to the update.\n"
         $ref: "#/definitions/PreviousValues"
     description: "New/Updated Plan to be added to a service."
+    example:
+      previous_values:
+        service_id: "service_id"
+        organization_id: "organization_id"
+        space_id: "space_id"
+        plan_id: "plan_id"
+      service_id: "service_id"
+      context: "{}"
+      parameters: "{}"
+      plan_id: "plan_id"
   PreviousValues:
+    type: "object"
     properties:
       plan_id:
         type: "string"
@@ -796,7 +1009,13 @@ definitions:
           \ ID of the space specified for the service instance. If present, MUST be\
           \ a non-empty string.\n"
     description: "Information about the service instance prior to the update.\n"
+    example:
+      service_id: "service_id"
+      organization_id: "organization_id"
+      space_id: "space_id"
+      plan_id: "plan_id"
   BindingRequest:
+    type: "object"
     required:
     - "plan_id"
     - "service_id"
@@ -823,7 +1042,16 @@ definitions:
           \ with the binding to be created. See Bind Resource Object for more information.\n"
         $ref: "#/definitions/BindResource"
     description: "Information to bind the service to an application.\n"
+    example:
+      app_guid: "app_guid"
+      service_id: "service_id"
+      bind_resource:
+        app_guid: "app_guid"
+        route: "route"
+      parameters: "{}"
+      plan_id: "plan_id"
   BindResource:
+    type: "object"
     properties:
       app_guid:
         type: "string"
@@ -837,7 +1065,11 @@ definitions:
       \ related to the context in which the service will be used. In some cases the\
       \ platform might not be able to provide this information at the time of the\
       \ binding request, therefore the bind_resource and its fields are OPTIONAL.\n"
+    example:
+      app_guid: "app_guid"
+      route: "route"
   BindingResponse:
+    type: "object"
     properties:
       credentials:
         type: "object"
@@ -864,7 +1096,15 @@ definitions:
           type: "object"
           properties: {}
     description: "Success binding response."
+    example:
+      route_service_url: "route_service_url"
+      credentials: "{}"
+      syslog_drain_url: "syslog_drain_url"
+      volume_mounts:
+      - "{}"
+      - "{}"
   ServiceMetadata:
+    type: "object"
     properties:
       displayName:
         type: "string"
@@ -890,7 +1130,16 @@ definitions:
         properties: {}
     description: "metadata related to the service. The attributes are defined by the\
       \ best practices [here](https://docs.cloudfoundry.org/services/catalog-metadata.html#services-metadata-fields)\n"
+    example:
+      longDescription: "longDescription"
+      documentationUrl: "documentationUrl"
+      providerDisplayName: "providerDisplayName"
+      displayName: "displayName"
+      imageUrl: "imageUrl"
+      supportUrl: "supportUrl"
+      extras: "{}"
   PlanMetadata:
+    type: "object"
     properties:
       bullets:
         type: "string"
@@ -914,7 +1163,13 @@ definitions:
         properties: {}
     description: "This is the plan metadata as required by the CloudFoundry broker\
       \ best practices\n"
+    example:
+      costs: "{}"
+      displayName: "displayName"
+      extras: "{}"
+      bullets: "bullets"
   LastOperation:
+    type: "object"
     required:
     - "state"
     properties:
@@ -930,6 +1185,9 @@ definitions:
           \ Can be used to tell the user details about the status of the operation.\
           \ If present, MUST be a non-empty string.\n"
     description: "status of polling last operation (async only)"
+    example:
+      description: "description"
+      state: "state"
   Error:
     properties:
       description:
@@ -938,6 +1196,7 @@ definitions:
           \ will be displayed to the user who initiated the request.\"\n"
     description: "Description of the error that occurred."
   UpdateOperationResponse:
+    type: "object"
     properties:
       operation:
         type: "string"
@@ -946,7 +1205,10 @@ definitions:
           \ the platform with requests to the Last Operation endpoint in a URL encoded\
           \ query parameter. If present, MUST be a non-empty string.\n"
     description: "Response after issuing an update to a service instance\n"
+    example:
+      operation: "operation"
   Manifest:
+    type: "object"
     required:
     - "id"
     - "manifest_content"
@@ -976,9 +1238,23 @@ definitions:
         description: "A set of endpoints that the service instance exposes. This includes\
           \ APIs and UIs."
         properties: {}
+      config:
+        type: "object"
+        description: "configuration parameters to be supplied to a service instance.\
+          \ this is not service instance specific"
+        properties: {}
     description: "The manifest of a software component and the plan and service it\
       \ is to be associated with.\n"
+    example:
+      manifest_type: "manifest_type"
+      endpoints: "{}"
+      service_id: "service_id"
+      id: "id"
+      manifest_content: "manifest_content"
+      config: "{}"
+      plan_id: "plan_id"
   ServiceInstance:
+    type: "object"
     properties:
       service_type:
         description: "the type of the service"
@@ -992,6 +1268,57 @@ definitions:
           \ ID, manifest ID and other state info"
         properties: {}
     description: "service instance"
+    example:
+      service_type:
+        bindable: true
+        metadata:
+          longDescription: "longDescription"
+          documentationUrl: "documentationUrl"
+          providerDisplayName: "providerDisplayName"
+          displayName: "displayName"
+          imageUrl: "imageUrl"
+          supportUrl: "supportUrl"
+          extras: "{}"
+        plan_updateable: false
+        plans:
+        - metadata:
+            costs: "{}"
+            displayName: "displayName"
+            extras: "{}"
+            bullets: "bullets"
+          bindable: true
+          name: "name"
+          description: "description"
+          id: "id"
+          free: true
+        - metadata:
+            costs: "{}"
+            displayName: "displayName"
+            extras: "{}"
+            bullets: "bullets"
+          bindable: true
+          name: "name"
+          description: "description"
+          id: "id"
+          free: true
+        name: "name"
+        description: "description"
+        short_name: "short_name"
+        id: "id"
+        dashboard_client:
+          id: "id"
+          secret: "secret"
+          redirect_uri: "redirect_uri"
+        tags:
+        - "tags"
+        - "tags"
+        requires:
+        - "requires"
+        - "requires"
+      context: "{}"
+      state:
+        description: "description"
+        state: "state"
 parameters:
   instance_id:
     name: "instance_id"

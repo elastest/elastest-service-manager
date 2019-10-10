@@ -100,6 +100,26 @@ def register_service(service):
         return Empty()
 
 
+def delete_service_type(service_id):  # noqa: E501
+    """Deletes a registered service type
+
+    Deletes a service that is already registered with the service manager.
+    It does not delete the manifest or plan associated with the service type.  # noqa: E501
+
+    :param service_id: service ID to be deleted
+    :type service_id: str
+
+    :rtype: Empty
+    """
+    srv = STORE.get_service(service_id)
+    # expectation: if not found, srv is None
+    if srv:
+        STORE.delete_service(service_id)
+        return Empty()
+    else:
+        return "Service type not found", 404
+
+
 def store_manifest(manifest_id, manifest):
     """
     takes deployment description of a software service and associates with a service and plan

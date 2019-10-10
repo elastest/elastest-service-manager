@@ -119,6 +119,28 @@ class TestCatalogController(BaseTestCase):
         self.assert200(response, "Response body is : " + response.data.decode('utf-8'))
         self.assertEquals(len(STORE.get_service()), 1)
 
+    def test_delete_service_type(self):
+        """Test case for delete_service_type
+
+        Deletes a registered service type
+        """
+        response = self._send_svc_reg()
+        query_string = [('service_id', self.test_service.id)]
+        response = self.client.open(
+            '/v2/et/catalog',
+            method='DELETE',
+            query_string=query_string)
+        self.assert200(response, 'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_delete_missing_service(self):
+        response = self._send_svc_reg()
+        query_string = [('service_id', 'ooof')]  #
+        response = self.client.open(
+            '/v2/et/catalog',
+            method='DELETE',
+            query_string=query_string)
+        self.assert404(response, 'Response body is : ' + response.data.decode('utf-8'))
+
 # TODO currently broken with the SQL driver, doesn't not detect that a service descr has changed
     # def test_update_service(self):
     #     """

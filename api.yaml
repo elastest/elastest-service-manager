@@ -92,6 +92,44 @@ paths:
             'The requested service type already exists. The ID of the service exists in the catalog already'
           schema:
             $ref: '#/definitions/Error'
+    delete:
+      operationId: deleteServiceType
+      summary: Deletes a registered service type
+      description: >
+        Deletes a service that is already registered with the service manager.
+        It does not delete the manifest or plan associated with the service type.
+      produces:
+        - application/json
+      tags:
+        - catalog
+      parameters:
+        - name: service_id
+          required: true
+          in: query
+          description: service ID to be deprovisioned
+          type: string
+        # - name: plan_id
+        #   required: true
+        #   in: query
+        #   description: plan ID of the service to be deprovisioned
+        #   type: string
+      responses:
+        '200':
+          description: >
+              MUST be returned if the service type was deleted as a
+              result of this request. The expected response body is {}.
+          schema:
+            $ref: '#/definitions/Empty'
+        '202':
+          description: >
+            MUST be returned if the service type deletion is in progress.
+          schema:
+            $ref: '#/definitions/Empty'
+        '404':
+          description: >
+            Should be returned if the type does not exist. The expected response body is {}.
+          schema:
+            $ref: '#/definitions/Error'
   /v2/et/manifest:
     get:
       operationId: listManifests
@@ -677,7 +715,7 @@ definitions:
           If not specified, the default is derived from the service.
   DashboardClient:
     description: 'Contains the data necessary to activate the Dashboard SSO feature for this service'
-    type: object    
+    type: object
     properties:
       id:
         type: string
