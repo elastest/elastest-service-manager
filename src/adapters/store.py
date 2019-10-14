@@ -613,13 +613,17 @@ class InMemoryStore(Store):  # pragma: no cover
             self.ESM_DB.services.remove(service_to_delete[0])
 
     def valid_manifest_type(self, content, type):
-        mani = yaml.safe_load(content)
-        if type == 'docker-compose':
-            return 'version' in mani
-        elif type == 'kubernetes':
-            return 'apiVersion' in mani
-        else:
-            return True # letting all other manifests pass
+        try:
+            mani = yaml.safe_load_all(content)
+            return True
+        except BaseException as e:
+            return False
+        # if type == 'docker-compose':
+        #     return 'version' in mani
+        # elif type == 'kubernetes':
+        #     return 'apiVersion' in mani
+        # else:
+        #     return True # letting all other manifests pass
 
     def add_manifest(self, manifest: Manifest) -> tuple:
 

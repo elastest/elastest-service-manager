@@ -78,7 +78,7 @@ class CreateInstance(Task):
         # should loop or receive call back to when the stack is done
 
         svc_up = self.store.get_service_instance(instance_id=self.instance_id)[0]
-        # TODO this is not true
+        # TODO this does not reflect real status (svc up)
         LOG.debug("svcup result {} \n{}".format(type(svc_up), svc_up))
 
         svc_up.state.state = 'succeeded'

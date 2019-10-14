@@ -49,7 +49,6 @@ services:
       - "37005:37005"
     networks:
       - elastest
-
   esm-mongo:
     image: mongo
     container_name: mongo
@@ -60,7 +59,7 @@ services:
       - "27017"
     networks:
       - elastest
-   esm_ui:
+  esm_ui:
      depends_on:
        - esm
      image: ademord/esmweb:latest

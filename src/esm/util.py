@@ -39,12 +39,12 @@ def _deserialize(data, klass):
     #         return _deserialize_dict(data, klass.__args__[1])
 
     # python 3.7
-    LOG.warn("RECEIVED class {}".format(klass))
+    # LOG.warn("RECEIVED class {}".format(klass))
     if hasattr(klass, '__origin__'):
-        LOG.warn("klass: {}".format(klass))
-        LOG.warn("klass: {}".format(klass.__origin__))
+        # LOG.warn("klass: {}".format(klass))
+        # LOG.warn("klass: {}".format(klass.__origin__))
         if klass.__origin__ == list or klass.__origin__ == typing.List:
-            LOG.warn("list returns: {}".format(_deserialize_list(data, klass.__args__[0])))
+            # LOG.warn("list returns: {}".format(_deserialize_list(data, klass.__args__[0])))
             return _deserialize_list(data, klass.__args__[0])
         if klass.__origin__ == dict or klass.__origin__ == typing.Dict:
             return _deserialize_dict(data, klass.__args__[1])
@@ -129,7 +129,7 @@ def deserialize_model(data, klass):
         return data
 
     for attr, attr_type in iteritems(instance.swagger_types):
-        LOG.debug("Deserializing... {}: {}".format(attr_type, attr))
+        # LOG.debug("Deserializing... {}: {}".format(attr_type, attr))
         if data is not None \
                 and instance.attribute_map[attr] in data \
                 and isinstance(data, (list, dict)):

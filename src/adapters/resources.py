@@ -36,6 +36,8 @@ LOG = get_logger(__name__)
 
 import kubernetes
 from kubernetes.client.rest import ApiException
+import itertools
+
 
 class DeployerBackend(object):
     def create(self, instance_id: str, content: str, c_type: str, **kwargs) -> None:
@@ -451,8 +453,8 @@ class KubernetesBackend(DeployerBackend):
         super().__init__()
         LOG.info('Adding Kubernetes Backend')
 
-        K8S_ENDPOINT = os.getenv('KUBERNETES_HOST', None) != None
-        K8S_API_TOKEN = os.getenv('KUBERNETES_TOKEN', None) != None
+        K8S_ENDPOINT = os.getenv('KUBERNETES_HOST', None)
+        K8S_API_TOKEN = os.getenv('KUBERNETES_TOKEN', None)
 
         if K8S_ENDPOINT != None:
             ApiToken = str(K8S_API_TOKEN)
@@ -482,31 +484,30 @@ class KubernetesBackend(DeployerBackend):
         #         instance_id[i] = "-"
 
         # k8s regex used for validation is '[a-z]([-a-z0-9]*[a-z0-9])?'); added an 'a'
-        new_instance_id = 'a' + ''.join([c if c != "_" else "-" for c in instance_id])
+        new_instance_id = 'k8s-' + ''.join([c if c != "_" else "-" for c in instance_id])
         LOG.warning("Instance ID name had to be modified to: {}".format(new_instance_id))
         return new_instance_id
 
     def _save_manifest_to_file(self, m, mani_path):
-        LOG.debug('writing to: {compo}'.format(compo=mani_path))
+        LOG.debug('Writing Manifest to: {}'.format(mani_path))
         content = yaml.dump(m)
-        m = open(mani_path, 'wt')
-        m.write(content)
-        m.close()
+        with open(mani_path, 'wt') as m:
+            m.write(content)
 
-    def _read_deployment(self, instance_id: str, sub_index: int, namespace: str = "default"):
-        try:
-            name = '{}{}-deployment'.format(self._translate_to_valid_name(instance_id), sub_index)
-            return self.extensions_api_instance.read_namespaced_deployment(name=name, namespace=namespace)
-        except BaseException as e:
-            # TODO change to LOG + return 500
-            raise Exception("Kubernetes backend is not responding")
-
-    def _read_service(self, instance_id: str, sub_index: int, namespace: str = "default"):
-        try:
-            name = '{}{}-service'.format(self._translate_to_valid_name(instance_id), sub_index)
-            return self.core_api_instance.read_namespaced_service(name=name, namespace=namespace)
-        except BaseException as e:
-            raise Exception("Kubernetes backend is not responding")
+    # def _read_deployment(self, instance_id: str, sub_index: int, namespace: str = "default"):
+    #     try:
+    #         name = '{}{}-deployment'.format(self._translate_to_valid_name(instance_id), sub_index)
+    #         return self.extensions_api_instance.read_namespaced_deployment(name=name, namespace=namespace)
+    #     except BaseException as e:
+    #         # TODO change to LOG + return 500
+    #         raise Exception("Kubernetes backend is not responding")
+    #
+    # def _read_service(self, instance_id: str, sub_index: int, namespace: str = "default"):
+    #     try:
+    #         # name = '{}{}-service'.format(self._translate_to_valid_name(instance_id), sub_index)
+    #         return self.core_api_instance.read_namespaced_service(name=name, namespace=namespace)
+    #     except BaseException as e:
+    #         raise Exception("Kubernetes backend is not responding")
 
     def _create_deployment(self, body, namespace: str = "default"):
         return self.extensions_api_instance.create_namespaced_deployment(body=body, namespace=namespace)
@@ -514,98 +515,199 @@ class KubernetesBackend(DeployerBackend):
     def _create_service(self, body, namespace: str = "default"):
         return self.core_api_instance.create_namespaced_service(body=body, namespace=namespace)
 
-    def _delete_deployment(self, instance_id: str, sub_index: int,namespace: str = "default"):
-        name = '{}{}-deployment'.format(self._translate_to_valid_name(instance_id), sub_index)
-        return self.extensions_api_instance.delete_namespaced_deployment(
-                name=name,
-                namespace=namespace,
-                body=kubernetes.client.V1DeleteOptions(
-                    propagation_policy='Foreground',
-                    grace_period_seconds=5))
+    # def _delete_deployment(self, instance_id: str, sub_index: int,namespace: str = "default"):
+    #     name = '{}{}-deployment'.format(self._translate_to_valid_name(instance_id), sub_index)
+    #     return self.extensions_api_instance.delete_namespaced_deployment(
+    #             name=name,
+    #             namespace=namespace,
+    #             body=kubernetes.client.V1DeleteOptions(
+    #                 propagation_policy='Foreground',
+    #                 grace_period_seconds=5))
+    #
+    # def _delete_service(self, instance_id: str, sub_index: int, namespace: str = "default"):
+    #     name = '{}{}-service'.format(self._translate_to_valid_name(instance_id), sub_index)
+    #     return self.core_api_instance.delete_namespaced_service(
+    #         name=name,
+    #         namespace=namespace,
+    #         body=kubernetes.client.V1DeleteOptions(
+    #             propagation_policy='Foreground',
+    #             grace_period_seconds=5))
 
-    def _delete_service(self, instance_id: str, sub_index: int, namespace: str = "default"):
-        name = '{}{}-service'.format(self._translate_to_valid_name(instance_id), sub_index)
-        return self.core_api_instance.delete_namespaced_service(
-            name=name,
-            namespace=namespace,
-            body=kubernetes.client.V1DeleteOptions(
-                propagation_policy='Foreground',
-                grace_period_seconds=5))
-
-    def _deploy(self, manifest):
-        for i in range(len(manifest['items'])):
-            item = manifest['items'][i]
-            if item['kind'].lower() == 'service':
-                api_response = self._create_service(item)
-                LOG.warning("Kubernetes Service created. status='%s'" % str(api_response.status))
-
-            elif item['kind'].lower() == 'deployment':
-                api_response = self._create_deployment(item)
-                LOG.warning("Kubernetes Deployment created. status='%s'" % str(api_response.status))
-
-    def _update_names(self, manifest, instance_id):
-        for i in range(len(manifest['items'])):
-            item = manifest['items'][i]
-            item['metadata']['name'] = '{}{}-{}'.format(self._translate_to_valid_name(instance_id), i, item['kind'].lower())
-            # TODO verify about optionally supplied parameters as environment variables
-        return manifest
-
-    def _create_directory(self, mani_dir):
-        if not os.path.exists(mani_dir):
-            os.makedirs(mani_dir)
-            return True
-        else:
-            LOG.info('There seems to be an allocated manifest for this Instance ID under the project: {mani_dir}'.format(mani_dir=mani_dir))
+    def _response_result(self, item_description, api_response):
+        LOG.warning('api_respeonse status = {}'. format(api_response.status))
+        if api_response.status == 'Failure':
+            LOG.info(
+                "Kubernetes {} creation failed. status='{}', reason='{}'".format(
+                    item_description,
+                    str(api_response.status),
+                    str(api_response.reason))
+            )
             return False
 
-    def create(self, instance_id: str, content: str, c_type: str, **kwargs) -> None:
-        outcome = False
+        else:
 
-        print(type(instance_id))
-        print(instance_id)
+            return True
+
+    def _deploy(self, item):
+        if item['kind'].lower() == 'service':
+            item_description = 'Service \'{}\''.format(item['metadata']['name'])
+            try:
+                api_response = self._create_service(item)
+                LOG.info("Kubernetes {} created. status='{}'".format(item_description, str(api_response.status)))
+                return True
+            except BaseException as e:
+                LOG.error("Kubernetes Error: {} creation failed. response=".format(item_description, e))
+                return False
+
+        elif item['kind'].lower() == 'deployment':
+            item_description = 'Deployment \'{}\''.format(item['metadata']['name'])
+            try:
+                api_response = self._create_deployment(item)
+                LOG.info("Kubernetes {} created. status='{}'".format(item_description, str(api_response.status)))
+                return True
+            except BaseException as e:
+                LOG.error("Kubernetes Error: {} creation failed. response=".format(item_description, e))
+                return False
+
+        elif item['kind'].lower() == 'list':
+            deployables = item['items']
+            outcomes = []
+            for deployable in deployables:
+                outcomes += [self._deploy(deployable)]
+
+            if False in outcomes:
+                return False
+            else:
+                return True
+
+    def _delete(self, item, namespace: str = "default"):
+        if item['kind'].lower() == 'service':
+            name = item['metadata']['name']
+            item_description = 'Service \'{}\''.format(item['metadata']['name'])
+
+            try:
+                api_response = self.core_api_instance.delete_namespaced_service(
+                    name=name,
+                    namespace=namespace,
+                    body=kubernetes.client.V1DeleteOptions(
+                        propagation_policy='Foreground',
+                        grace_period_seconds=5))
+                LOG.info("Kubernetes {} deleted. status='{}'".format(item_description, str(api_response.status)))
+                return True
+
+            except BaseException as e:
+                LOG.error("Kubernetes Error: {} delete failed. response=".format(item_description, e))
+                return False
+
+        elif item['kind'].lower() == 'deployment':
+            name = item['metadata']['name']
+            item_description = 'Deployment \'{}\''.format(item['metadata']['name'])
+            try:
+                api_response = self.extensions_api_instance.delete_namespaced_deployment(
+                    name=name,
+                    namespace=namespace,
+                    body=kubernetes.client.V1DeleteOptions(
+                        propagation_policy='Foreground',
+                        grace_period_seconds=5))
+                LOG.info("Kubernetes {} deleted. status='{}'".format(item_description, str(api_response.status)))
+                return True
+
+            except BaseException as e:
+                LOG.error("Kubernetes Error: {} delete failed. response=".format(item_description, e))
+                return False
+
+        elif item['kind'].lower() == 'list':
+            deployables = item['items']
+            for deployable in deployables:
+                self._delete(deployable)
+            return True
+        return False
+
+    def _update_names(self, manifests, instance_id):
+        for i in range(len(manifests)):
+            if manifests[i]['kind'].lower() == 'service':
+                LOG.info("Kubernetes Backend: updating Service name...")
+                manifests[i]['metadata']['name'] = '{}{}-{}'.format(self._translate_to_valid_name(instance_id), i,
+                                                            manifests[i]['kind'].lower())
+            elif manifests[i]['kind'].lower() == 'deployment':
+                LOG.info("Kubernetes Backend: updating Deployment name...")
+                manifests[i]['metadata']['name'] = '{}{}-{}'.format(self._translate_to_valid_name(instance_id), i,
+                                                            manifests[i]['kind'].lower())
+            elif manifests[i]['kind'].lower() == 'list':
+                LOG.info("Kubernetes Backend: updating List name...")
+                for j in range(len(manifests[i]['items'])):
+                    manifests[i]['items'][j]['metadata']['name'] = '{}{}-{}'.format(self._translate_to_valid_name(instance_id), str(i) + str(j), manifests[i]['items'][j]['kind'].lower())
+                    # TODO verify about optionally supplied parameters as environment variables
+        return manifests
+
+    def _create_directory(self, instance_id):
+        mani_dir = self.manifest_cache + '/' + instance_id
+
+        directory_exists = os.path.exists(mani_dir)
+        if directory_exists:
+            LOG.info('Existing Manifest was found for this Instance ID under {}'.format(mani_dir))
+            LOG.info("Polling the instance to see if it's alive...")
+            info = self.info(instance_id)
+            LOG.info("Info retrieved: {}".format(info))
+
+            if info != {}:
+                LOG.warning('Existing instance found. Exiting create...')
+                return mani_dir, False
+
+            else:
+                LOG.warning('No instance found. Content in this directory will be overwritten.')
+                self.delete_mani_dir(instance_id)
+
+        os.makedirs(mani_dir)
+        LOG.info('Manifest stored under {}'.format(mani_dir))
+        return mani_dir, True
+
+    def valid_data_received(self, instance_id, content):
         if type(instance_id) != str:
             LOG.error('Instance ID not valid')
-            return outcome
+            return False
 
         if str(type(content)) != "<class '_io.TextIOWrapper'>" and type(content) != str:  # simple check
             LOG.error('Manifest content not valid. Received type: {} with content: {}'.format(type(content), str(content)))
-            return outcome
+            return False
 
-        # super().create(instance_id, content, c_type)
-        LOG.info('Creating Kubernetes Deployment...')
+        return True
 
-        mani_dir = self.manifest_cache + '/' + instance_id
-        mani_path = mani_dir + '/manifest.yaml'
+    def create(self, instance_id: str, content: str, c_type: str, **kwargs) -> None:
+        LOG.info('Kubernetes Backend: Creating Service Instance \'{}\'...'.format(instance_id))
+        outcome = False
 
-        directory_created = self._create_directory(mani_dir)
-        LOG.info("directory variable: {}".format(directory_created))
-        if not directory_created:
-            LOG.info("Polling the instance to see if it's alive...")
-            info = self.info(instance_id=instance_id)
-            LOG.info("Info retrieved: {}".format(info))
+        if self.valid_data_received(instance_id, content):
 
-            if info == {}:
-                LOG.warning('No instance found. Content in this directory will be overwritten.')
-                directory_created = True
+            mani_dir, directory_created = self._create_directory(instance_id)
+            mani_path = mani_dir + '/manifest.yaml'
 
-        LOG.info("directory variable: {}".format(directory_created))
-        if directory_created:
-            manifest = yaml.safe_load(content)
+            if directory_created:
+                manifests = list(yaml.safe_load_all(content))
+                LOG.info("Loaded YAML file {}".format(manifests))
+                successful_deployments = 0
 
-            if manifest['kind'] == 'List':
                 # modify deployment and service names to include instance_id
-                manifest = self._update_names(manifest, instance_id)
+                manifest = self._update_names(manifests, instance_id)
+
                 # save manifest
                 self._save_manifest_to_file(manifest, mani_path)
-                # deploy contents
+
                 with open(mani_path) as f:
-                    manifest = yaml.safe_load(f)
+                    # turn generator into list to be able to subscript and get length
+                    saved_manifests = list(itertools.chain.from_iterable(yaml.safe_load_all(f)))
+                    LOG.debug("Reading saved manifest:\n{}".format(saved_manifests))
+                    for manifest in saved_manifests:
+                        successful_deployments += self._deploy(manifest)
 
-                    self._deploy(manifest)
+                # Note this comparison (<) will only verify that at least* as many things as different components
+                # in the YAML were deployed. if one is of kind: List, more will be deployed
+                # than it sees at first sight
+                if successful_deployments >= len(manifests):
+                    LOG.info('Successfully deployed Service Instance \'{}\''.format(instance_id))
                     outcome = True
-
-            else:
-                LOG.error('Invalid YAML file provided. Make sure it is of Kind \'List\'')
+                else:
+                    LOG.error('Kubernetes Error: Could not deploy.')
 
         return outcome
 
@@ -649,106 +751,128 @@ class KubernetesBackend(DeployerBackend):
                     info[name + '_environment_' + env_var.name] = env_var.value
         return info
 
+    # def _get_info_service(self, api_response):
+
+    def get_info(self, manifests, instance_id):
+        base_info = {}
+
+        for i in range(len(manifests)):
+            LOG.info('reading part of manifest... {}'.format(i))
+            item = manifests[i]
+            info = {}
+
+            if item['kind'].lower() == 'service':
+                LOG.debug('Kubernetes Backend: {} found in Manifest YAML.'.format('Service'))
+                info['name_service'] = item['metadata']['name']
+
+                api_response = self.core_api_instance.read_namespaced_service(name=item['metadata']['name'], namespace='default')
+                LOG.debug('API Response: {}'.format(api_response))
+
+                ip = item['spec'].get('load_balancer_ip')
+                info[instance_id + '_Ip'] = '{}:{}'.format(ip, item['spec']['node_port']) if ip is not None else 'pending'
+
+            elif item['kind'].lower() == 'deployment':
+                info['name_deployment'] = item['metadata']['name']
+                LOG.debug('Kubernetes Backend: {} found in Manifest YAML.'.format('Deployment'))
+                api_response = self.extensions_api_instance.read_namespaced_deployment(name=item['metadata']['name'], namespace='default')
+                info = self._get_instance_status(info, api_response)
+                info = self._get_container_data(info, api_response)
+
+            elif item['kind'].lower() == 'list':
+                LOG.debug('Kubernetes Backend: {} found in Manifest YAML.'.format('List'))
+                list_base_info = {}
+                deployables = item['items']
+                for deployable in deployables:
+                    info = self.get_info([deployable], instance_id)
+                    list_base_info = {**list_base_info, **info}
+
+                info = list_base_info
+                # LOG.warning('List information retrieval is not supported yet.')
+            base_info = {**base_info, **info}
+
+        return base_info
+
     def info(self, instance_id: str, **kwargs) -> Dict[str, str]:
-        # super().info(instance_id)
-        mani_dir = self.manifest_cache + '/' + str(instance_id)
+        LOG.info('Kubernetes Backend: Querying info for Service Instance \'{}\'...'.format(instance_id))
+
+        mani_path, manifest_exists = self.get_manifest_path(instance_id)
+        info = {'srv_inst.state.state': 'failed'}
+
+        if manifest_exists:
+            with open(mani_path) as f:
+                manifests = list(itertools.chain.from_iterable(yaml.safe_load_all(f)))
+                LOG.info("Loaded YAML file {}".format(manifests))
+                try:
+                    info = self.get_info(manifests, instance_id)
+                    LOG.info('Stack\'s attrs:\n{}'.format(info))
+
+                except ApiException as e:
+                    LOG.error("Exception when calling ExtensionsV1beta1Api->read_namespaced_deployment: %s\n" % e)
+                    # info = {}
+        return info
+
+    def get_manifest_path(self, instance_id):
+        mani_dir = self.manifest_cache + '/' + instance_id
         mani_path = mani_dir + '/manifest.yaml'
-        LOG.info('showing info for instance id {}, with Kubernetes backend...'.format(instance_id))
-        # check if void
-        if not os.path.exists(mani_path):
-            LOG.error('requested file does not exist: {mani_path}'.format(mani_path=mani_path))
-            return {'srv_inst.state.state': 'failed'}
-        # get info
+        manifest_exists = os.path.exists(mani_path)
+
+        if manifest_exists:
+            LOG.info("Manifest file for Service Instance \'{}\' found at {}".format(instance_id, mani_path))
+            return mani_path, True
+
         else:
-            try:
-                LOG.debug('info from: {compo}'.format(compo=mani_path))
-                with open(mani_path) as f:
-                    manifest = yaml.safe_load(f)
-                    info = dict()
+            LOG.error('Manifest file not found for Service Instance \'{}\' at {}'.format(instance_id, mani_path))
+            return mani_path, False
 
-                    for i in range(len(manifest['items'])):
-                        item = manifest['items'][i]
-                        if item['kind'].lower() == 'service':
-                            api_response = self._read_service(instance_id, i)
-                            LOG.warning('reading service information')
-                            LOG.warning(api_response)
-                            # get the IP from the service
-                            ip = item['spec'].get('load_balancer_ip')
-                            if ip is not None:
-                                info[instance_id + '_Ip'] = '{}:{}'.format(ip, item['spec']['node_port'])
-                            else:
-                                info[instance_id + '_Ip'] = 'pending'
-
-                        elif item['kind'].lower() == 'deployment':
-                            api_response = self._read_deployment(instance_id, i)
-                            info = self._get_instance_status(info, api_response)
-                            info = self._get_container_data(info, api_response)
-
-
-                    LOG.debug('Stack\'s attrs:')
-                    LOG.debug(info)
-
-                    return info
-
-            except ApiException as e:
-                LOG.warning("Exception when calling ExtensionsV1beta1Api->read_namespaced_deployment: %s\n" % e)
-                return {}
+    def delete_mani_dir(self, instance_id):
+        mani_dir = self.manifest_cache + '/' + instance_id
+        try:
+            shutil.rmtree(mani_dir)
+            LOG.info('Successfully Deleted directory {} for instance {}'.format(mani_dir, instance_id))
+        except PermissionError:
+            # Done to let travis pass
+            LOG.error('Could not delete the directory {} for instance {}'.format(mani_dir, instance_id))
+            return False
 
     def delete(self, instance_id: str, **kwargs) -> None:
+        LOG.info('Kubernetes Backend: Deprovisioning Service Instance \'{}\'...'.format(instance_id))
         outcome = False
+        instance_exists = False
 
         if type(instance_id) != str:
             LOG.error('Instance ID not valid')
             return outcome
 
         super().delete(instance_id)
-        LOG.info('Deleting Kubernetes Deployment...')
+        mani_path, manifest_exists = self.get_manifest_path(instance_id)
 
-        mani_dir = self.manifest_cache + '/' + instance_id
-        mani_path = mani_dir + '/manifest.yaml'
-
-        directory_created = os.path.exists(mani_path)
-        LOG.info("directory variable: {}".format(directory_created))
-
-        # check if directory for IID exists
-        if not directory_created:
-            LOG.warning('requested file does not exist: {mani_path}'.format(mani_path=mani_path))
-            outcome = False
-            return outcome
-
-        # if IID dir exists, check it is alive
-        if directory_created:
+        # if IID manifest file exists, check it is alive
+        if manifest_exists:
             LOG.info("Polling the instance to see if it's alive...")
-            info = self.info(instance_id=instance_id)
+
+            info = self.info(instance_id)
             LOG.info("Info retrieved: {}".format(info))
 
-            if info == {}:
-                LOG.warning('No instance found. Content in this directory will be overwritten.')
-                directory_created = True
+            instance_exists = True if info != {} else False
 
         # if IID is alive, proceed to delete
-        if directory_created:
-            with open(mani_path) as f:
-                manifest = yaml.safe_load(f)
-                for i in range(len(manifest['items'])):
-                    item = manifest['items'][i]
-                    if item['kind'].lower() == 'service':
-                        api_response = self._delete_service(instance_id, i)
-                        LOG.warning('Kubernetes Service deleted.')
+        if instance_exists:
+            successful_deprovisions = 0
 
-                    elif item['kind'].lower() == 'deployment':
-                        api_response = self._delete_deployment(instance_id, i)
-                        LOG.warning('Kubernetes Deployment deleted')
+            with open(mani_path) as f:
+                # turn generator into list to be able to subscript and get length
+                saved_manifests = list(itertools.chain.from_iterable(yaml.safe_load_all(f)))
+
+                # delete all components
+                for manifest in saved_manifests:
+                    successful_deprovisions += self._delete(manifest)
 
                 # delete directory
-                try:
-                    shutil.rmtree(mani_dir)
-                    outcome = True
+                self.delete_mani_dir(instance_id)
 
-                except PermissionError:
-                    # Done to let travis pass
-                    LOG.warning('Could not delete the directory {dir}'.format(dir=mani_dir))
-                    outcome = False
+        else:
+            LOG.warning('No instance found to be deleted. Attempting to delete old directory...')
+            self.delete_mani_dir(instance_id)
 
         return outcome
 
