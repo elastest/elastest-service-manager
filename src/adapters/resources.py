@@ -451,12 +451,22 @@ class EPMBackend(DeployerBackend):  # pragma: epm NO cover
 class KubernetesBackend(DeployerBackend):
     def __init__(self) -> None:
         super().__init__()
+        """
+            If Kubernetes is being supported, the ESM is being deployed *within* K8s, so we can access
+            the env variables provided in the pod.
+        """
         LOG.info('Adding Kubernetes Backend')
 
-        K8S_ENDPOINT = os.getenv('KUBERNETES_HOST', None)
-        K8S_API_TOKEN = os.getenv('KUBERNETES_TOKEN', None)
+        # K8S_ENDPOINT = os.getenv('KUBERNETES_HOST', None)
+        # K8S_API_TOKEN = os.getenv('KUBERNETES_TOKEN', None)
 
-        if K8S_ENDPOINT != None:
+        KUBERNETES_SERVICE_HOST = os.environ.get('KUBERNETES_SERVICE_HOST')
+        KUBERNETES_PORT_443_TCP_PORT = os.environ.get('KUBERNETES_PORT_443_TCP_PORT')
+
+        if KUBERNETES_SERVICE_HOST and KUBERNETES_PORT_443_TCP_PORT:
+            K8S_ENDPOINT = 'https://' + KUBERNETES_SERVICE_HOST + ':' + KUBERNETES_PORT_443_TCP_PORT # + '/api/v1/'
+            K8S_API_TOKEN = self.get_kube_auth_token()
+
             ApiToken = str(K8S_API_TOKEN)
             configuration = kubernetes.client.Configuration()
             configuration.host = str(K8S_ENDPOINT) #TODO verify that it is of format ip:port
@@ -477,6 +487,16 @@ class KubernetesBackend(DeployerBackend):
         self.core_api_instance = kubernetes.client.CoreV1Api()  # services api
         self.extensions_api_instance = kubernetes.client.ExtensionsV1beta1Api()  # deployments api
         self.manifest_cache = config.esm_dock_tmp_dir
+
+    def get_kube_auth_token(self):
+        """
+        Gets the kubernetes auth token from serviceaccount on which the container runs on
+        :return: The auth token
+        :rtype: str
+        """
+        with open("/var/run/secrets/kubernetes.io/serviceaccount/token", "r") as f:
+            token = f.read()
+            return token
 
     def _translate_to_valid_name(self, instance_id: str) -> str:
         # for i in range(len(instance_id)):
@@ -870,6 +890,7 @@ class KubernetesBackend(DeployerBackend):
                 # delete directory
                 self.delete_mani_dir(instance_id)
 
+            outcome = True if successful_deprovisions >= len(saved_manifests) else False
         else:
             LOG.warning('No instance found to be deleted. Attempting to delete old directory...')
             self.delete_mani_dir(instance_id)
