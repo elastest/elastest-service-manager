@@ -772,7 +772,8 @@ class KubernetesBackend(DeployerBackend):
                     LOG.debug('API Response: {}'.format(api_response))
 
                     ip = item['spec'].get('load_balancer_ip')
-                    info[instance_id + '_Ip'] = '{}:{}'.format(ip, item['spec']['node_port']) if ip is not None \
+                    info_ip_key = "{}_{}_Ip".format(instance_id,info['name_service'])
+                    info[info_ip_key] = '{}:{}'.format(ip, item['spec']['node_port']) if ip is not None \
                         else 'pending'
 
                 elif item['kind'].lower() == 'deployment':
