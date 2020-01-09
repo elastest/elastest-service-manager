@@ -771,8 +771,17 @@ class KubernetesBackend(DeployerBackend):
                                                                                   namespace=namespace)
                     LOG.debug('API Response: {}'.format(api_response))
 
+                    # get IP
                     ip = item['spec'].get('load_balancer_ip')
-                    info_ip_key = "{}_{}_Ip".format(instance_id,info['name_service'])
+
+                    # get service name
+                    try:
+                        service_name = item['endpoints'][:-1]
+                    except:
+                        LOG.warn("Could not read \'endpoints\' object in Manifest file.")
+                        service_name = item['metadata']['name']
+
+                    info_ip_key = "{}_{}_Ip".format(instance_id, service_name)
                     info[info_ip_key] = '{}:{}'.format(ip, item['spec']['node_port']) if ip is not None \
                         else 'pending'
 
