@@ -683,7 +683,12 @@ class KubernetesBackend(DeployerBackend):
                     LOG.debug("\nReading saved manifest:\n{}".format(saved_manifests))
 
                     # create namespace
-                    namespace_exists = self.core_api_instance.read_namespace(namespace)
+                    namespace_exists = False
+                    try:
+                        namespace_exists = self.core_api_instance.read_namespace(namespace)
+                    except:
+                        LOG.warn('Namespace could not be found: {}...\nProceeding...'.format(namespace_exists))
+
                     LOG.debug('Namespace exists: {}...'.format(namespace_exists))
                     if not namespace_exists:
                         self.core_api_instance.create_namespace(
