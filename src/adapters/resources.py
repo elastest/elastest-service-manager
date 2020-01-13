@@ -619,8 +619,40 @@ class KubernetesBackend(DeployerBackend):
     #             LOG.info("Kubernetes Backend: updating List name...")
     #             for j in range(len(manifests[i]['items'])):
     #                 manifests[i]['items'][j]['metadata']['name'] = '{}{}-{}'.format(self._translate_to_valid_name(instance_id), str(i) + str(j), manifests[i]['items'][j]['kind'].lower())
-    #                 # TODO verify about optionally supplied parameters as environment variables
     #     return manifests
+
+    def dict_to_list(self, parameters):
+        # !!! This implementation is different than the Docker Backend implementation !!!
+        extra_env_list = list()
+        for k, v in parameters.items():
+            LOG.info('Including additional environment variables: {k}={v}'.format(k=k, v=v))
+
+            # Kubernetes implementation is a list of dicts of syntax {name:, value:}
+            cache = {'name': k, 'value': v}
+            extra_env_list.append(cache)
+
+        return extra_env_list
+
+    def _update_env_var(self, manifests, extra_env_list):
+        for i in range(len(manifests)):
+            if manifests[i]['kind'].lower() == 'service':
+                LOG.warn("Kubernetes Backend: skipping update of env_vars for Service...")
+                # manifests[i]['spec']['containers'] = '{}{}-{}'.format(self._translate_to_valid_name(instance_id), i,
+                #                                             manifests[i]['kind'].lower())
+            elif manifests[i]['kind'].lower() == 'deployment':
+                LOG.warn("Kubernetes Backend: skipping update of env_vars for Deployment...")
+                # merge current_env_var_list and new env_var_list
+                manifests[i]['spec']['template']['spec']['containers']['env'] += extra_env_list
+
+            elif manifests[i]['kind'].lower() == 'list':
+                LOG.warn("Kubernetes Backend: skipping update of env_vars for List...")
+                for j in range(len(manifests[i]['items'])):
+                    if manifests[i]['items'][j]['kind'].lower() == 'deployment':
+                        LOG.warn("Kubernetes Backend: skipping update of env_vars for Deployment...")
+                        # merge current_env_var_list and new env_var_list
+                        manifests[i]['items'][j]['spec']['template']['spec']['containers']['env'] += extra_env_list
+
+        return manifests
 
     def _is_instance_alive_from_info(self, info):
         return len(info.keys()) > 1
@@ -673,6 +705,13 @@ class KubernetesBackend(DeployerBackend):
 
                 # modify deployment and service names to include instance_id
                 # manifests = self._update_names(manifests, instance_id)
+
+                # modify YAML files to include env_vars
+                parameters = kwargs.get('parameters', dict())
+                if parameters:
+                    # extra_env_list = self.dict_to_list(parameters)
+                    manifests = self._update_env_var(manifests, parameters)
+
 
                 # save manifest
                 self._save_manifest_to_file(manifests, mani_path)
@@ -777,8 +816,9 @@ class KubernetesBackend(DeployerBackend):
                     # get service name
                     try:
                         service_name = item['endpoints'][:-1]
-                    except:
-                        LOG.warn("Could not read \'endpoints\' object in Manifest file.")
+                        LOG.info('Successfully retrieved service name from Manifest[endpoints].')
+                    except BaseException as e:
+                        LOG.warn("Could not read \'endpoints\' object in Manifest file, with error: {}".format(e))
                         service_name = item['metadata']['name']
 
                     info_ip_key = "{}_{}_Ip".format(instance_id, service_name)
