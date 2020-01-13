@@ -642,8 +642,11 @@ class KubernetesBackend(DeployerBackend):
             elif manifests[i]['kind'].lower() == 'deployment':
                 LOG.warn("Kubernetes Backend: skipping update of env_vars for Deployment...")
                 # merge current_env_var_list and new env_var_list
-                for c_ix in manifests[i]['spec']['template']['spec']['containers']:
-                    manifests[i]['spec']['template']['spec']['containers'][c_ix]['env'] += extra_env_list
+                for c_ix in range(len(manifests[i]['spec']['template']['spec']['containers'])):
+                    try:
+                        manifests[i]['spec']['template']['spec']['containers'][c_ix]['env'] += extra_env_list
+                    except:
+                        continue
 
             elif manifests[i]['kind'].lower() == 'list':
                 LOG.warn("Kubernetes Backend: skipping update of env_vars for List...")
@@ -651,9 +654,11 @@ class KubernetesBackend(DeployerBackend):
                     if manifests[i]['items'][j]['kind'].lower() == 'deployment':
                         LOG.warn("Kubernetes Backend: skipping update of env_vars for Deployment...")
                         # merge current_env_var_list and new env_var_list
-                        for c_ix in manifests[i]['spec']['template']['spec']['containers']:
-                            manifests[i]['spec']['template']['spec']['containers'][c_ix]['env'] += extra_env_list
-
+                        for c_ix in range(len(manifests[i]['spec']['template']['spec']['containers'])):
+                            try:
+                                manifests[i]['spec']['template']['spec']['containers'][c_ix]['env'] += extra_env_list
+                            except:
+                                continue
         return manifests
 
     def _is_instance_alive_from_info(self, info):
