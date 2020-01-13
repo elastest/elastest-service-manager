@@ -720,8 +720,8 @@ class KubernetesBackend(DeployerBackend):
                 # modify YAML files to include env_vars
                 parameters = kwargs.get('parameters', dict())
                 if parameters:
-                    # extra_env_list = self.dict_to_list(parameters)
-                    manifests = self._update_env_var(manifests, parameters)
+                    extra_env_list = self.dict_to_list(parameters)
+                    manifests = self._update_env_var(manifests, extra_env_list)
 
 
                 # save manifest
