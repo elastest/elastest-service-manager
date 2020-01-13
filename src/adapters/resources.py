@@ -801,7 +801,7 @@ class KubernetesBackend(DeployerBackend):
                 LOG.info('\nReading part {}/{} of manifests list... '.format(i, len(manifests)))
                 item = manifests[i]
                 info = {}
-                info['environment'] = item['spec']['template']['spec']['containers']['env']
+
 
                 if item['kind'].lower() == 'service':
                     LOG.debug('Kubernetes Backend: {} found in Manifest YAML.'.format('Service'))
@@ -832,6 +832,7 @@ class KubernetesBackend(DeployerBackend):
                     api_response = self.extensions_api_instance.read_namespaced_deployment(
                         name=item['metadata']['name'],
                         namespace=namespace)
+                    info['environment'] = item['spec']['template']['spec']['containers']['env']
                     info = self._get_instance_status(info, api_response)
                     info = self._get_container_data(info, api_response)
 
