@@ -646,6 +646,8 @@ class KubernetesBackend(DeployerBackend):
                     try:
                         manifests[i]['spec']['template']['spec']['containers'][c_ix]['env'] += extra_env_list
                     except:
+                        LOG.error(
+                            "Kuberentes Backend Error: Could not merge environment variables with error {}:".format(e))
                         continue
 
             elif manifests[i]['kind'].lower() == 'list':
@@ -657,7 +659,9 @@ class KubernetesBackend(DeployerBackend):
                         for c_ix in range(len(manifests[i]['spec']['template']['spec']['containers'])):
                             try:
                                 manifests[i]['spec']['template']['spec']['containers'][c_ix]['env'] += extra_env_list
-                            except:
+                            except BaseException as e:
+                                LOG.error(
+                                    "Kuberentes Backend Error: Could not merge environment variables with error {}:".format(e))
                                 continue
         return manifests
 
