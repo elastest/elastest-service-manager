@@ -801,6 +801,7 @@ class KubernetesBackend(DeployerBackend):
                 LOG.info('\nReading part {}/{} of manifests list... '.format(i, len(manifests)))
                 item = manifests[i]
                 info = {}
+                info['environment'] = item['spec']['template']['spec']['containers']['env']
 
                 if item['kind'].lower() == 'service':
                     LOG.debug('Kubernetes Backend: {} found in Manifest YAML.'.format('Service'))
