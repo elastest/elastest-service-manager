@@ -799,67 +799,93 @@ class KubernetesBackend(DeployerBackend):
                     info[name + '_environment_' + env_var.name] = env_var.value
         return info
 
-    # def _get_info_service(self, api_response):
+    def _get_info_service(self, cache):
+        item, manifests, instance_id, namespace = cache['item'], cache['manifests'], cache['instance_id'], cache['namespace']
+        info = {}
+
+        info['name_service'] = item['metadata']['name']
+
+        LOG.info("Querying info from namespaced_service...")
+        api_response = self.core_api_instance.read_namespaced_service(name=item['metadata']['name'],
+                                                                      namespace=namespace)
+        LOG.debug('API Response: {}'.format(api_response))
+        # get IP
+        ip = item['spec'].get('load_balancer_ip')
+
+        # get service name
+        try:
+            service_name = item['endpoints'][:-1]
+            LOG.info('Successfully retrieved service name from Manifest[endpoints].')
+        except BaseException as e:
+            LOG.warn("Could not read \'endpoints\' object in Manifest file, with error: {}".format(e))
+            service_name = item['metadata']['name']
+
+        info_ip_key = "{}_{}_Ip".format(instance_id, service_name)
+        info[info_ip_key] = '{}:{}'.format(ip, item['spec']['node_port']) if ip is not None \
+            else 'pending'
+
+        LOG.info("Querying info completed!")
+        return info
+
+    def _get_info_deployment(self, cache):
+        item, manifests, instance_id, namespace = cache['item'], cache['manifests'], cache['instance_id'], cache[
+            'namespace']
+        info = {}
+
+        info['name_deployment'] = item['metadata']['name']
+
+        LOG.info("Querying info from namespaced_deployment...")
+        api_response = self.extensions_api_instance.read_namespaced_deployment(
+            name=item['metadata']['name'],
+            namespace=namespace)
+
+        LOG.info("Querying environment from each container described in Manifest...")
+        for c in item['spec']['template']['spec']['containers']:
+            info['environment' + c['name']] = c['env']
+
+        LOG.info("Querying instance status...")
+        info = self._get_instance_status(info, api_response)
+
+        LOG.info("Querying container data...")
+        info = self._get_container_data(info, api_response)
+
+        LOG.info("Querying info completed!")
+
+        return info
 
     def get_info(self, manifests, instance_id):
-        namespace = instance_id  # TODO this might change in the future
-        base_info = {
-            'namespace_name': namespace
+        cache = {
+            'manifests': manifests,
+            'instance_id': instance_id,
+            'namespace': instance_id, # TODO this might change in the future
         }
+        base_info = {'namespace_name': instance_id}  # TODO this might change in the future
 
         try:
             for i in range(len(manifests)):
                 LOG.info('\nReading part {}/{} of manifests list... '.format(i, len(manifests)))
-                item = manifests[i]
-                info = {}
+                cache['item'] = manifests[i]
 
-
-                if item['kind'].lower() == 'service':
+                if cache['item']['kind'].lower() == 'service':
                     LOG.debug('Kubernetes Backend: {} found in Manifest YAML.'.format('Service'))
-                    info['name_service'] = item['metadata']['name']
+                    info = self._get_info_service(cache)
 
-                    api_response = self.core_api_instance.read_namespaced_service(name=item['metadata']['name'],
-                                                                                  namespace=namespace)
-                    LOG.debug('API Response: {}'.format(api_response))
-
-                    # get IP
-                    ip = item['spec'].get('load_balancer_ip')
-
-                    # get service name
-                    try:
-                        service_name = item['endpoints'][:-1]
-                        LOG.info('Successfully retrieved service name from Manifest[endpoints].')
-                    except BaseException as e:
-                        LOG.warn("Could not read \'endpoints\' object in Manifest file, with error: {}".format(e))
-                        service_name = item['metadata']['name']
-
-                    info_ip_key = "{}_{}_Ip".format(instance_id, service_name)
-                    info[info_ip_key] = '{}:{}'.format(ip, item['spec']['node_port']) if ip is not None \
-                        else 'pending'
-
-                elif item['kind'].lower() == 'deployment':
-                    info['name_deployment'] = item['metadata']['name']
+                elif cache['item']['kind'].lower() == 'deployment':
                     LOG.debug('Kubernetes Backend: {} found in Manifest YAML.'.format('Deployment'))
-                    api_response = self.extensions_api_instance.read_namespaced_deployment(
-                        name=item['metadata']['name'],
-                        namespace=namespace)
-                    info['environment'] = item['spec']['template']['spec']['containers']['env']
-                    info = self._get_instance_status(info, api_response)
-                    info = self._get_container_data(info, api_response)
+                    info = self._get_info_deployment(cache)
 
-                elif item['kind'].lower() == 'list':
+                elif cache['item']['kind'].lower() == 'list':
                     LOG.debug('Kubernetes Backend: {} found in Manifest YAML.'.format('List'))
                     list_base_info = {}
-                    deployables = item['items']
+                    deployables = cache['item']['items']
                     for deployable in deployables:
                         info = self.get_info([deployable], instance_id)
                         list_base_info = {**list_base_info, **info}
-
                     info = list_base_info
-                    # LOG.warning('List information retrieval is not supported yet.')
+
                 base_info = {**base_info, **info}
         except BaseException as e:
-            LOG.error('Could not read the instance\'s information.')
+            LOG.error('Could not read the instance\'s information, with error: {}'.format(e))
 
         return base_info
 
